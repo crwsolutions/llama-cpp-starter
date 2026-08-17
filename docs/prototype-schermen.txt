@@ -1,0 +1,380 @@
+================================================================================
+LLAMA.CPP-STARTER - PROTOTYPE SCHERM BESCHRIJVINGEN
+================================================================================
+
+App titel: "llama.cpp - starter"
+Type: Desktop applicatie (Windows)
+Navigatie: Linker zijbalk met 4 items (Overzicht, Modellen, Runtimes, Instellingen)
+
+================================================================================
+SCHERM 1: OVERZICHT / LAAD-ONLAAD (START/STOP) PAGINA
+================================================================================
+
+Beschrijving:
+Het hoofdoverzichtsscherm. Dit is de landingpagina waar de gebruiker een model
+kies en kan starten/stoppen (laden/unloaden) via de runtime. Bevat ook
+opgeslagen modelvarianten (startprofielen).
+
+LAYOUT:
+- Linker sidebar: 4 navigatie-items met iconen
+  - Overzicht (huis-icoon, actief geselecteerd)
+  - Modellen (map-icoon (SCHERM 2))
+  - Runtimes (code-icoon (SCHERM 3))
+  - Instellingen (tandenwiel-icoon)
+
+- Bovenste balk:
+  - Modelnaam dropdown: "Modelnaam / Qwen3.6 32B UD Q5 K X..." (geselecteerd model)
+  - Startprofiel dropdown: "Default"
+  - Modelnaap label + pad: "E:\llama.cpp\models"
+  - Twee knoppen rechts: "Laden" (primair) en "unload" (secundair)
+
+- Middelste kolom (Modelstatus):
+  - Titel: "Modelbestanden"
+  - Subtitel: "Fysieke GGUF-bestanden die zijn gevonden in de modelfolder of geïmporteerd van een andere map."
+  - Tabel met kolommen:
+    - Naam (modelnaam)
+    - Kwantificatie (bv. Q5_K_XL, Q4_K_XS, Q4_K_M, Q4_K_P, Q5_K_S)
+    - Grootte (bv. 18,7 GB, 14 GB, 21,1 GB, 20,8 GB, 24,8 GB, 21,8 GB, 21,3 GB, 23 GB, 22,3 GB)
+    - Hardware (bv. "No loaded model", "MTP-token Inactive")
+    - Map openen (knop "Open Folder")
+    - Verwijderen (knop "Delete")
+  - Voorbeelddata:
+    - Qwen3.6 32B UD Q5 K X L | Q5_K_XL | 18,7 GB | No loaded model
+    - Qwen3.6 27B Uncensored HauhauCS Aggr... | Q4_K_XS | 14 GB
+    - Qwen3.6 35B A3B UD Q4 K M | Q4_K_M | 21,1 GB | MTP-token Inactive
+    - Qwen3.6 35B A3B UD Q4 K X L | Q4_K_XL | 20,8 GB
+    - Qwen3.6 35B A3B UD Q5 K X L | Q5_K_XL | 24,8 GB
+    - Qwen3.6 35B A3B Uncensored HauhauCS... | Q4_K_P | 21,8 GB
+    - Qwen3.8 27B Q6 K | Q6_K | 21,3 GB
+    - Qwopus3.6 35B A3B V1 Q5 K M | Q5_K_M | 23 GB
+    - Qwopus3.6 35B A3B V1 Q5 K S | Q5_K_S | 22,3 GB
+
+  - Onder de tabel: "Live runtime-logboek"
+    - Status tekst: "No runtime is loaded for the selected model." (waarschuwing)
+
+- Onderaan (Opgeslagen modelvarianten):
+  - Subtitel: "Laadbare allassen gemaakt uit startinstellingen."
+  - Knop: "Add"
+  - Tabel met kolommen: Naam, Basismodel, Poort, Verwijderen
+  - Voorbeelddata:
+    - Default | Qwen3.6 27B UD Q5 K X L | 8081
+
+- Rechtermiddel (Runtime configuratie / Startinstellingen):
+  - Runtime dropdown: "llama.cpp llama-local-build Native Cuda"
+  - Poort veld: "8081"
+  - Name veld: "Second profile" (editabel)
+  - Subtitel: "Arch: qwen35 | Quant: Q5_K_X L | Context: 63436 | Batch: unknown | Vision: mmproj fou..."
+  - Status: "Busy/decode 0, 0"
+  - Knop rechtsboven: "Gevarensoerde instellingen" (danger-zone knop)
+
+  - Sectie "Basisstart":
+    - Contextgrootte: "131072"
+    - KV-cache: "Used Unknown"
+    - Threads: "0"
+    - GPU-lagen: "999"
+    - Capacity: "Unknown"
+    - GPU mode: dropdown "auto"
+
+  - Sectie "Prestaties & Geheugen":
+    - Batchgrootte: "4096"
+    - Microbatch: "512"
+    - Flash attention: dropdown "auto"
+    - K-cache: dropdown "q8_0"
+    - V-cache: dropdown "q8_0"
+
+  - Sectie "Speculatie / MTP":
+    - Spec-type: dropdown "none"
+    - Conceptmodel: dropdown "Speculatief conceptmo..."
+    - MTP-head: dropdown "MTP-head automatisch"
+    - Concept-K-cache: dropdown "q8_0"
+    - Concept-V-cache: dropdown "q8_0"
+    - Concept-max: "0"
+    - Concept-min: "0"
+
+  - Sectie "Chat- en modelmogelijkheden":
+    - Redeneren: dropdown "auto"
+    - Redeneerformaat: dropdown "auto"
+    - Reasoning effort: dropdown "default"
+    - Redeneerbudget: "-1"
+    - Jinja-chat: dropdown "auto"
+    - Vision: dropdown "auto"
+    - Vision-head: dropdown "Auto-detect vision hea..."
+    - Afbeelding-min: "0"
+    - Afbeelding-max: "0"
+
+  - Sectie "Standaardwaarden generatie":
+    - Temperatuur: "0,65"
+    - Top K: "40"
+    - Top P: "0,95"
+    - Min P: "0,05"
+
+  - Sectie "Runtime Command":
+    - Tekst: "Exact generated command. Append flags at the end, then apply them to matching settings."
+    - (waarschijnlijk een tekstveld hieronder, afgekapt in screenshot)
+
+TECHNISCHE NOTITIES — DATA BRONNEN PER CARD
+--------------------------------------------------------------------------------
+
+Deze notities documenteren waar de data voor de diverse kaarten/velden op
+scherm 1 vandaan komt.
+
+### 1. ModelStatus (bv. "Loaded Qwen3.6...")
+
+Bron: Lokale application state (ModelRuntimeStatusTracker)
+
+- Wordt bijgehouden door de app zelf, NIET van de server gehaald
+- Drie staten: Loading, Loaded, Fallback
+- De "Loading Time" wordt berekend vanaf een interne timer (_loadingStartedAt)
+
+### 2. Hardware (GPU info, bv. kolom "Hardware" in de modeltabel)
+
+Bron: Lokale systeem probes (GpuStatusProbeService + RuntimeGpuSummaryApplicationService)
+
+- Gebruikt systeemcommando's (niet de llama-server gateway!)
+- Voor NVIDIA: nvidia-smi --query-gpu=... --format=csv,noheader,nounits
+- Voor AMD: rocm-smi of ROCm JSON output
+- Voor Intel Arc: sycl-ls of clinfo
+- Voor CPU temperatuur: wmic (Windows) of sensors (Linux)
+- Resultaat wordt gecached in GpuSummaryCache
+
+### 3. Slots (bv. "Active 0/1, Queued 0, Busy/decode 1,0")
+
+Bron: llama-server /slots endpoint (via RuntimeMetricPollerService)
+
+- Pollt http://localhost:{port}/slots van de draaiende llama-server
+- Parse de JSON response naar RuntimeSlotSnapshot
+- Toont per-slot status en verwerkingsinformatie
+
+### 4. Tokens (bv. "Generated 102.0 t/s, Prompt 34.2 t/s")
+
+Bron: llama-server /metrics endpoint (via RuntimeMetricPollerService)
+
+- Pollt http://localhost:{port}/metrics van de draaiende llama-server
+- Parse Prometheus formaat data naar PrometheusSample
+- RuntimeMetricSummaryTracker berekent rates, totals, en deltas
+- Genereert rates op twee manieren:
+  - Wall-clock rate: tokens / verstreken tijd
+  - Seconds-based rate: tokens / actieve generatie-seconden
+    (voorkomt dilutie tijdens idle gaps)
+
+### 5. MTP-tokens (bv. "Inactive" in de Hardware-kolom)
+
+Bron: llama-server /metrics endpoint (dezelfde als Tokens)
+
+- Specifiek voor MTP (Multi-Tensor Parallel) speculative decoding
+- Alleen zichtbaar wanneer speculativeType ingesteld is op draft-* of mtp
+
+### 6. KV-cache (bv. "Used 2.146 t | 1,6%, Capacity 131.072 t")
+
+Bron: llama-server /metrics endpoint (dezelfde als Tokens)
+
+- Haalt kv.cache.usage, kv.cache.tokens, context.size uit de metrics
+- Capacity komt van de slot data of app settings
+
+================================================================================
+SCHERM 2: MODELEN - SCAN & STARTPARAMETERS DEFINIËREN
+================================================================================
+
+Beschrijving:
+De "Modellen" pagina. Hier scant de gebruiker de modelmap op GGUF-bestanden
+en definieert startparameters/profielen per model. De layout is identiek aan
+het Overzicht-scherm (Scherm 1), maar met andere bovenste balk (scan-knoppen
+i.p.v. modelselectie) en een modeltabel zonder Hardware-kolom.
+
+LAYOUT:
+- Linker sidebar: 4 navigatie-items met iconen
+  - Overzicht (huis-icoon)
+  - Modellen (map-icoon, actief geselecteerd)
+  - Runtimes (code-icoon (SCHERM 3))
+  - Instellingen (tandenwiel-icoon)
+
+- Bovenste balk:
+  - Twee knoppen links: "Modellenmap scannen" (primair) en "Kiezen" (secundair)
+  - Modelnaam label + pad: "E:\llama.cpp\models" (rechts van de knoppen)
+
+- Middelste kolom (Modelbestanden):
+  - Titel: "Modelbestanden"
+  - Subtitel: "Fysieke GGUF-bestanden die zijn gevonden in de modelfolder of geïmporteerd van een andere map."
+  - Tabel met kolommen:
+    - Naam (modelnaam)
+    - Kwantificatie (bv. Q5_K_XL, Q4_K_XS, Q4_K_M, Q4_K_P, Q5_K_S)
+    - Grootte (bv. 18,7 GB, 14 GB, 21,1 GB, 20,8 GB, 24,8 GB, 21,8 GB, 21,3 GB, 23 GB, 22,3 GB)
+    - Map openen (knop "Open Folder")
+    - Verwijderen (knop "Delete")
+  - Voorbeelddata:
+    - Qwen3.6 27B UD Q5 K X L | Q5_K_XL | 18,7 GB
+    - Qwen3.6 27B Uncensored HauhauCS Aggr... | Q4_K_XS | 14 GB
+    - Qwen3.6 35B A3B UD Q4 K M | Q4_K_M | 21,1 GB
+    - Qwen3.6 35B A3B UD Q4 K X L | Q4_K_XL | 20,8 GB
+    - Qwen3.6 35B A3B UD Q5 K X L | Q5_K_XL | 24,8 GB
+    - Qwen3.6 35B A3B Uncensored HauhauCS... | Q4_K_P | 21,8 GB
+    - Qwen3.8 27B Q6 K | Q6_K | 21,3 GB
+    - Qwopus3.6 35B A3B V1 Q5 K M | Q5_K_M | 23 GB
+    - Qwopus3.6 35B A3B V1 Q5 K S | Q5_K_S | 22,3 GB
+
+  - Opmerking: Deze tabel heeft GEEN "Hardware" kolom (in tegenstelling tot Scherm 1).
+
+- Onderaan (Opgeslagen modelvarianten):
+  - Subtitel: "Laadbare allassen gemaakt uit startinstellingen."
+  - Knop: "Add"
+  - Tabel met kolommen: Naam, Basismodel, Poort, Verwijderen
+  - Voorbeelddata:
+    - Default | Qwen3.6 27B UD Q5 K X L | 8081
+
+- Rechtermiddel (Runtime configuratie / Startinstellingen):
+  - Runtime dropdown: "llama.cpp llama-local-build Native Cuda"
+  - Poort veld: "8081"
+  - Name veld: "Second profile" (editabel)
+  - Subtitel: "Arch: qwen35 | Quant: Q5_K_XL | Context: 262.144 | Chat template: unknown | Vision: mmproj fou..."
+  - Knop rechtsboven: "Gevarensoerde instellingen" (danger-zone knop)
+
+  - Sectie "Basisstart":
+    - Contextgrootte: "131072"
+    - Threads: "0"
+    - GPU-lagen: "999"
+    - GPU mode: dropdown "auto"
+
+  - Sectie "Prestaties & Geheugen":
+    - Batchgrootte: "4096"
+    - Microbatch: "512"
+    - Flash attention: dropdown "auto"
+    - K-cache: dropdown "q8_0"
+    - V-cache: dropdown "q8_0"
+
+  - Sectie "Speculatie / MTP":
+    - Spec-type: dropdown "none"
+    - Conceptmodel: dropdown "Speculatief conceptmo..."
+    - MTP-head: dropdown "MTP-head automatisch"
+    - Concept-K-cache: dropdown "q8_0"
+    - Concept-V-cache: dropdown "q8_0"
+    - Concept-max: "0"
+    - Concept-min: "0"
+
+  - Sectie "Chat- en modelmogelijkheden":
+    - Redeneren: dropdown "auto"
+    - Redeneerformaat: dropdown "auto"
+    - Reasoning effort: dropdown "default"
+    - Redeneerbudget: "-1"
+    - Jinja-chat: dropdown "auto"
+    - Vision: dropdown "auto"
+    - Vision-head: dropdown "Auto-detect vision hea..."
+    - Afbeelding-min: "0"
+    - Afbeelding-max: "0"
+
+  - Sectie "Standaardwaarden generatie":
+    - Temperatuur: "0,65"
+    - Top K: "40"
+    - Top P: "0,95"
+    - Min P: "0,05"
+
+  - Sectie "Runtime Command":
+    - Tekst: "Exact generated command. Append flags at the end, then apply them to matching settings."
+    - (waarschijnlijk een tekstveld hieronder, afgekapt in screenshot)
+
+KERNFUNCTIES:
+1. Modelscan: Detecteer GGUF-bestanden in de modelmap (knop "Modellenmap scannen")
+2. Modelmap kiezen: Alternatieve map selecteren (knop "Kiezen")
+3. Modelinformatie tonen: Naam, kwantificatie, grootte (GEEN hardware-kolom)
+4. Startparameters definieren: Per model of per profiel (recht paneel)
+   - Basisstart: contextgrootte, GPU-lagen, threads, GPU mode
+   - Prestaties: batchgrootte, microbatch, flash attention, K/V-cache
+   - Speculatie/MTP: spec-type, conceptmodel, MTP-head, concept-caches
+   - Chat-opties: redeneren, vision, jinja-chat
+   - Standaardwaarden: temperatuur, top K, top P, min P
+5. Profielen opslaan: Naam + basismodel + poort (knop "Add")
+6. Map openen / verwijderen acties per model
+
+VERSCHIL TEGENOVER SCHERM 1:
+- Geen "Modelnaam / Model" dropdown in de bovenste balk
+- Geen "Startprofiel" dropdown
+- In plaats daarvan: "Modellenmap scannen" en "Kiezen" knoppen
+- Geen "Hardware" kolom in de modeltabel
+- Geen "Live runtime-logboek" sectie
+- Geen "Laden"/"unload" knoppen (dat is functie van Scherm 1)
+- Context-waarde in subtitel: 262.144 (in plaats van 63436 op Scherm 1)
+- Geen "Busy/decode" status indicator
+- Geen KV-cache / Capacity velden in Basisstart
+
+================================================================================
+SCHERM 3: RUNTIMES - RUNTIME SELECTEREN
+================================================================================
+
+Beschrijving:
+De "Runtimes" pagina. Hier beheer je lokale llama.cpp builds (runtimes) die
+kunnen worden gebruikt om modellen te draaien. Je kiest een map, scant op
+geïnstalleerde builds, en kunt runs toevoegen of verwijderen.
+
+LAYOUT:
+- Linker sidebar: zelfde 4 items, "Runtimes" nu geselecteerd (met code-icoon)
+
+- Bovenste balk:
+  - Twee tabs/knoppen: "Map kiezen" (geselecteerd) en "Run timemap"
+  - Pad label: "E:\llama.cpp\llama-local-build"
+
+- Hoofdinhoud:
+  - Titel: "Geïnstalleerde lokale builds"
+  - Tabel met kolommen:
+    - Naam
+    - Backend
+    - Status
+    - Locatie
+    - Actie
+  - Voorbeelddata (1 rij):
+    - Naam: "llama.cpp llama-local-build Native Cuda"
+    - Backend: "Cuda"
+    - Status: "Built Native"
+    - Locatie: "E:\llama.cpp\llama-local-build\llama-server.exe"
+    - Actie: "Delete" knop
+
+KERNFUNCTIES:
+1. Map kiezen: Selecteer de map waar lokale llama.cpp builds staan
+2. Scan: Detecteer builds (llama-server.exe, etc.)
+3. Builds tonen: Naam, backend (Cuda, CPU, etc.), status, locatie
+4. Build verwijderen: Delete knop per build
+5. Nieuwe build toevoegen: (mogelijk via "Map kiezen" flow)
+
+================================================================================
+ALGEMENE UI ELEMENTEN
+================================================================================
+
+NAVIGATIE (Sidebar):
+- Positie: Links, volle hoogte
+- Items met icoon + label
+- Bovenin sidebar: hamburger-menu icoon (☰)
+
+HEADER:
+- Titel links: "llama.cpp - starter"
+- Rechts: venstercontroles (minimize, maximize, close)
+
+SECTIES:
+- Elke sectie heeft een verticale balk links als visueel accent
+- Sectietitel bovenaan de sectie
+- Content in grid layout (2 kolommen voor velden)
+
+KNOPPEN:
+- Primair: "Laden"
+- Secundair: "unload", "Open Folder", "Add"
+- Destructief: "Delete"
+
+================================================================================
+TECHNISCHE NOOT
+================================================================================
+
+Deze app is een desktop applicatie (WPF/WinUI of vergelijkbaar) die:
+- GGUF modellen scant en beheert
+- llama.cpp builds (runtimes) detecteert en start
+- Per-model startparameters kan definiëren en opslaan
+- Modellen kan laden/unloaden via een lokale server (poort 8081)
+- Live runtime logs toont
+- UI met Dutch (Nederlandse) tekst
+
+De architechtuur suggereert:
+- Modelmanager: scant mappen, toont GGUF bestanden
+- RuntimeManager: detecteert llama.cpp builds
+- ProfileManager: slaat startinstellingen per model op
+- ServerController: start/stopt llama-server.exe met juiste parameters
+- LogViewer: toont realtime server-logs
+
+================================================================================
+EINDE
+================================================================================

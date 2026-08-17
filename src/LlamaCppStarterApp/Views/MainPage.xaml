@@ -10,12 +10,6 @@
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25">
-            <Image
-                Source="dotnet_bot.png"
-                HeightRequest="185"
-                Aspect="AspectFit"
-                SemanticProperties.Description="dot net bot in a submarine number ten" />
-
             <Label
                 Text="Hello, World!"
                 Style="{StaticResource Headline}"
@@ -32,24 +26,26 @@
                 FontAttributes="Bold"
                 SemanticProperties.HeadingLevel="Level2" />
 
-            <Entry
-                Text="{Binding PromptText}"
-                Placeholder="Type a prompt..."
-                Keyboard="Chat"
-                SemanticProperties.Hint="Prompt to send to the llama.cpp server" />
-
             <Button
-                Text="{Binding CounterText}"
-                SemanticProperties.Hint="Counts the number of times you click"
-                Command="{Binding ClickCounterCommand}"
-                HorizontalOptions="Fill" />
-
-            <Button
-                Text="Send"
-                SemanticProperties.Hint="Send the prompt"
-                Command="{Binding SendPromptCommand}"
+                Text="Run hello.exe"
+                SemanticProperties.Hint="Runs E:\temp\hello.exe and streams its output"
+                Command="{Binding RunHelloCommand}"
                 IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
                 HorizontalOptions="Fill" />
+
+            <Border
+                BackgroundColor="#1E1E1E"
+                StrokeShape="RoundRectangle 8"
+                Padding="12"
+                HorizontalOptions="Fill">
+                <ScrollView HeightRequest="160">
+                    <Label
+                        Text="{Binding ProcessOutput}"
+                        FontFamily="Consolas"
+                        TextColor="White"
+                        LineBreakMode="CharacterWrap" />
+                </ScrollView>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 
