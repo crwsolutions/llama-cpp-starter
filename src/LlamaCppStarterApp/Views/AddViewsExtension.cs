@@ -11,10 +11,6 @@ internal static class AddViewsExtension
         builder.Services.AddSingleton<RuntimesViewModel>();
         builder.Services.AddSingleton<SettingsViewModel>();
 
-        builder.Services.AddSingleton<OverviewPage, OverviewViewModel>();
-        builder.Services.AddSingleton<ModelsPage, ModelsViewModel>();
-        builder.Services.AddSingleton<RuntimesPage, RuntimesViewModel>();
-        builder.Services.AddSingleton<SettingsPage, SettingsViewModel>();
 
         return builder;
     }

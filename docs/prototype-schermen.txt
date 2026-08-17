@@ -25,6 +25,7 @@ LAYOUT:
 - Bovenste balk:
   - Modelnaam dropdown: "Modelnaam / Qwen3.6 32B UD Q5 K X..." (geselecteerd model)
   - Startprofiel dropdown: "Default"
+  - Runtime dropdown: "llama.cpp llama-local-build Native Cuda"
   - Modelnaap label + pad: "E:\llama.cpp\models"
   - Twee knoppen rechts: "Laden" (primair) en "unload" (secundair)
 
@@ -222,8 +223,7 @@ LAYOUT:
     - Default | Qwen3.6 27B UD Q5 K X L | 8081
 
 - Rechtermiddel (Runtime configuratie / Startinstellingen):
-  - Runtime dropdown: "llama.cpp llama-local-build Native Cuda"
-  - Poort veld: "8081"
+  - Poort veld: "8081" (editable)
   - Name veld: "Second profile" (editabel)
   - Subtitel: "Arch: qwen35 | Quant: Q5_K_XL | Context: 262.144 | Chat template: unknown | Vision: mmproj fou..."
   - Knop rechtsboven: "Gevarensoerde instellingen" (danger-zone knop)

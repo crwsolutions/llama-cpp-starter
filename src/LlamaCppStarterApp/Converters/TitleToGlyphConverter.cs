@@ -10,7 +10,7 @@ public class TitleToGlyphConverter : IValueConverter
     {
         ["Overzicht"] = "\uf015",   // house
         ["Modellen"] = "\uf07b",    // folder
-        ["Runtimes"] = "\uf121",    // code
+        ["Runtimes"] = "\uf2db",    // processor
         ["Instellingen"] = "\uf013" // gear
     };
 
