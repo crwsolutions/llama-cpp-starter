@@ -1,0 +1,10 @@
+global using CommunityToolkit.Maui;
+global using CommunityToolkit.Mvvm.ComponentModel;
+global using CommunityToolkit.Mvvm.Input;
+global using LlamaCppStarterApp.ViewModels;
+global using LlamaCppStarterApp.Views;
+global using Microsoft.Extensions.Logging;
+global using System.Collections.ObjectModel;
+global using System.Diagnostics;
+global using System.Globalization;
+global using System.Threading.Tasks;

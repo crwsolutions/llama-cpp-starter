@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/LlamaCppStarterApp/LlamaCppStarterApp.csproj" Id="b08d5bb9-9d4f-4577-88f6-45f74e9f8665">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>
