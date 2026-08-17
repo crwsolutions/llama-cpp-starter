@@ -11,9 +11,46 @@
     FlyoutWidth="260"
     FlyoutBackgroundColor="Black">
 
+    <!-- Flyout-items met FontAwesome6 Free Solid glyphs (huis, map, code, tandenwiel) -->
+    <Shell.ItemTemplate>
+        <DataTemplate x:DataType="FlyoutItem">
+            <Grid HeightRequest="44" ColumnDefinitions="Auto,*">
+                <Label Grid.Column="0"
+                       Text="{Binding Title, Converter={StaticResource TitleToGlyphConverter}}"
+                       FontFamily="FontAwesomeSolid"
+                       FontSize="16"
+                       TextColor="{OnPlatform Android={AppThemeBinding Light=#DE000000, Dark=White}, Default=White}"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       WidthRequest="54" />
+                <Label Grid.Column="1"
+                       Text="{Binding Title}"
+                       FontSize="14"
+                       TextColor="{OnPlatform Android={AppThemeBinding Light=#DE000000, Dark=White}, Default=White}"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center" />
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate views:MainPage}"
-        Route="MainPage" />
+        Title="Overzicht"
+        ContentTemplate="{DataTemplate views:OverviewPage}"
+        Route="OverviewPage" />
+
+    <ShellContent
+        Title="Modellen"
+        ContentTemplate="{DataTemplate views:ModelsPage}"
+        Route="ModelsPage" />
+
+    <ShellContent
+        Title="Runtimes"
+        ContentTemplate="{DataTemplate views:RuntimesPage}"
+        Route="RuntimesPage" />
+
+    <ShellContent
+        Title="Instellingen"
+        ContentTemplate="{DataTemplate views:SettingsPage}"
+        Route="SettingsPage" />
 
 </Shell>

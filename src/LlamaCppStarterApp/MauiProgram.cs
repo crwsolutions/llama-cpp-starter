@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui;
 using LlamaCppStarterApp.Repositories;
+using LlamaCppStarterApp.Services;
 using LlamaCppStarterApp.Views;
 using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
@@ -29,7 +30,16 @@ public static class MauiProgram
 #endif
 
         // Register repositories
-        builder.Services.AddSingleton<IPromptRepository, PromptRepository>();
+        builder.Services.AddSingleton<IModelRepository, ModelRepository>();
+        builder.Services.AddSingleton<IProfileRepository, ProfileRepository>();
+        builder.Services.AddSingleton<IRuntimeRepository, RuntimeRepository>();
+        builder.Services.AddSingleton<IAppSettingsRepository, AppSettingsRepository>();
+
+        // Register services
+        builder.Services.AddSingleton<ModelScannerService>();
+        builder.Services.AddSingleton<RuntimeScannerService>();
+        builder.Services.AddSingleton<LlamaServerProcessService>();
+        builder.Services.AddSingleton<ServerHealthService>();
 
         var app = builder.Build();
         Database.Initialize();

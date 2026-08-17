@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
+             xmlns:models="clr-namespace:LlamaCppStarterApp.Models"
+             x:DataType="vm:RuntimesViewModel"
+             x:Class="LlamaCppStarterApp.Views.RuntimesPage"
+             Title="Runtimes">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="20,16">
+
+        <!-- Topbar: Map kiezen + pad -->
+        <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0"
+                        Text="Map kiezen"
+                        SemanticProperties.Hint="Kies de map met lokale llama.cpp builds en scan direct"
+                        Command="{Binding ChooseFolderCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+                <Label Grid.Column="1"
+                       Text="{Binding Directory}"
+                       FontFamily="Consolas"
+                       FontSize="13"
+                       VerticalOptions="Center"
+                       LineBreakMode="CharacterWrap"
+                       Margin="12,0" />
+                <ActivityIndicator Grid.Column="2"
+                                   IsRunning="{Binding IsBusy}"
+                                   IsVisible="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"
+                                   VerticalOptions="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Sectie: Geïnstalleerde lokale builds -->
+        <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                    <BoxView Grid.Column="0"
+                             WidthRequest="4"
+                             HeightRequest="20"
+                             CornerRadius="2"
+                             BackgroundColor="{StaticResource Primary}"
+                             Margin="0,0,10,0"
+                             VerticalOptions="Center" />
+                    <Label Grid.Column="1"
+                           Text="Geïnstalleerde lokale builds"
+                           Style="{StaticResource SectionTitle}" />
+                </Grid>
+
+                <!-- Tabelkop -->
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="2*,Auto,Auto,3*,Auto"
+                      Margin="0,12,0,4">
+                    <Label Grid.Column="0" Text="Naam" Style="{StaticResource TableHeaderLabel}" />
+                    <Label Grid.Column="1" Text="Backend" Style="{StaticResource TableHeaderLabel}" />
+                    <Label Grid.Column="2" Text="Status" Style="{StaticResource TableHeaderLabel}" />
+                    <Label Grid.Column="3" Text="Locatie" Style="{StaticResource TableHeaderLabel}" />
+                    <Label Grid.Column="4" Text="Actie" Style="{StaticResource TableHeaderLabel}" HorizontalOptions="End" />
+                </Grid>
+
+                <CollectionView Grid.Row="2"
+                                ItemsSource="{Binding Runtimes}"
+                                VerticalScrollBarVisibility="Always">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Runtime">
+                            <Border Style="{StaticResource TableRowBorder}">
+                                <Grid ColumnDefinitions="2*,Auto,Auto,3*,Auto">
+                                    <Label Grid.Column="0"
+                                           Text="{Binding Name}"
+                                           Style="{StaticResource TableCell}"
+                                           FontAttributes="Bold" />
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Backend}"
+                                           Style="{StaticResource TableCell}" />
+                                    <Label Grid.Column="2"
+                                           Text="{Binding Status}"
+                                           Style="{StaticResource TableCell}" />
+                                    <Label Grid.Column="3"
+                                           Text="{Binding Location}"
+                                           Style="{StaticResource TableCell}"
+                                           FontFamily="Consolas"
+                                           FontSize="11" />
+                                    <Button Grid.Column="4"
+                                            Text="Delete"
+                                            Style="{StaticResource DangerButton}"
+                                            HorizontalOptions="End"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+
+        <!-- Statusregel -->
+        <Label Grid.Row="3"
+               Text="{Binding StatusText}"
+               Style="{StaticResource SectionSubtitle}"
+               Margin="4,10,0,0"
+               LineBreakMode="CharacterWrap" />
+    </Grid>
+</ContentPage>
