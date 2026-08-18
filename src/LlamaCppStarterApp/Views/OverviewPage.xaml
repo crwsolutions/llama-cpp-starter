@@ -99,6 +99,8 @@
 
                     <CollectionView Grid.Row="3"
                                     ItemsSource="{Binding Models}"
+                                    SelectionMode="Single"
+                                    SelectedItem="{Binding SelectedModel}"
                                     VerticalScrollBarVisibility="Always">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:Model">
@@ -169,7 +171,7 @@
             </Border>
         </Grid>
 
-        <!-- Opgeslagen modelvarianten -->
+        <!-- Laadprofielen (opstartprofielen per model) -->
         <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
             <Grid RowDefinitions="Auto,Auto,Auto,Auto" HeightRequest="170">
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
@@ -181,7 +183,7 @@
                              Margin="0,0,10,0"
                              VerticalOptions="Center" />
                     <Label Grid.Column="1"
-                           Text="Opgeslagen modelvarianten"
+                           Text="Laadprofielen"
                            Style="{StaticResource SectionTitle}" />
                     <Button Grid.Column="2"
                             Text="Add"
@@ -191,7 +193,7 @@
                             Command="{Binding AddProfileCommand}" />
                 </Grid>
                 <Label Grid.Row="1"
-                       Text="Laadbare allassen gemaakt uit startinstellingen."
+                       Text="Laadbare varianten van startinstellingen."
                        Style="{StaticResource SectionSubtitle}"
                        Margin="14,4,0,6" />
 

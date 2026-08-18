@@ -7,13 +7,13 @@ Type: Desktop applicatie (Windows)
 Navigatie: Linker zijbalk met 4 items (Overzicht, Modellen, Runtimes, Instellingen)
 
 ================================================================================
-SCHERM 1: OVERZICHT / LAAD-ONLAAD (START/STOP) PAGINA
+SCHERM 1: OVERZICHT / STATUS & MODEL-SELECTIE PAGINA
 ================================================================================
 
 Beschrijving:
-Het hoofdoverzichtsscherm. Dit is de landingpagina waar de gebruiker een model
-kies en kan starten/stoppen (laden/unloaden) via de runtime. Bevat ook
-opgeslagen modelvarianten (startprofielen).
+Het hoofdoverzichtsscherm. Dit is de landingpagina waar de gebruiker het 
+huidige modelstatus kan zien en snel een model kan laden/unloaden via de 
+bovenste balk. Toont kaarten met runtime-informatie en logs.
 
 LAYOUT:
 - Linker sidebar: 4 navigatie-items met iconen
@@ -23,95 +23,40 @@ LAYOUT:
   - Instellingen (tandenwiel-icoon)
 
 - Bovenste balk:
-  - Modelnaam dropdown: "Modelnaam / Qwen3.6 32B UD Q5 K X..." (geselecteerd model)
+  - Modelnaam dropdown: "Qwen3.6 27B UD Q5 K XL" (geselecteerd model)
   - Startprofiel dropdown: "Default"
-  - Runtime dropdown: "llama.cpp llama-local-build Native Cuda"
-  - Modelnaap label + pad: "E:\llama.cpp\models"
   - Twee knoppen rechts: "Laden" (primair) en "unload" (secundair)
 
-- Middelste kolom (Modelstatus):
-  - Titel: "Modelbestanden"
-  - Subtitel: "Fysieke GGUF-bestanden die zijn gevonden in de modelfolder of geïmporteerd van een andere map."
-  - Tabel met kolommen:
-    - Naam (modelnaam)
-    - Kwantificatie (bv. Q5_K_XL, Q4_K_XS, Q4_K_M, Q4_K_P, Q5_K_S)
-    - Grootte (bv. 18,7 GB, 14 GB, 21,1 GB, 20,8 GB, 24,8 GB, 21,8 GB, 21,3 GB, 23 GB, 22,3 GB)
-    - Hardware (bv. "No loaded model", "MTP-token Inactive")
-    - Map openen (knop "Open Folder")
-    - Verwijderen (knop "Delete")
-  - Voorbeelddata:
-    - Qwen3.6 32B UD Q5 K X L | Q5_K_XL | 18,7 GB | No loaded model
-    - Qwen3.6 27B Uncensored HauhauCS Aggr... | Q4_K_XS | 14 GB
-    - Qwen3.6 35B A3B UD Q4 K M | Q4_K_M | 21,1 GB | MTP-token Inactive
-    - Qwen3.6 35B A3B UD Q4 K X L | Q4_K_XL | 20,8 GB
-    - Qwen3.6 35B A3B UD Q5 K X L | Q5_K_XL | 24,8 GB
-    - Qwen3.6 35B A3B Uncensored HauhauCS... | Q4_K_P | 21,8 GB
-    - Qwen3.8 27B Q6 K | Q6_K | 21,3 GB
-    - Qwopus3.6 35B A3B V1 Q5 K M | Q5_K_M | 23 GB
-    - Qwopus3.6 35B A3B V1 Q5 K S | Q5_K_S | 22,3 GB
+- Middenbereik (Kaarten):
+  - Kaart 1 (Modelstatus):
+    - Titel: "Modelstatus"
+    - Inhoud: "Stopped Qwen3.6 27B UD Q5 K XL"
 
-  - Onder de tabel: "Live runtime-logboek"
-    - Status tekst: "No runtime is loaded for the selected model." (waarschuwing)
+  - Kaart 2 (Hardware):
+    - Titel: "Hardware"
+    - Inhoud: "No loaded model"
 
-- Onderaan (Opgeslagen modelvarianten):
-  - Subtitel: "Laadbare allassen gemaakt uit startinstellingen."
-  - Knop: "Add"
-  - Tabel met kolommen: Naam, Basismodel, Poort, Verwijderen
-  - Voorbeelddata:
-    - Default | Qwen3.6 27B UD Q5 K X L | 8081
+  - Kaart 3 (Stats):
+    - Titel: "Stats"
+    - Inhoud: "Active 0/1 | Queued 0"
+    -         "Busy/decode: 0, 0"
 
-- Rechtermiddel (Runtime configuratie / Startinstellingen):
-  - Runtime dropdown: "llama.cpp llama-local-build Native Cuda"
-  - Poort veld: "8081"
-  - Name veld: "Second profile" (editabel)
-  - Subtitel: "Arch: qwen35 | Quant: Q5_K_X L | Context: 63436 | Batch: unknown | Vision: mmproj fou..."
-  - Status: "Busy/decode 0, 0"
-  - Knop rechtsboven: "Gevarensoerde instellingen" (danger-zone knop)
+  - Kaart 4 (Tokens):
+    - Titel: "Tokens"
+    - Inhoud: "No runtime"
 
-  - Sectie "Basisstart":
-    - Contextgrootte: "131072"
-    - KV-cache: "Used Unknown"
-    - Threads: "0"
-    - GPU-lagen: "999"
-    - Capacity: "Unknown"
-    - GPU mode: dropdown "auto"
+  - Kaart 5 (MTP-tokens):
+    - Titel: "MTP-tokens"
+    - Inhoud: "Inactive"
 
-  - Sectie "Prestaties & Geheugen":
-    - Batchgrootte: "4096"
-    - Microbatch: "512"
-    - Flash attention: dropdown "auto"
-    - K-cache: dropdown "q8_0"
-    - V-cache: dropdown "q8_0"
+  - Kaart 6 (KV-cache):
+    - Titel: "KV-cache"
+    - Inhoud: "Used Unknown"
+    -         "Capacity Unknown"
 
-  - Sectie "Speculatie / MTP":
-    - Spec-type: dropdown "none"
-    - Conceptmodel: dropdown "Speculatief conceptmo..."
-    - MTP-head: dropdown "MTP-head automatisch"
-    - Concept-K-cache: dropdown "q8_0"
-    - Concept-V-cache: dropdown "q8_0"
-    - Concept-max: "0"
-    - Concept-min: "0"
-
-  - Sectie "Chat- en modelmogelijkheden":
-    - Redeneren: dropdown "auto"
-    - Redeneerformaat: dropdown "auto"
-    - Reasoning effort: dropdown "default"
-    - Redeneerbudget: "-1"
-    - Jinja-chat: dropdown "auto"
-    - Vision: dropdown "auto"
-    - Vision-head: dropdown "Auto-detect vision hea..."
-    - Afbeelding-min: "0"
-    - Afbeelding-max: "0"
-
-  - Sectie "Standaardwaarden generatie":
-    - Temperatuur: "0,65"
-    - Top K: "40"
-    - Top P: "0,95"
-    - Min P: "0,05"
-
-  - Sectie "Runtime Command":
-    - Tekst: "Exact generated command. Append flags at the end, then apply them to matching settings."
-    - (waarschijnlijk een tekstveld hieronder, afgekapt in screenshot)
+- Onderaan (Live runtime-logboek):
+  - Titel: "Live runtime-logboek"
+  - Status tekst: "No runtime is loaded for the selected model."
 
 TECHNISCHE NOTITIES — DATA BRONNEN PER CARD
 --------------------------------------------------------------------------------
@@ -133,9 +78,6 @@ Bron: Lokale systeem probes (GpuStatusProbeService + RuntimeGpuSummaryApplicatio
 
 - Gebruikt systeemcommando's (niet de llama-server gateway!)
 - Voor NVIDIA: nvidia-smi --query-gpu=... --format=csv,noheader,nounits
-- Voor AMD: rocm-smi of ROCm JSON output
-- Voor Intel Arc: sycl-ls of clinfo
-- Voor CPU temperatuur: wmic (Windows) of sensors (Linux)
 - Resultaat wordt gecached in GpuSummaryCache
 
 ### 3. Slots (bv. "Active 0/1, Queued 0, Busy/decode 1,0")

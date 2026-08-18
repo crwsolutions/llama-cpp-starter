@@ -22,11 +22,14 @@ public partial class ProfileParameters : ObservableObject
         "ngram-simple", "ngram-map-k", "ngram-map-k4v", "ngram-mod", "ngram-cache"
     };
 
+    public static readonly IReadOnlyList<string> RopeScalingValues = new[] { "none", "linear", "yarn" };
+
     // Optielijsten voor de pickers, inclusief "(default)" = vlag niet doorgeven
     public static readonly IReadOnlyList<string> SplitModeOptions = new[] { DefaultPlaceholder }.Concat(SplitModes).ToArray();
     public static readonly IReadOnlyList<string> FlashAttnOptions = new[] { DefaultPlaceholder }.Concat(FlashAttnValues).ToArray();
     public static readonly IReadOnlyList<string> CacheTypeOptions = new[] { DefaultPlaceholder }.Concat(CacheTypes).ToArray();
     public static readonly IReadOnlyList<string> SpecTypeOptions = new[] { DefaultPlaceholder }.Concat(SpecTypes).ToArray();
+    public static readonly IReadOnlyList<string> RopeScalingOptions = new[] { DefaultPlaceholder }.Concat(RopeScalingValues).ToArray();
 
     // --- Basisstart ---
 
@@ -92,6 +95,22 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial string? CacheTypeV { get; set; }
 
+    /// <summary>--rope-scaling {none,linear,yarn}</summary>
+    [ObservableProperty]
+    public partial string? RopeScaling { get; set; }
+
+    /// <summary>--rope-scale N</summary>
+    [ObservableProperty]
+    public partial int? RopeScale { get; set; }
+
+    /// <summary>--rope-freq-base N</summary>
+    [ObservableProperty]
+    public partial int? RopeFreqBase { get; set; }
+
+    /// <summary>--rope-freq-scale N</summary>
+    [ObservableProperty]
+    public partial int? RopeFreqScale { get; set; }
+
     // --- Speculatie / MTP ---
 
     /// <summary>--spec-type</summary>
@@ -101,6 +120,19 @@ public partial class ProfileParameters : ObservableObject
     /// <summary>--spec-draft-n-max</summary>
     [ObservableProperty]
     public partial int? SpecDraftNMax { get; set; }
+
+    /// <summary>
+    /// Draft-model override voor --spec-draft-model. Null = auto-resolutie op het moment van laden
+    /// (companion-bestand in de modelmap; embedded MTP → geen flag); leeg/expliciet pad wint.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? SpecDraftPath { get; set; }
+
+    // --- Prompt cache ---
+
+    /// <summary>--cache-prompt (true = aan, false = --no-cache-prompt, null = niet meegeven)</summary>
+    [ObservableProperty]
+    public partial bool? CachePrompt { get; set; }
 
     // --- Vision ---
 
@@ -150,7 +182,58 @@ public partial class ProfileParameters : ObservableObject
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public string ToJson() => JsonSerializer.Serialize(this, JsonOptions);
+    /// <summary>
+    /// App-globale defaults (exacte waarden = referentie-opdracht uit het core-plan,
+    /// incl. spec-type + vision-waarden). Seed voor elk nieuw Default-profiel;
+    /// opgeslagen als AppSettings-rij `GlobalLaunchDefaults` (JSON-blob).
+    /// </summary>
+    public static ProfileParameters GlobalLaunchDefaults
+    {
+        get
+        {
+            if (_globalLaunchDefaults is null)
+            {
+                var defaults = new ProfileParameters
+                {
+                    CtxSize = 192144,
+                    SplitMode = "layer",
+                    Ngl = "999",
+                    BatchSize = 256,
+                    UbatchSize = 256,
+                    Threads = 8,
+                    Temperature = 1.0,
+                    TopP = 0.95,
+                    TopK = 20,
+                    MinP = 0.00,
+                    FlashAttn = "on",
+                    TensorSplit = "24,8",
+                    CacheTypeK = "q8_0",
+                    CacheTypeV = "q8_0",
+                    Parallel = 1,
+                    PresencePenalty = 0.0,
+                    RepeatPenalty = 1.0,
+                    Jinja = true,
+                    Keep = 1024,
+                    CtxCheckpoints = 128,
+                    SpecType = "draft-mtp",
+                    SpecDraftNMax = 4,
+                    ImageMinTokens = 1024
+                };
+                _globalLaunchDefaults = defaults;
+            }
+            return _globalLaunchDefaults;
+        }
+    }
+
+    private static ProfileParameters? _globalLaunchDefaults;
+
+    /// <summary>JSON van <see cref="GlobalLaunchDefaults"/> (seed voor AppSettings-rij GlobalLaunchDefaults).</summary>
+    public static string GlobalLaunchDefaultsJson() => GlobalLaunchDefaults.ToJson();
+
+    // Let op: het concrete type expliciet megeven. `this`/de generic-variant lost een
+    // partial class op op het gedeclareerde type, waardoor de source-generated properties
+    // (de [ObservableProperty]-velden) NIET (de)serialiseerd werden → lege profielen.
+    public string ToJson() => JsonSerializer.Serialize(this, typeof(ProfileParameters), JsonOptions);
 
     public static ProfileParameters FromJson(string? json)
     {
@@ -192,6 +275,24 @@ public partial class ProfileParameters : ObservableObject
             return false;
         }
     }
+
+    /// <summary>
+    /// True als er geen enkele parameter expliciet is ingevuld (alle velden null; Jinja staat
+    /// op zijn class-default true). Gebruikt om leeg-geseede Default-profielen te herkennen.
+    /// </summary>
+    public bool IsEmpty() =>
+        CtxSize is null && SplitMode is null && Ngl is null && TensorSplit is null
+        && Threads is null && HostBind is null && NoHost is null && Parallel is null
+        && Keep is null && CtxCheckpoints is null
+        && BatchSize is null && UbatchSize is null && FlashAttn is null
+        && CacheTypeK is null && CacheTypeV is null
+        && RopeScaling is null && RopeScale is null && RopeFreqBase is null && RopeFreqScale is null
+        && SpecType is null && SpecDraftNMax is null && SpecDraftPath is null
+        && CachePrompt is null
+        && MmprojPath is null && ImageMinTokens is null
+        && Temperature is null && TopP is null && TopK is null && MinP is null
+        && PresencePenalty is null && RepeatPenalty is null
+        && Jinja is not false;
 
     /// <summary>
     /// Effectieve mmproj-pad: profiel-override (null = auto-gekoppelde mmproj van het model;

@@ -42,7 +42,7 @@
         <!-- Midden: links tabellen, rechts Startinstellingen -->
         <Grid Grid.Row="1" ColumnDefinitions="*,440" Margin="0,12,0,0" ColumnSpacing="12">
 
-            <!-- Linkerkolom: Modelbestanden + Opgeslagen modelvarianten -->
+            <!-- Linkerkolom: Modelbestanden + Laadprofielen -->
             <Grid Grid.Column="0" RowDefinitions="*,Auto" RowSpacing="12">
 
                 <!-- Modelbestanden -->
@@ -77,6 +77,8 @@
 
                         <CollectionView Grid.Row="3"
                                         ItemsSource="{Binding Models}"
+                                        SelectionMode="Single"
+                                        SelectedItem="{Binding SelectedModel}"
                                         VerticalScrollBarVisibility="Always">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="models:Model">
@@ -113,7 +115,7 @@
                     </Grid>
                 </Border>
 
-                <!-- Opgeslagen modelvarianten -->
+                <!-- Laadprofielen (opstartprofielen per model) -->
                 <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
                     <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
@@ -125,7 +127,7 @@
                                      Margin="0,0,10,0"
                                      VerticalOptions="Center" />
                             <Label Grid.Column="1"
-                                   Text="Opgeslagen modelvarianten"
+                                   Text="Laadprofielen"
                                    Style="{StaticResource SectionTitle}" />
                             <Button Grid.Column="2"
                                     Text="Add"
@@ -135,7 +137,7 @@
                                     Command="{Binding AddProfileCommand}" />
                         </Grid>
                         <Label Grid.Row="1"
-                               Text="Laadbare allassen gemaakt uit startinstellingen."
+                               Text="Laadbare varianten van startinstellingen."
                                Style="{StaticResource SectionSubtitle}"
                                Margin="14,4,0,8" />
 
@@ -150,6 +152,8 @@
 
                         <CollectionView Grid.Row="3"
                                         ItemsSource="{Binding Profiles}"
+                                        SelectionMode="Single"
+                                        SelectedItem="{Binding SelectedProfile}"
                                         VerticalScrollBarVisibility="Always">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="models:Profile">
@@ -182,268 +186,300 @@
                 </Border>
             </Grid>
 
-            <!-- Rechtkolom: Startinstellingen (editabel, direct gebonden aan de geselecteerde ProfileParameters) -->
+            <!-- Rechtkolom: Startinstellingen (editabel, direct gebonden aan de geselecteerde ProfileParameters).
+                 Metadata (boven) en Opslaan/Verwijderen (onder) blijven vast; het formulier daartussen scrolt. -->
             <Border Grid.Column="1" Style="{StaticResource PanelBorder}">
-                <ScrollView VerticalScrollBarVisibility="Default">
-                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                <Grid RowDefinitions="Auto,*,Auto">
+
+                    <!-- Boven: Metadata (capability-chips) — altijd zichtbaar -->
+                    <Grid Grid.Row="0"
+                          IsVisible="{Binding SelectedModelCapabilitySummaryText, Converter={StaticResource StringToVisibilityConverter}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0"
+                               Text="Metadata"
+                               Style="{StaticResource SectionTitle}"
+                               FontSize="13" />
+                        <Label Grid.Row="1"
+                               Text="{Binding SelectedModelCapabilitySummaryText}"
+                               FontSize="13"
+                               LineBreakMode="CharacterWrap"
+                               Margin="14,4,0,8" />
+                    </Grid>
+
+                    <!-- Midden (scrolt): Naam/Poort + parametersecties + Runtime Command -->
+                    <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Default">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
 
-                        <!-- Kop: Naam + Poort -->
-                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                            <Entry Grid.Column="0"
-                                   Text="{Binding SelectedProfile.Name, Mode=TwoWay}"
-                                   Style="{StaticResource FieldEntry}"
-                                   Placeholder="Profielnaam" />
-                            <Entry Grid.Column="1"
-                                   WidthRequest="80"
-                                   Text="{Binding SelectedProfile.Port, Converter={StaticResource IntNullableConverter}}"
-                                   Style="{StaticResource FieldEntry}"
-                                   Placeholder="Poort" />
-                        </Grid>
+                            <!-- Kop: Naam + Poort -->
+                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Entry Grid.Column="0"
+                                       Text="{Binding SelectedProfile.Name, Mode=TwoWay}"
+                                       Style="{StaticResource FieldEntry}"
+                                       Placeholder="Profielnaam"
+                                       IsEnabled="{Binding SelectedProfile.IsDefault, Converter={StaticResource InvertedBoolConverter}}" />
+                                <Entry Grid.Column="1"
+                                       WidthRequest="80"
+                                       Text="{Binding SelectedProfile.Port, Converter={StaticResource IntNullableConverter}}"
+                                       Style="{StaticResource FieldEntry}"
+                                       Placeholder="Poort" />
+                            </Grid>
 
-                        <!-- Basisstart -->
-                        <Grid Grid.Row="1" Margin="0,14,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                            <!-- Basisstart -->
+                            <Grid Grid.Row="1" Margin="0,14,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Basisstart" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Basisstart" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                            <Label Grid.Row="1" Grid.Column="0" Text="Contextgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="1" Grid.Column="1"
+                                <Label Grid.Row="1" Grid.Column="0" Text="Contextgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="1" Grid.Column="1"
                                   Text="{Binding CurrentParameters.CtxSize, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="2" Grid.Column="0" Text="GPU mode" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Picker Grid.Row="2" Grid.Column="1"
+                                <Label Grid.Row="2" Grid.Column="0" Text="GPU mode" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="2" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.SplitModeOptions}"
                                    SelectedItem="{Binding CurrentParameters.SplitMode, Converter={StaticResource PickerDefaultConverter}}"
                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="3" Grid.Column="0" Text="GPU-lagen" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="3" Grid.Column="1"
+                                <Label Grid.Row="3" Grid.Column="0" Text="GPU-lagen" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="3" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Ngl}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="bv. 999, auto of all" />
 
-                            <Label Grid.Row="4" Grid.Column="0" Text="Tensor split" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="4" Grid.Column="1"
+                                <Label Grid.Row="4" Grid.Column="0" Text="Tensor split" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="4" Grid.Column="1"
                                   Text="{Binding CurrentParameters.TensorSplit}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="bv. 24,8" />
 
-                            <Label Grid.Row="5" Grid.Column="0" Text="Threads" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="5" Grid.Column="1"
+                                <Label Grid.Row="5" Grid.Column="0" Text="Threads" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="5" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Threads, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="6" Grid.Column="0" Text="Host bind" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="6" Grid.Column="1"
+                                <Label Grid.Row="6" Grid.Column="0" Text="Host bind" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="6" Grid.Column="1"
                                   Text="{Binding CurrentParameters.HostBind}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="0.0.0.0" />
 
-                            <Label Grid.Row="7" Grid.Column="0" Text="No host" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <CheckBox Grid.Row="7" Grid.Column="1"
+                                <Label Grid.Row="7" Grid.Column="0" Text="No host" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <CheckBox Grid.Row="7" Grid.Column="1"
                                       IsChecked="{Binding CurrentParameters.NoHost, Converter={StaticResource BoolNullableConverter}}"
                                       VerticalOptions="Center" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="8" Grid.Column="0" Text="Parallel (slots)" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="8" Grid.Column="1"
+                                <Label Grid.Row="8" Grid.Column="0" Text="Parallel (slots)" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="8" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Parallel, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="9" Grid.Column="0" Text="Keep" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="9" Grid.Column="1"
+                                <Label Grid.Row="9" Grid.Column="0" Text="Keep" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="9" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Keep, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="10" Grid.Column="0" Text="Ctx checkpoints" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="10" Grid.Column="1"
+                                <Label Grid.Row="10" Grid.Column="0" Text="Ctx checkpoints" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="10" Grid.Column="1"
                                   Text="{Binding CurrentParameters.CtxCheckpoints, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
-                        </Grid>
+                            </Grid>
 
-                        <!-- Prestaties & Geheugen -->
-                        <Grid Grid.Row="2" Margin="0,14,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                            <!-- Prestaties & Geheugen -->
+                            <Grid Grid.Row="2" Margin="0,14,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Prestaties &amp; Geheugen" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Prestaties &amp; Geheugen" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                            <Label Grid.Row="1" Grid.Column="0" Text="Batchgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="1" Grid.Column="1"
+                                <Label Grid.Row="1" Grid.Column="0" Text="Batchgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="1" Grid.Column="1"
                                   Text="{Binding CurrentParameters.BatchSize, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="2" Grid.Column="0" Text="Microbatch" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="2" Grid.Column="1"
+                                <Label Grid.Row="2" Grid.Column="0" Text="Microbatch" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="2" Grid.Column="1"
                                   Text="{Binding CurrentParameters.UbatchSize, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="3" Grid.Column="0" Text="Flash attention" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Picker Grid.Row="3" Grid.Column="1"
+                                <Label Grid.Row="3" Grid.Column="0" Text="Flash attention" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="3" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.FlashAttnOptions}"
                                    SelectedItem="{Binding CurrentParameters.FlashAttn, Converter={StaticResource PickerDefaultConverter}}"
                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="4" Grid.Column="0" Text="K-cache" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Picker Grid.Row="4" Grid.Column="1"
+                                <Label Grid.Row="4" Grid.Column="0" Text="K-cache" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="4" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.CacheTypeOptions}"
                                    SelectedItem="{Binding CurrentParameters.CacheTypeK, Converter={StaticResource PickerDefaultConverter}}"
                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="5" Grid.Column="0" Text="V-cache" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Picker Grid.Row="5" Grid.Column="1"
+                                <Label Grid.Row="5" Grid.Column="0" Text="V-cache" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="5" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.CacheTypeOptions}"
                                    SelectedItem="{Binding CurrentParameters.CacheTypeV, Converter={StaticResource PickerDefaultConverter}}"
                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
-                        </Grid>
+                            </Grid>
 
-                        <!-- Speculatie / MTP -->
-                        <Grid Grid.Row="3" Margin="0,14,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                            <!-- Speculatie / MTP -->
+                            <Grid Grid.Row="3" Margin="0,14,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Speculatie / MTP" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Speculatie / MTP" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                            <Label Grid.Row="1" Grid.Column="0" Text="Spec-type" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Picker Grid.Row="1" Grid.Column="1"
+                                <Label Grid.Row="1" Grid.Column="0" Text="Spec-type" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="1" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.SpecTypeOptions}"
                                    SelectedItem="{Binding CurrentParameters.SpecType, Converter={StaticResource PickerDefaultConverter}}"
                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="2" Grid.Column="0" Text="Spec draft n-max" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="2" Grid.Column="1"
+                                <Label Grid.Row="2" Grid.Column="0" Text="Spec draft n-max" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="2" Grid.Column="1"
                                   Text="{Binding CurrentParameters.SpecDraftNMax, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
-                        </Grid>
+                            </Grid>
 
-                        <!-- Vision -->
-                        <Grid Grid.Row="4" Margin="0,14,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                            <!-- Vision (alleen zichtbaar bij LikelyVision van het geselecteerde model) -->
+                            <Grid Grid.Row="4" Margin="0,14,0,0"
+                              IsVisible="{Binding SelectedModelHasVision, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Vision" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Vision" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                            <Label Grid.Row="1" Grid.Column="0" Text="MM-projector" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="1" Grid.Column="1"
+                                <Label Grid.Row="1" Grid.Column="0" Text="MM-projector" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="1" Grid.Column="1"
                                   Text="{Binding CurrentParameters.MmprojPath}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="auto (null) of leeg = uit" />
 
-                            <Label Grid.Row="2" Grid.Column="0" Text="Afbeelding-min" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="2" Grid.Column="1"
+                                <Label Grid.Row="2" Grid.Column="0" Text="Afbeelding-min" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="2" Grid.Column="1"
                                   Text="{Binding CurrentParameters.ImageMinTokens, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
-                        </Grid>
+                            </Grid>
 
-                        <!-- Standaardwaarden generatie -->
-                        <Grid Grid.Row="5" Margin="0,14,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                            <!-- Standaardwaarden generatie -->
+                            <Grid Grid.Row="5" Margin="0,14,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Standaardwaarden generatie" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Standaardwaarden generatie" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                            <Label Grid.Row="1" Grid.Column="0" Text="Temperatuur" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="1" Grid.Column="1"
+                                <Label Grid.Row="1" Grid.Column="0" Text="Temperatuur" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="1" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Temperature, Converter={StaticResource DoubleNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="2" Grid.Column="0" Text="Top K" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="2" Grid.Column="1"
+                                <Label Grid.Row="2" Grid.Column="0" Text="Top K" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="2" Grid.Column="1"
                                   Text="{Binding CurrentParameters.TopK, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="3" Grid.Column="0" Text="Top P" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="3" Grid.Column="1"
+                                <Label Grid.Row="3" Grid.Column="0" Text="Top P" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="3" Grid.Column="1"
                                   Text="{Binding CurrentParameters.TopP, Converter={StaticResource DoubleNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="4" Grid.Column="0" Text="Min P" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="4" Grid.Column="1"
+                                <Label Grid.Row="4" Grid.Column="0" Text="Min P" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="4" Grid.Column="1"
                                   Text="{Binding CurrentParameters.MinP, Converter={StaticResource DoubleNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="5" Grid.Column="0" Text="Presence penalty" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="5" Grid.Column="1"
+                                <Label Grid.Row="5" Grid.Column="0" Text="Presence penalty" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="5" Grid.Column="1"
                                   Text="{Binding CurrentParameters.PresencePenalty, Converter={StaticResource DoubleNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="6" Grid.Column="0" Text="Repeat penalty" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <Entry Grid.Row="6" Grid.Column="1"
+                                <Label Grid.Row="6" Grid.Column="0" Text="Repeat penalty" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="6" Grid.Column="1"
                                   Text="{Binding CurrentParameters.RepeatPenalty, Converter={StaticResource DoubleNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                            <Label Grid.Row="7" Grid.Column="0" Text="Jinja-chat" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                            <CheckBox Grid.Row="7" Grid.Column="1"
+                                <Label Grid.Row="7" Grid.Column="0" Text="Jinja-chat" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <CheckBox Grid.Row="7" Grid.Column="1"
                                       IsChecked="{Binding CurrentParameters.Jinja, Converter={StaticResource BoolNullableConverter}}"
                                       VerticalOptions="Center" Margin="0,0,0,4" />
-                        </Grid>
+                            </Grid>
 
-                        <!-- Runtime Command (read-only preview) -->
-                        <Grid Grid.Row="6" Margin="0,14,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Label Grid.Row="0"
+                            <!-- Runtime Command (read-only preview) -->
+                            <Grid Grid.Row="6" Margin="0,14,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                            </Grid>
+
+                        </Grid>
+                    </ScrollView>
+
+                    <!-- Onder: Opslaan / Verwijderen — altijd zichtbaar -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="8" Margin="0,8,0,0" RowDefinitions="auto,auto,auto"
+                          IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
+                                <Label Grid.Row="0"
                                    Text="Runtime Command"
                                    Style="{StaticResource SectionTitle}"
                                    FontSize="15"
                                    Margin="0,0,0,8" />
-                            <Editor Grid.Row="1"
+                                <Editor Grid.Row="1" Grid.ColumnSpan="2"
                                     Text="{Binding CommandPreview, Mode=OneWay}"
                                     IsReadOnly="True"
                                     FontFamily="Consolas"
@@ -451,24 +487,19 @@
                                     AutoSize="TextChanges"
                                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}"
                                     TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
-                        </Grid>
-
-                        <!-- Opslaan / Verwijderen -->
-                        <Grid Grid.Row="7" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,16,0,0">
-                            <Button Grid.Column="0"
-                                    Text="Opslaan"
-                                    SemanticProperties.Hint="Sla de startinstellingen op als JSON-blob"
-                                    Command="{Binding SaveProfileCommand}" />
-                            <Button Grid.Column="1"
-                                    Text="Verwijderen"
-                                    Style="{StaticResource DangerButton}"
-                                    MinimumHeightRequest="44"
-                                    IsEnabled="{Binding SelectedProfile.IsDefault, Converter={StaticResource InvertedBoolConverter}}"
-                                    SemanticProperties.Hint="Verwijder het geselecteerde profiel (Default kan niet)"
-                                    Command="{Binding DeleteProfileCommand}" />
-                        </Grid>
+                        <Button Grid.Column="0" Grid.Row="2"
+                                Text="Opslaan"
+                                SemanticProperties.Hint="Sla de startinstellingen op als JSON-blob"
+                                Command="{Binding SaveProfileCommand}" />
+                        <Button Grid.Column="1" Grid.Row="2"
+                                Text="Verwijderen"
+                                Style="{StaticResource DangerButton}"
+                                MinimumHeightRequest="44"
+                                IsEnabled="{Binding SelectedProfile.IsDefault, Converter={StaticResource InvertedBoolConverter}}"
+                                SemanticProperties.Hint="Verwijder het geselecteerde profiel (Default kan niet)"
+                                Command="{Binding DeleteProfileCommand}" />
                     </Grid>
-                </ScrollView>
+                </Grid>
             </Border>
         </Grid>
 

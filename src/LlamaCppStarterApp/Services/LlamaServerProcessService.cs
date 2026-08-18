@@ -106,7 +106,9 @@ public class LlamaServerProcessService
                 return false;
             }
 
-            var args = LlamaServerCommandBuilder.BuildArgs(runtime, model, parameters, port);
+            // --spec-draft-model-resolutie op het moment van laden (pure static; embedded MTP → null).
+            var draftModelPath = ModelCompanionService.ResolveDraftModelPath(model.Path, parameters.SpecType, parameters.SpecDraftPath);
+            var args = LlamaServerCommandBuilder.BuildArgs(runtime, model, parameters, port, draftModelPath);
 
             var startInfo = new ProcessStartInfo
             {

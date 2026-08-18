@@ -16,21 +16,21 @@ public partial class ProfileRepository : IProfileRepository
     public async Task<List<Profile>> GetAllAsync()
     {
         using var connection = new SqliteConnection($"Data Source={_dbPath}");
-        const string sql = "SELECT Id, Name, ModelId, IsDefault, Port, Params FROM Profiles ORDER BY Name";
+        const string sql = "SELECT Id, Name, ModelId, IsDefault, Port, ParamsJson FROM Profiles ORDER BY Name";
         return (await connection.QueryAsync<Profile>(sql)).ToList();
     }
 
     public async Task<List<Profile>> GetByModelAsync(int modelId)
     {
         using var connection = new SqliteConnection($"Data Source={_dbPath}");
-        const string sql = "SELECT Id, Name, ModelId, IsDefault, Port, Params FROM Profiles WHERE ModelId = @ModelId ORDER BY Name";
+        const string sql = "SELECT Id, Name, ModelId, IsDefault, Port, ParamsJson FROM Profiles WHERE ModelId = @ModelId ORDER BY Name";
         return (await connection.QueryAsync<Profile>(sql, new { ModelId = modelId })).ToList();
     }
 
     public async Task<Profile?> GetByIdAsync(int id)
     {
         using var connection = new SqliteConnection($"Data Source={_dbPath}");
-        const string sql = "SELECT Id, Name, ModelId, IsDefault, Port, Params FROM Profiles WHERE Id = @Id";
+        const string sql = "SELECT Id, Name, ModelId, IsDefault, Port, ParamsJson FROM Profiles WHERE Id = @Id";
         return await connection.QueryFirstOrDefaultAsync<Profile>(sql, new { Id = id });
     }
 
@@ -42,8 +42,8 @@ public partial class ProfileRepository : IProfileRepository
         if (profile.Id == 0)
         {
             const string insertSql = """
-                INSERT INTO Profiles (Name, ModelId, IsDefault, Port, Params)
-                VALUES (@Name, @ModelId, @IsDefault, @Port, @Params);
+                INSERT INTO Profiles (Name, ModelId, IsDefault, Port, ParamsJson)
+                VALUES (@Name, @ModelId, @IsDefault, @Port, @ParamsJson);
                 SELECT last_insert_rowid();
                 """;
             profile.Id = await connection.ExecuteScalarAsync<int>(insertSql, profile);
@@ -52,7 +52,7 @@ public partial class ProfileRepository : IProfileRepository
         {
             const string updateSql = """
                 UPDATE Profiles
-                SET Name = @Name, ModelId = @ModelId, IsDefault = @IsDefault, Port = @Port, Params = @Params
+                SET Name = @Name, ModelId = @ModelId, IsDefault = @IsDefault, Port = @Port, ParamsJson = @ParamsJson
                 WHERE Id = @Id;
                 """;
             await connection.ExecuteAsync(updateSql, profile);

@@ -8,7 +8,11 @@ namespace LlamaCppStarterApp.Services;
 /// </summary>
 public static class LlamaServerCommandBuilder
 {
-    public static string[] BuildArgs(Runtime? runtime, Model model, ProfileParameters p, int port)
+    /// <summary>
+    /// <paramref name="draftModelPath"/> = opgelost --spec-draft-model-pad
+    /// (via ModelCompanionService.ResolveDraftModelPath; null = geen flag, bv. embedded MTP).
+    /// </summary>
+    public static string[] BuildArgs(Runtime? runtime, Model model, ProfileParameters p, int port, string? draftModelPath)
     {
         var args = new List<string>();
 
@@ -119,6 +123,31 @@ public static class LlamaServerCommandBuilder
             args.Add(p.CacheTypeV);
         }
 
+        // --rope-* (na de cache-types)
+        if (!string.IsNullOrWhiteSpace(p.RopeScaling))
+        {
+            args.Add("--rope-scaling");
+            args.Add(p.RopeScaling);
+        }
+
+        if (p.RopeScale is not null)
+        {
+            args.Add("--rope-scale");
+            args.Add(p.RopeScale.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        if (p.RopeFreqBase is not null)
+        {
+            args.Add("--rope-freq-base");
+            args.Add(p.RopeFreqBase.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        if (p.RopeFreqScale is not null)
+        {
+            args.Add("--rope-freq-scale");
+            args.Add(p.RopeFreqScale.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
         if (p.Parallel is not null)
         {
             args.Add("--parallel");
@@ -155,6 +184,12 @@ public static class LlamaServerCommandBuilder
             args.Add(p.CtxCheckpoints.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
+        // --cache-prompt (true = aan, false = --no-cache-prompt, null = niet meegeven)
+        if (p.CachePrompt is not null)
+        {
+            args.Add(p.CachePrompt.Value ? "--cache-prompt" : "--no-cache-prompt");
+        }
+
         if (!string.IsNullOrWhiteSpace(p.SpecType))
         {
             args.Add("--spec-type");
@@ -165,6 +200,13 @@ public static class LlamaServerCommandBuilder
         {
             args.Add("--spec-draft-n-max");
             args.Add(p.SpecDraftNMax.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        // --spec-draft-model (alleen indien opgelost pad niet-witruimte; null = bv. embedded MTP)
+        if (!string.IsNullOrWhiteSpace(draftModelPath))
+        {
+            args.Add("--spec-draft-model");
+            args.Add(Quote(draftModelPath));
         }
 
         if (p.ImageMinTokens is not null)

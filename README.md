@@ -5,7 +5,7 @@
 ## Wat de app doet
 
 - **Runtimes** — kies een map met lokale llama.cpp-builds; de app scant recursief op `llama-server.exe`, detecteert de backend (Cuda/Vulkan/Rocm/Metal/CPU) en onthoudt de runtimes in een lokale SQLite-DB.
-- **Modellen** — scant een modelfolder op GGUF-bestanden (naam, kwantificatie, grootte; `*mmproj*.gguf` wordt automatisch gekoppeld). Per model beheer je opstartprofielen: alle `llama-server`-startparameters in één editor-paneel met live command-preview. Profielen worden als JSON-blob opgeslagen; elk nieuw model krijgt een `Default`-profiel (niet te verwijderen).
+- **Modellen** — scant een modelfolder op GGUF-bestanden (PascalCase-naam, kwantificatie uit de bestandsnaam of GGUF-metadata, grootte; `*mmproj*.gguf` wordt automatisch gekoppeld; projector/draft/MTP-companionbestanden worden uit de modellijst gehouden). Elk model krijgt GGUF-metadata (JSON-blob in de DB) en bij selectie een capability-samenvatting (architectuur, contextlengte, chat template, vision, MoE, …) — gecachet als JSON-blob bij het model en herlezen zodra het bestand wijzigt. Modellen zijn single-selectbaar; daaronder staan de **Laadprofielen** per model. Per model beheer je opstartprofielen: alle `llama-server`-startparameters in één editor-paneel met live command-preview (incl. auto-resolutie van `--spec-draft-model`, embedded MTP inbegrepen). Profielen worden als JSON-blob opgeslagen; elk nieuw model krijgt een `Default`-profiel met de app-globale defaults (niet te hernoemen/verwijderen).
 - **Overzicht** — kies model + startprofiel + runtime en klik **Laden** om de server te starten (live logboek + health-polling op `/health`). **Unload** stopt de server eerst via `POST /exit`, wacht max 30 s en killt anders het procesboom. Bij het afsluiten van de app wordt een draaiende server gestopt.
 - **Instellingen** — placeholder (nog te doen). Map-instellingen worden intern al gepersisteerd.
 
@@ -14,9 +14,10 @@
 MVVM (CommunityToolkit.MVVM) met Repository/Services-laag:
 
 ```
-Models/        : Model, Profile, ProfileParameters, Runtime, LlamaServerState
-Repositories/  : IModelRepository, IProfileRepository, IRuntimeRepository, IAppSettingsRepository (Dapper + SQLite)
-Services/      : ModelScannerService, RuntimeScannerService, LlamaServerCommandBuilder (pure static),
+Models/        : Model (ModelId + MetadataJson + CapabilitiesJson), Profile, ProfileParameters, Runtime, LlamaServerState
+Repositories/  : IModelRepository, IProfileRepository, IRuntimeRepository, IAppSettingsRepository (Dapper + SQLite, user_version 2)
+Services/      : GgufMetadataReader, ModelCompanionService, ModelCapabilityService (pure static),
+                 ModelScannerService, RuntimeScannerService, LlamaServerCommandBuilder (pure static),
                  LlamaServerProcessService (singleton), ServerHealthService
 ViewModels/    : OverviewViewModel, ModelsViewModel, RuntimesViewModel, SettingsViewModel
 Views/         : OverviewPage, ModelsPage, RuntimesPage, SettingsPage (Shell-flyout)

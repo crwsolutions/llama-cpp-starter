@@ -1,10 +1,10 @@
 namespace LlamaCppStarterApp.Converters;
 
-/// <summary>null → Collapsed, anders → Visible.</summary>
+/// <summary>null → false, anders → true (voedt IsVisible; dat is een bool).</summary>
 public class NullToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is null ? Visibility.Collapsed : Visibility.Visible;
+        value is not null;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -12,11 +12,11 @@ public class NullToVisibilityConverter : IValueConverter
     }
 }
 
-/// <summary>true → Visible, false → Collapsed.</summary>
+/// <summary>true → true, false/null → false (voedt IsVisible; dat is een bool).</summary>
 public class BoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is true ? Visibility.Visible : Visibility.Collapsed;
+        value is true;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -24,11 +24,11 @@ public class BoolToVisibilityConverter : IValueConverter
     }
 }
 
-/// <summary>true → Collapsed, false → Visible.</summary>
+/// <summary>true → false, false/null → true (voedt IsVisible; dat is een bool).</summary>
 public class InverseBoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is true ? Visibility.Collapsed : Visibility.Visible;
+        value is not true;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -44,4 +44,16 @@ public class BoolNullableConverter : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         value is true;
+}
+
+/// <summary>Niet-lege string → true, null/leeg → false (voedt IsVisible; dat is een bool).</summary>
+public class StringToVisibilityConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        !string.IsNullOrEmpty(value as string);
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
 }

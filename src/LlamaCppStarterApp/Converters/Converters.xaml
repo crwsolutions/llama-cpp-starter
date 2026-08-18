@@ -10,6 +10,7 @@
     <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
     <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+    <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
     <converters:BoolNullableConverter x:Key="BoolNullableConverter" />
     <converters:TitleToGlyphConverter x:Key="TitleToGlyphConverter" />
     <converters:IntNullableConverter x:Key="IntNullableConverter" />

@@ -1,4 +1,5 @@
 using CommunityToolkit.Maui.Storage;
+using LlamaCppStarterApp.Services;
 using Microsoft.Data.Sqlite;
 
 namespace LlamaCppStarterApp.Repositories;
@@ -7,7 +8,7 @@ internal static class Database
 {
     internal static string DbPath { get; private set; } = default!;
 
-    internal const int CurrentUserVersion = 1;
+    internal const int CurrentUserVersion = 2;
 
     internal static void Initialize()
     {
@@ -31,12 +32,23 @@ internal static class Database
 
         var userVersion = GetInt(connection, "PRAGMA user_version");
 
-        // 0 → 1: nieuwe tabellen voor modellen/profielen/runtimes/settings
+        // 0 → 2: nieuwe tabellen voor modellen/profielen/runtimes/settings.
+        // CreateCoreTables/SeedSettings maken direct het volledige v2-schema
+        // (incl. ModelId/MetadataJson/CapabilitiesJson + GlobalLaunchDefaults) → één stap.
         if (userVersion < 1)
         {
             CreateCoreTables(connection);
             SeedSettings(connection);
-            SetUserVersion(connection, 1);
+            SetUserVersion(connection, CurrentUserVersion);
+            return;
+        }
+
+        // 1 → 2: modelmetadata + capabilities (ModelId/MetadataJson/CapabilitiesJson)
+        //         + app-globale launch-defaults als AppSettings-rij
+        if (userVersion < 2)
+        {
+            MigrateToVersion2(connection);
+            SetUserVersion(connection, 2);
         }
     }
 
@@ -50,6 +62,65 @@ internal static class Database
         SetUserVersion(connection, CurrentUserVersion);
     }
 
+    /// <summary>
+    /// Migratie 1 → 2: drie nieuwe kolommen op Models + backfill van ModelId (deterministisch
+    /// uit Path) + uniek index; seedt AppSettings-rij GlobalLaunchDefaults (INSERT OR IGNORE).
+    /// Niet-destructief en idempotent; bestaande data blijft onaangetast.
+    /// </summary>
+    private static void MigrateToVersion2(SqliteConnection connection)
+    {
+        using (var command = new SqliteCommand(
+            """
+            ALTER TABLE Models ADD COLUMN ModelId TEXT NOT NULL DEFAULT '';
+            ALTER TABLE Models ADD COLUMN MetadataJson TEXT;
+            ALTER TABLE Models ADD COLUMN CapabilitiesJson TEXT;
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_Models_ModelId ON Models(ModelId);
+            """, connection))
+        {
+            command.ExecuteNonQuery();
+        }
+
+        // Backfill: deterministisch ModelId per rij (zelfde formule als de scanner),
+        // met de geconfigureerde ModelsDirectory als scope-root.
+        var modelsRoot = GetSettingValue(connection, "ModelsDirectory");
+        using (var select = new SqliteCommand("SELECT Id, Path FROM Models WHERE ModelId = ''", connection))
+        using (var update = new SqliteCommand("UPDATE Models SET ModelId = @ModelId WHERE Id = @Id"))
+        using (var exists = new SqliteCommand("SELECT COUNT(1) FROM Models WHERE ModelId = @ModelId AND Id <> @Id"))
+        {
+            var rows = new List<(int Id, string ModelId)>();
+            using var reader = select.ExecuteReader();
+            while (reader.Read())
+            {
+                var path = reader.GetString(1);
+                var scopeRoot = string.IsNullOrEmpty(modelsRoot)
+                    ? Path.GetDirectoryName(path) ?? path
+                    : modelsRoot;
+                rows.Add((reader.GetInt32(0), ModelCompanionService.ModelIdForPath(scopeRoot, path)));
+            }
+
+            foreach (var (id, modelId) in rows)
+            {
+                // Unieke index: nooit dubbel schrijven (kan niet voorbestaan, maar dan liever overslaan).
+                exists.Parameters.AddWithValue("@ModelId", modelId);
+                exists.Parameters.AddWithValue("@Id", id);
+                if ((int)exists.ExecuteScalar()! > 0) continue;
+
+                update.Parameters.AddWithValue("@ModelId", modelId);
+                update.Parameters.AddWithValue("@Id", id);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        SeedSettings(connection);
+    }
+
+    private static string? GetSettingValue(SqliteConnection connection, string key)
+    {
+        using var command = new SqliteCommand("SELECT Value FROM AppSettings WHERE Key = @Key", connection);
+        command.Parameters.AddWithValue("@Key", key);
+        return command.ExecuteScalar() as string;
+    }
+
     private static void CreateCoreTables(SqliteConnection connection)
     {
         using var command = new SqliteCommand(
@@ -61,8 +132,13 @@ internal static class Database
             Quant TEXT,
             SizeBytes INTEGER,
             MmprojPath TEXT NULL,
-            ScannedAt INTEGER
+            ScannedAt INTEGER,
+            ModelId TEXT NOT NULL DEFAULT '',
+            MetadataJson TEXT,
+            CapabilitiesJson TEXT
             );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_Models_ModelId ON Models(ModelId);
 
             CREATE TABLE IF NOT EXISTS Profiles (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +146,7 @@ internal static class Database
             ModelId INTEGER NOT NULL REFERENCES Models(Id) ON DELETE CASCADE,
             IsDefault INTEGER NOT NULL DEFAULT 0,
             Port INTEGER NOT NULL DEFAULT 8080,
-            Params TEXT NOT NULL
+            ParamsJson TEXT NOT NULL
             );
 
             CREATE UNIQUE INDEX IF NOT EXISTS IX_Profiles_Name_ModelId ON Profiles (Name, ModelId);
@@ -97,11 +173,15 @@ internal static class Database
 
     private static void SeedSettings(SqliteConnection connection)
     {
+        // GlobalLaunchDefaults = app-globale defaults (exacte referentie-opdracht) als JSON-blob;
+        // INSERT OR IGNORE → bestaande waarde blijft onaangetast (niet-destructief).
         using var command = new SqliteCommand(
-            """
+            $"""
             INSERT OR IGNORE INTO AppSettings (Key, Value) VALUES ('ModelsDirectory', 'E:\\llama.cpp\\models');
             INSERT OR IGNORE INTO AppSettings (Key, Value) VALUES ('RuntimeDirectory', 'E:\\llama.cpp\\llama-local-build');
+            INSERT OR IGNORE INTO AppSettings (Key, Value) VALUES ('GlobalLaunchDefaults', @GlobalLaunchDefaults);
             """, connection);
+        command.Parameters.AddWithValue("@GlobalLaunchDefaults", Models.ProfileParameters.GlobalLaunchDefaultsJson());
         command.ExecuteNonQuery();
     }
 

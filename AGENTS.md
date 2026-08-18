@@ -19,18 +19,29 @@ MVVM met Repository/Services-laag. ViewModels roepen services; repos doen puur S
 
 ```
 src/LlamaCppStarterApp/
-  Models/        : Model, Profile, ProfileParameters, Runtime, LlamaServerState
+  Models/        : Model (Id int PK + ModelId deterministisch string, MetadataJson, CapabilitiesJson),
+                   Profile, ProfileParameters, Runtime, LlamaServerState
                    ProfileParameters = ObservableObject met nullable velden;
                    dubbel gebruik: editor-model (paneel) én JSON-blob (Params-kolom).
                    Null/leeg = vlag niet doorgeven (llama.cpp-default).
-  Repositories/  : Database (user_version-migratie 0→1), IModelRepository,
+                   GlobalLaunchDefaults = app-globale defaults (referentie-opdracht) als statische property + JSON.
+  Repositories/  : Database (user_version-migratie 0→2), IModelRepository,
                    IProfileRepository, IRuntimeRepository, IAppSettingsRepository (Dapper)
-  Services/      : ModelScannerService (GGUF-scan, quant/mmproj-detectie),
+  Services/      : GgufMetadataReader (pure static; binair GGUF-kop lezen; elke fout → leeg dict),
+                   ModelCompanionService (pure static; projector/draft/MTP-naammarkers,
+                   FamilyVersion/ParameterSize-match, ResolveDraftModelPath incl. embedded MTP,
+                   ModelIdForPath/FriendlyName/InferQuant),
+                   ModelCapabilityService (pure static; 11-veldensamenvatting + SummaryText-chips,
+                   Fingerprint + TryReadCached/BuildCacheJson voor de DB-cache-blob),
+                   ModelScannerService (GGUF-scan reparse-skip, companion-uitsluiting,
+                   MetadataJson met 9 velden, Default-profiel-seeding vanuit GlobalLaunchDefaults),
                    RuntimeScannerService (llama-server.exe-scan, backend-heuristiek),
                    LlamaServerCommandBuilder (pure static; volgorde = referentie-opdracht;
+                   + --rope-*, --cache-prompt, --spec-draft-model (draftModelPath-argument);
                    pad met spaties quoten),
                    LlamaServerProcessService (singleton; één current server; Load/Unload:
-                   POST /exit → max 30 s wachten → Kill(entireProcessTree)),
+                   POST /exit → max 30 s wachten → Kill(entireProcessTree);
+                   LoadAsync lost --spec-draft-model op via ModelCompanionService),
                    ServerHealthService (poll /health elke 2 s terwijl Starting/Running)
   ViewModels/    : BaseViewModel, OverviewViewModel, ModelsViewModel,
                    RuntimesViewModel, SettingsViewModel
@@ -43,8 +54,12 @@ src/LlamaCppStarterApp/
 Kernmechanismen:
 
 - **Database**: `llamacppstarter_data.db` in `FileSystem.AppDataDirectory`. Migraties alleen voorwaarts via `PRAGMA user_version`; nieuwe tabellen/colomms toevoegen = nieuwe versiestap in `Database.Migrate()`.
-- **Profielen**: `ProfileParameters` serialiseert naar één JSON-blob in `Profiles.Params` (voorwaarts-compatibel; nieuwe velden kosten geen migratie). Corrupte blob → `ProfileParameters.TryParse` → fallback leeg profiel + melding in UI (móét niet crashen).
-- **Command-constructie**: `LlamaServerCommandBuilder.BuildArgs` is pure static en reproduceert de referentie-opdracht uit het plan (vlag-volgorde en double-formattering per veld, bv. `--temp 1.0`, `--min-p 0.00`). Wijzigingen hier handmatig verifiëren (geen test-project).
+- **GGUF-metadata**: `GgufMetadataReader.TryRead` leest de GGUF-kop binair (alleen-lezen, geen dependency); elke fout → leeg dictionary. De scan slaat een metadata-JSON op (`Model.MetadataJson`, exact 9 velden: sourceFolder, modelFile, quant, registeredAt, ggufMetadataAvailable, ggufArchitecture, ggufQuantization, ggufContextLength (>0 alleen), ggufHasChatTemplate).
+- **Capabilities**: `ModelCapabilityService` (pure static) inspecteert per selectie (niet bij scan) → 11-veldensamenvatting + `SummaryText`-chips. Cache = JSON-blob in `Model.CapabilitiesJson` (fingerprint op path/size/lastwrite + projector; `TryReadCached` → miss/stale = her-inspecteren, daarna `UpdateCapabilityAsync(ModelId, …)` opslaan).
+- **Companions**: `ModelCompanionService` (pure static) uitsluit projector/draft/MTP-bestanden bij de scan en lost `--spec-draft-model` op (configured-pad wint; `draft-mtp` + embedded MTP = `nextn_predict_layers > 0` in hoofdmiddel → geen flag). Resolutie zit in `LlamaServerProcessService.LoadAsync` én `ModelsViewModel.UpdateCommandPreview` (zelfde pure static call → preview = echte load).
+- **GlobalLaunchDefaults**: app-globale defaults (exacte referentie-opdracht) als `AppSettings`-rij `GlobalLaunchDefaults` (JSON van `ProfileParameters`, gemigreerd/gedeeld met `ProfileParameters.GlobalLaunchDefaults`); de scanner seedt elk nieuw Default-profiel met deze waarde.
+- **Profielen**: `ProfileParameters` serialiseert naar één JSON-blob in `Profiles.Params` (voorwaarts-compatibel; nieuwe velden kosten geen migratie). Corrupte blob → `ProfileParameters.TryParse` → fallback leeg profiel + melding in UI (móét niet crashen). Default-profiel is niet te hernoemen (naam-Entry disabled + `SaveProfileAsync`-guard) en niet te verwijderen.
+- **Command-constructie**: `LlamaServerCommandBuilder.BuildArgs` is pure static en reproduceert de referentie-opdracht uit het plan (vlag-volgorde en double-formattering per veld, bv. `--temp 1.0`, `--min-p 0.00`); nieuwe vlaggen: `--rope-*` (na `--cache-type-v`), `--cache-prompt`/`--no-cache-prompt` (na `--ctx-checkpoints`), `--spec-draft-model` (na `--spec-draft-n-max`). Wijzigingen hier handmatig verifiëren (geen test-project).
 - **Procesbeheer**: process-events naar UI marshalen via `MainThread.BeginInvokeOnMainThread` (AppendOutput-patroon, log-buffer max ~2000 regels). App-uitgang: `Window.Destroying` → `LlamaServerProcessService.UnloadAsync()` (geen weestprocessen).
 - **Map-instellingen**: `ModelsDirectory`/`RuntimeDirectory` in `AppSettings`-tabel; scan-schermen lezen/schrijven ze (niet hard-coden).
 - **Navigatie**: Shell-routes `OverviewPage`, `ModelsPage`, `RuntimesPage`, `SettingsPage`; Overzicht → Modellen voor "Add"-profiel via `ModelsViewModel.PendingNewProfileModelId` + `Shell.Current.GoToAsync`.

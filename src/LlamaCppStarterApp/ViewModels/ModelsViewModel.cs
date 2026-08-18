@@ -16,6 +16,7 @@ public partial class ModelsViewModel : BaseViewModel
     private readonly IAppSettingsRepository _appSettings;
 
     private bool _loaded;
+    private string? _selectedProfileOriginalName;
 
     public ModelsViewModel(
         IModelRepository modelRepository,
@@ -56,6 +57,14 @@ public partial class ModelsViewModel : BaseViewModel
     [ObservableProperty]
     public partial string CommandPreview { get; set; } = string.Empty;
 
+    /// <summary>Capability-chips (metadata-samenvatting) van het geselecteerde model; leeg = nog niet geselecteerd.</summary>
+    [ObservableProperty]
+    public partial string SelectedModelCapabilitySummaryText { get; set; } = string.Empty;
+
+    /// <summary>True als het geselecteerde model (waarschijnlijk) vision-capable is → Vision-sectie zichtbaar.</summary>
+    [ObservableProperty]
+    public partial bool SelectedModelHasVision { get; set; }
+
     /// <summary>Door Overzicht ("Add") gezet: nieuw profiel aanmaken voor dit model na navigatie.</summary>
     public int? PendingNewProfileModelId { get; set; }
 
@@ -71,6 +80,7 @@ public partial class ModelsViewModel : BaseViewModel
                 Models = new ObservableCollection<Model>(await _modelRepository.GetAllAsync());
                 if (Models.Count > 0)
                 {
+                    // Triggert OnSelectedModelChanged → profielen + capabilities laden.
                     SelectedModel = Models[0];
                 }
             }
@@ -99,9 +109,14 @@ public partial class ModelsViewModel : BaseViewModel
         var target = prevModelId is int id ? Models.FirstOrDefault(m => m.Id == id) : null;
         SelectedModel = target ?? Models.FirstOrDefault();
         await LoadProfilesAsync();
+        await LoadCapabilityAsync();
     }
 
-    partial void OnSelectedModelChanged(Model? value) => _ = LoadProfilesAsync();
+    partial void OnSelectedModelChanged(Model? value)
+    {
+        _ = LoadProfilesAsync();
+        _ = LoadCapabilityAsync();
+    }
 
     private async Task LoadProfilesAsync()
     {
@@ -115,25 +130,10 @@ public partial class ModelsViewModel : BaseViewModel
 
         var prevProfileId = SelectedProfile?.Id;
         var profiles = (await _profileRepository.GetByModelAsync(model.Id)).ToList();
+
         foreach (var profile in profiles)
         {
             profile.ModelName = model.Name;
-        }
-
-        // Nieuw model zonder profiel → seed Default (port 8080, lege JSON)
-        if (profiles.All(p => !p.IsDefault))
-        {
-            var def = new Profile
-            {
-                Name = "Default",
-                ModelId = model.Id,
-                IsDefault = true,
-                Port = 8080,
-                ParamsJson = new ProfileParameters().ToJson()
-            };
-            def.ModelName = model.Name;
-            await _profileRepository.UpsertAsync(def);
-            profiles.Insert(0, def);
         }
 
         // Model is tijdens het laden gewisseld → resultaat negeren
@@ -148,14 +148,56 @@ public partial class ModelsViewModel : BaseViewModel
             ?? profiles.FirstOrDefault();
     }
 
+    /// <summary>
+    /// Capability van het geselecteerde model: DB-blob + fingerprint-check; bij miss/stale
+    /// draait Inspect in de achtergrond, daarna wordt de cache-blob opgeslagen.
+    /// </summary>
+    private async Task LoadCapabilityAsync()
+    {
+        var model = SelectedModel;
+        if (model is null)
+        {
+            SelectedModelCapabilitySummaryText = string.Empty;
+            SelectedModelHasVision = false;
+            return;
+        }
+
+        ModelCapabilitySummary? summary = null;
+        var summaryText = string.Empty;
+        if (ModelCapabilityService.TryReadCached(model, out var cached, out summaryText))
+        {
+            summary = cached;
+        }
+        else
+        {
+            var inspected = await Task.Run(() => ModelCapabilityService.Inspect(model));
+            // Model is tijdens de inspectie gewisseld → resultaat negeren
+            if (!ReferenceEquals(SelectedModel, model))
+            {
+                return;
+            }
+
+            summary = inspected;
+            summaryText = ModelCapabilityService.SummaryText(summary);
+            model.CapabilitiesJson = ModelCapabilityService.BuildCacheJson(model, summary, summaryText);
+            await _modelRepository.UpdateCapabilityAsync(model.ModelId, model.CapabilitiesJson);
+        }
+
+        SelectedModelCapabilitySummaryText = summaryText;
+        SelectedModelHasVision = summary.LikelyVision;
+    }
+
     partial void OnSelectedProfileChanged(Profile? value)
     {
         if (value is null)
         {
             CurrentParameters = null;
             CommandPreview = string.Empty;
+            _selectedProfileOriginalName = null;
             return;
         }
+
+        _selectedProfileOriginalName = value.Name;
 
         // Corrupte/oude blob → fallback naar leeg profiel + melding (crashen mag niet)
         ProfileParameters.TryParse(value.ParamsJson, out var parameters, out var error);
@@ -196,11 +238,13 @@ public partial class ModelsViewModel : BaseViewModel
             return;
         }
 
-        var args = LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, CurrentParameters, SelectedProfile.Port);
+        // Zelfde resolutie als de echte load (pure static) → preview toont exact wat wordt opgestart.
+        var draftModelPath = ModelCompanionService.ResolveDraftModelPath(SelectedModel.Path, CurrentParameters.SpecType, CurrentParameters.SpecDraftPath);
+        var args = LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, CurrentParameters, SelectedProfile.Port, draftModelPath);
         CommandPreview = LlamaServerCommandBuilder.BuildCommandLine(args);
     }
 
-    /// <summary>Modellenmap scannen (GGUF-bestanden) + Default-profielen seeden voor nieuwe modellen.</summary>
+    /// <summary>Modellenmap scannen (GGUF-bestanden; Default-profielen worden in de scanner geseed).</summary>
     [RelayCommand]
     private async Task ScanModelsAsync()
     {
@@ -216,26 +260,17 @@ public partial class ModelsViewModel : BaseViewModel
             var models = await _modelScanner.ScanAsync(FolderPath);
             Models = new ObservableCollection<Model>(models);
 
-            foreach (var model in models)
-            {
-                var profiles = await _profileRepository.GetByModelAsync(model.Id);
-                if (profiles.All(p => !p.IsDefault))
-                {
-                    await _profileRepository.UpsertAsync(new Profile
-                    {
-                        Name = "Default",
-                        ModelId = model.Id,
-                        IsDefault = true,
-                        Port = 8080,
-                        ParamsJson = new ProfileParameters().ToJson()
-                    });
-                }
-            }
-
             var prevId = SelectedModel?.Id;
             SelectedModel = (prevId is int id ? models.FirstOrDefault(m => m.Id == id) : null) ?? models.FirstOrDefault();
             await LoadProfilesAsync();
-            StatusText = $"{Models.Count} model(len) gevonden in {FolderPath}";
+            await LoadCapabilityAsync();
+
+            var status = $"{Models.Count} model(len) gevonden in {FolderPath}";
+            if (_modelScanner.SkippedCompanionCount > 0)
+            {
+                status += $" ({_modelScanner.SkippedCompanionCount} bestanden overgeslagen: projector/draft/MTP)";
+            }
+            StatusText = status;
         }
         catch (Exception ex)
         {
@@ -303,7 +338,7 @@ public partial class ModelsViewModel : BaseViewModel
         StatusText = $"Nieuw profiel '{name}' aangemaakt voor {SelectedModel.Name}.";
     }
 
-    /// <summary>Opslaan: ProfileParameters → JSON-blob → repo.</summary>
+    /// <summary>Opslaan: ProfileParameters → JSON-blob → repo. Hernoemen van het Default-profiel is geblokkeerd.</summary>
     [RelayCommand]
     private async Task SaveProfileAsync()
     {
@@ -319,8 +354,19 @@ public partial class ModelsViewModel : BaseViewModel
             return;
         }
 
+        if (SelectedProfile.IsDefault
+            && _selectedProfileOriginalName is not null
+            && !string.Equals(SelectedProfile.Name, _selectedProfileOriginalName, StringComparison.Ordinal))
+        {
+            // Naam ongedaan maken en geen opslag doen.
+            SelectedProfile.Name = _selectedProfileOriginalName;
+            StatusText = "Het Default-profiel kan niet worden gehernoemd.";
+            return;
+        }
+
         SelectedProfile.ParamsJson = CurrentParameters.ToJson();
         await _profileRepository.UpsertAsync(SelectedProfile);
+        _selectedProfileOriginalName = SelectedProfile.Name;
         StatusText = $"Profiel '{SelectedProfile.Name}' opgeslagen.";
     }
 
