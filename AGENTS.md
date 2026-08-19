@@ -9,9 +9,9 @@ Richtlijnen voor AI-agents die in dit repo werken.
 - een **runtime** kiest (lokale `llama-server.exe` build, gevonden via map-scan),
 - een **modelfolder** scant op GGUF-bestanden,
 - **opstartprofielen per model** beheert (alle `llama-server`-startparameters; `Default` per model is niet te verwijderen),
-- een model **laadt/unloadt** via het Overzicht-scherm (server-start, live logboek, health-polling op `/health`).
+- een model **laadt/unloadt** via het Overzicht-scherm (server-start, live logboek, health-polling op `/health`), waar het midden **6 status-kaarten** toont (Modelstatus, Hardware, Stats, Tokens, MTP-tokens, KV-cache; data-bronnen: lokaal status-state, nvidia-smi, `/slots`, `/metrics`).
 
-Scope-grenzen (bewust niet in deze iteratie): live metrics (tokens/s, KV-cache), GPU-probe (nvidia-smi), redeneren/vision-head velden, editabele runtime-command-editor, hardware-kolom, `--fit`-veld, Instellingen-content (placeholder). Zie `.alta/plans/2026-08-17-llama-cpp-starter-core.md` voor het volledige goedgekeurde plan.
+Scope-grenzen (bewust niet in deze iteratie): live metrics (tokens/s, KV-cache) en GPU-probe zijn in scope op het **Overzicht-scherm** (sinds 2026-08-19; GPU-probe = nvidia-smi alleen, geen AMD/Intel/CPU); op Scherm 2/3 niet. Buiten scope: redeneren/vision-head velden, editabele runtime-command-editor, hardware-kolom, `--fit`-veld, Instellingen-content (placeholder). Zie `.alta/plans/2026-08-17-llama-cpp-starter-core.md` voor het volledige goedgekeurde plan en `.alta/plans/2026-08-19-overzicht-status-kaarten.md` voor de status-kaarten-iteratie.
 
 ## Architectuur
 
@@ -24,6 +24,7 @@ src/LlamaCppStarterApp/
                    ProfileParameters = ObservableObject met nullable velden;
                    dubbel gebruik: editor-model (paneel) én JSON-blob (Params-kolom).
                    Null/leeg = vlag niet doorgeven (llama.cpp-default).
+                   EnableMetrics (bool? = true) = metrics endpoint (--metrics); oude blobs zonder key → true.
                    GlobalLaunchDefaults = app-globale defaults (referentie-opdracht) als statische property + JSON.
   Repositories/  : Database (user_version-migratie 0→2), IModelRepository,
                    IProfileRepository, IRuntimeRepository, IAppSettingsRepository (Dapper)
@@ -37,12 +38,23 @@ src/LlamaCppStarterApp/
                    MetadataJson met 9 velden, Default-profiel-seeding vanuit GlobalLaunchDefaults),
                    RuntimeScannerService (llama-server.exe-scan, backend-heuristiek),
                    LlamaServerCommandBuilder (pure static; volgorde = referentie-opdracht;
-                   + --rope-*, --cache-prompt, --spec-draft-model (draftModelPath-argument);
-                   pad met spaties quoten),
+                   + --rope-*, --cache-prompt, --spec-draft-model (draftModelPath-argument),
+                   --metrics (EnableMetrics is not false; default aan); pad met spaties quoten),
                    LlamaServerProcessService (singleton; één current server; Load/Unload:
                    POST /exit → max 30 s wachten → Kill(entireProcessTree);
-                   LoadAsync lost --spec-draft-model op via ModelCompanionService),
-                   ServerHealthService (poll /health elke 2 s terwijl Starting/Running)
+                   LoadAsync lost --spec-draft-model op via ModelCompanionService;
+                   LoadedSession record (Runtime, Model, Parameters, Port, ProcessId) als
+                   public Session, null bij stop),
+                   ServerHealthService (poll /health elke 2 s terwijl Starting/Running),
+                   RuntimeMetrics + RuntimeDashboardService (pure static; Prometheus-parsing,
+                   /slots-snapshot, kaart-labels → port uit het referentieproject),
+                   ModelRuntimeStatusTracker (Loading/Loaded/Fallback + Loading Time),
+                   GpuStatusProbeService + GpuStatusService + GpuSummaryCache (nvidia-smi-alleen;
+                   per-PID uuid-match + fallback; 10 s-cache),
+                   GpuSummaryService (Session null → "No loaded model", anders nvidia-smi),
+                   RuntimeMetricSummaryTracker (rates/totals/last-known per sessie-key),
+                   RuntimeMetricPollerService (poll /slots + /metrics elke 2 s; /metrics 501
+                   = niet ingeschakeld → leeg-lijst, géén fout-log; event MetricsUpdated)
   ViewModels/    : BaseViewModel, OverviewViewModel, ModelsViewModel,
                    RuntimesViewModel, SettingsViewModel
   Views/         : AppShell (4 ShellContents, FlyoutBehavior=Locked, glyph-itemtemplate),
@@ -59,10 +71,10 @@ Kernmechanismen:
 - **Companions**: `ModelCompanionService` (pure static) uitsluit projector/draft/MTP-bestanden bij de scan en lost `--spec-draft-model` op (configured-pad wint; `draft-mtp` + embedded MTP = `nextn_predict_layers > 0` in hoofdmiddel → geen flag). Resolutie zit in `LlamaServerProcessService.LoadAsync` én `ModelsViewModel.UpdateCommandPreview` (zelfde pure static call → preview = echte load).
 - **GlobalLaunchDefaults**: app-globale defaults (exacte referentie-opdracht) als `AppSettings`-rij `GlobalLaunchDefaults` (JSON van `ProfileParameters`, gemigreerd/gedeeld met `ProfileParameters.GlobalLaunchDefaults`); de scanner seedt elk nieuw Default-profiel met deze waarde.
 - **Profielen**: `ProfileParameters` serialiseert naar één JSON-blob in `Profiles.Params` (voorwaarts-compatibel; nieuwe velden kosten geen migratie). Corrupte blob → `ProfileParameters.TryParse` → fallback leeg profiel + melding in UI (móét niet crashen). Default-profiel is niet te hernoemen (naam-Entry disabled + `SaveProfileAsync`-guard) en niet te verwijderen.
-- **Command-constructie**: `LlamaServerCommandBuilder.BuildArgs` is pure static en reproduceert de referentie-opdracht uit het plan (vlag-volgorde en double-formattering per veld, bv. `--temp 1.0`, `--min-p 0.00`); nieuwe vlaggen: `--rope-*` (na `--cache-type-v`), `--cache-prompt`/`--no-cache-prompt` (na `--ctx-checkpoints`), `--spec-draft-model` (na `--spec-draft-n-max`). Wijzigingen hier handmatig verifiëren (geen test-project).
+- **Command-constructie**: `LlamaServerCommandBuilder.BuildArgs` is pure static en reproduceert de referentie-opdracht uit het plan (vlag-volgorde en double-formattering per veld, bv. `--temp 1.0`, `--min-p 0.00`); nieuwe vlaggen: `--rope-*` (na `--cache-type-v`), `--cache-prompt`/`--no-cache-prompt` (na `--ctx-checkpoints`), `--spec-draft-model` (na `--spec-draft-n-max`), `--metrics` (EnableMetrics is not false; default aan; na `--image-min-tokens`). Wijzigingen hier handmatig verifiëren (geen test-project).
 - **Procesbeheer**: process-events naar UI marshalen via `MainThread.BeginInvokeOnMainThread` (AppendOutput-patroon, log-buffer max ~2000 regels). App-uitgang: `Window.Destroying` → `LlamaServerProcessService.UnloadAsync()` (geen weestprocessen).
 - **Map-instellingen**: `ModelsDirectory`/`RuntimeDirectory` in `AppSettings`-tabel; scan-schermen lezen/schrijven ze (niet hard-coden).
-- **Navigatie**: Shell-routes `OverviewPage`, `ModelsPage`, `RuntimesPage`, `SettingsPage`; Overzicht → Modellen voor "Add"-profiel via `ModelsViewModel.PendingNewProfileModelId` + `Shell.Current.GoToAsync`.
+- **Navigatie**: Shell-routes `OverviewPage`, `ModelsPage`, `RuntimesPage`, `SettingsPage`.
 
 ## Techstack
 

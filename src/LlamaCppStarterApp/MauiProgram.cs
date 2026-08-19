@@ -41,6 +41,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<RuntimeScannerService>();
         builder.Services.AddSingleton<LlamaServerProcessService>();
         builder.Services.AddSingleton<ServerHealthService>();
+        builder.Services.AddSingleton<GpuStatusProbeService>();
+        builder.Services.AddSingleton<GpuSummaryCache>();
+        builder.Services.AddSingleton<GpuSummaryService>();
+        builder.Services.AddSingleton<RuntimeMetricSummaryTracker>();
+        builder.Services.AddSingleton<RuntimeMetricPollerService>();
 
         var app = builder.Build();
         Database.Initialize();

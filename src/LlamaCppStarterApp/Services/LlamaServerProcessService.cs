@@ -16,6 +16,13 @@ public class ServerStateChangedEventArgs : EventArgs
 }
 
 /// <summary>
+/// Sessie-informatie van de (laatst) geladen server: welke runtime/model/profiel-parametercombinatie
+/// draait op welk proces. Null = geen geladen server. Gebruikt door de Overzicht-kaarten
+/// (nvidia-smi-PID-match, /metrics-toggel, configured slots).
+/// </summary>
+public sealed record LoadedSession(Runtime Runtime, Model Model, ProfileParameters Parameters, int Port, int ProcessId);
+
+/// <summary>
 /// Beheert één "current server" (llama-server.exe proces).
 /// Load/Unload met best-effort POST /exit, max 30 s wachten, daarna Kill(entireProcessTree).
 /// </summary>
@@ -33,6 +40,7 @@ public class LlamaServerProcessService
     private string? _modelName;
     private string? _hostBind;
     private int _lastExitCode;
+    private LoadedSession? _session;
 
     public LlamaServerState State
     {
@@ -72,6 +80,20 @@ public class LlamaServerProcessService
             return _lastExitCode;
         }
         private set => _lastExitCode = value;
+    }
+
+    /// <summary>
+    /// Informatie over de geladen sessie (null = geen server geladen). Wordt bijgewerkt bij
+    /// LoadAsync en opgeborgen bij UnloadAsync én bij natuurlijke processtop (CheckAlive/wait-loop).
+    /// </summary>
+    public LoadedSession? Session
+    {
+        get
+        {
+            CheckAlive();
+            return _session;
+        }
+        private set => _session = value;
     }
 
     /// <summary>Log-regel uit stdout/stderr (stderr krijgt een "[stderr] " prefix).</summary>
@@ -154,6 +176,7 @@ public class LlamaServerProcessService
             Port = port;
             ModelName = model.Name;
             _hostBind = parameters.HostBind;
+            Session = new LoadedSession(runtime, model, parameters, port, process.Id);
             State = LlamaServerState.Starting;
 
             RaiseLog($"Opstarten: {LlamaServerCommandBuilder.BuildCommandLine(args)}");
@@ -170,6 +193,7 @@ public class LlamaServerProcessService
                         RaiseLog($"llama-server gestopt (exit code {_lastExitCode}).");
                         State = LlamaServerState.Idle;
                         _process = null;
+                        Session = null;
                     }
                 }
                 catch (ObjectDisposedException)
@@ -244,6 +268,7 @@ public class LlamaServerProcessService
             RaiseLog("Server gestopt.");
             State = LlamaServerState.Idle;
             _process = null;
+            Session = null;
             ModelName = null;
         }
         finally
@@ -290,6 +315,7 @@ public class LlamaServerProcessService
             RaiseLog($"llama-server gestopt (exit code {_lastExitCode}).");
             State = LlamaServerState.Idle;
             _process = null;
+            Session = null;
         }
     }
 

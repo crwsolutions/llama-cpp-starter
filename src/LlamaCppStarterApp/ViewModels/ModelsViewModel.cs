@@ -65,9 +65,6 @@ public partial class ModelsViewModel : BaseViewModel
     [ObservableProperty]
     public partial bool SelectedModelHasVision { get; set; }
 
-    /// <summary>Door Overzicht ("Add") gezet: nieuw profiel aanmaken voor dit model na navigatie.</summary>
-    public int? PendingNewProfileModelId { get; set; }
-
     internal async Task EnsureLoadedAsync()
     {
         if (!_loaded)
@@ -97,8 +94,6 @@ public partial class ModelsViewModel : BaseViewModel
         {
             await RefreshAsync();
         }
-
-        await HandlePendingNewProfileAsync();
     }
 
     internal async Task RefreshAsync()
@@ -432,29 +427,5 @@ public partial class ModelsViewModel : BaseViewModel
                 StatusText = $"Kon map niet openen: {ex.Message}";
             }
         }
-    }
-
-    private async Task HandlePendingNewProfileAsync()
-    {
-        if (PendingNewProfileModelId is not int modelId)
-        {
-            return;
-        }
-
-        PendingNewProfileModelId = null;
-
-        var model = Models.FirstOrDefault(m => m.Id == modelId) ?? Models.FirstOrDefault();
-        if (model is null)
-        {
-            return;
-        }
-
-        if (!ReferenceEquals(SelectedModel, model))
-        {
-            SelectedModel = model;
-        }
-
-        await LoadProfilesAsync();
-        await AddProfileCoreAsync();
     }
 }

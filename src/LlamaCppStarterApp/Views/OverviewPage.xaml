@@ -2,8 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
-             xmlns:models="clr-namespace:LlamaCppStarterApp.Models"
-             x:DataType="vm:OverviewViewModel"
+                          x:DataType="vm:OverviewViewModel"
              x:Class="LlamaCppStarterApp.Views.OverviewPage"
              Title="Overzicht">
 
@@ -64,12 +63,17 @@
             </Grid>
         </Border>
 
-        <!-- Midden: Modelbestanden + Live runtime-logboek -->
-        <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="0,12,0,0" RowSpacing="12">
+        <!-- Midden: 6 status-kaarten (3×2 raster; MAUI heeft geen UniformGrid → Grid *) -->
+        <Grid Grid.Row="1"
+              RowDefinitions="*,*"
+              ColumnDefinitions="*,*,*"
+              ColumnSpacing="12"
+              RowSpacing="12"
+              Margin="0,12,0,0">
 
-            <!-- Modelbestanden -->
-            <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
-                <Grid RowDefinitions="Auto,Auto,Auto,*">
+            <!-- Kaart 1: Modelstatus (lokaal status-state) -->
+            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource PanelBorder}">
+                <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
                         <BoxView Grid.Column="0"
                                  WidthRequest="4"
@@ -79,67 +83,21 @@
                                  Margin="0,0,10,0"
                                  VerticalOptions="Center" />
                         <Label Grid.Column="1"
-                               Text="Modelbestanden"
+                               Text="Modelstatus"
                                Style="{StaticResource SectionTitle}" />
                     </Grid>
                     <Label Grid.Row="1"
-                           Text="Fysieke GGUF-bestanden die zijn gevonden in de modelfolder of geïmporteerd van een andere map."
-                           Style="{StaticResource SectionSubtitle}"
-                           Margin="14,4,0,0" />
-
-                    <Grid Grid.Row="2"
-                          ColumnDefinitions="4*,Auto,Auto,Auto,Auto"
-                          Margin="0,12,0,4">
-                        <Label Grid.Column="0" Text="Naam" Style="{StaticResource TableHeaderLabel}" />
-                        <Label Grid.Column="1" Text="Kwantificatie" Style="{StaticResource TableHeaderLabel}" />
-                        <Label Grid.Column="2" Text="Grootte" Style="{StaticResource TableHeaderLabel}" />
-                        <Label Grid.Column="3" Text="Map openen" Style="{StaticResource TableHeaderLabel}" />
-                        <Label Grid.Column="4" Text="Verwijderen" Style="{StaticResource TableHeaderLabel}" />
-                    </Grid>
-
-                    <CollectionView Grid.Row="3"
-                                    ItemsSource="{Binding Models}"
-                                    SelectionMode="Single"
-                                    SelectedItem="{Binding SelectedModel}"
-                                    VerticalScrollBarVisibility="Always">
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:Model">
-                                <Border Style="{StaticResource TableRowBorder}">
-                                    <Grid ColumnDefinitions="4*,Auto,Auto,Auto,Auto">
-                                        <Label Grid.Column="0"
-                                               Text="{Binding Name}"
-                                               Style="{StaticResource TableCell}"
-                                               FontAttributes="Bold" />
-                                        <Label Grid.Column="1"
-                                               Text="{Binding Quant}"
-                                               Style="{StaticResource TableCell}"
-                                               Margin="8,0" />
-                                        <Label Grid.Column="2"
-                                               Text="{Binding SizeBytes, Converter={StaticResource SizeToGbConverter}}"
-                                               Style="{StaticResource TableCell}"
-                                               Margin="8,0" />
-                                        <Button Grid.Column="3"
-                                                Text="Open Folder"
-                                                Style="{StaticResource RowButton}"
-                                                Margin="8,0"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenFolderCommand}"
-                                                CommandParameter="{Binding .}" />
-                                        <Button Grid.Column="4"
-                                                Text="Delete"
-                                                Style="{StaticResource DangerButton}"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteModelCommand}"
-                                                CommandParameter="{Binding .}" />
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                           Text="{Binding ModelStatusText}"
+                           FontSize="13"
+                           LineBreakMode="CharacterWrap"
+                           VerticalOptions="Center"
+                           Margin="0,10,0,0" />
                 </Grid>
             </Border>
 
-            <!-- Live runtime-logboek -->
-            <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
-                <Grid RowDefinitions="Auto,Auto,Auto" HeightRequest="180">
+            <!-- Kaart 2: Hardware (nvidia-smi) -->
+            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource PanelBorder}">
+                <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
                         <BoxView Grid.Column="0"
                                  WidthRequest="4"
@@ -149,32 +107,123 @@
                                  Margin="0,0,10,0"
                                  VerticalOptions="Center" />
                         <Label Grid.Column="1"
-                               Text="Live runtime-logboek"
+                               Text="Hardware"
                                Style="{StaticResource SectionTitle}" />
                     </Grid>
                     <Label Grid.Row="1"
-                           Text="{Binding StatusText}"
-                           FontSize="12"
-                           FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
-                           Margin="14,6,0,0" />
-                    <Border Grid.Row="2"
-                            BackgroundColor="#1E1E1E"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 6"
-                            Margin="14,6,0,0">
-                        <ScrollView HeightRequest="90">
-                            <Label Text="{Binding LogText}" Style="{StaticResource LogLabel}" Padding="8" />
-                        </ScrollView>
-                    </Border>
+                           Text="{Binding HardwareText}"
+                           FontSize="13"
+                           LineBreakMode="CharacterWrap"
+                           VerticalOptions="Center"
+                           Margin="0,10,0,0" />
+                </Grid>
+            </Border>
+
+            <!-- Kaart 3: Stats (/slots) -->
+            <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource PanelBorder}">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                        <BoxView Grid.Column="0"
+                                 WidthRequest="4"
+                                 HeightRequest="20"
+                                 CornerRadius="2"
+                                 BackgroundColor="{StaticResource Primary}"
+                                 Margin="0,0,10,0"
+                                 VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="Stats"
+                               Style="{StaticResource SectionTitle}" />
+                    </Grid>
+                    <Label Grid.Row="1"
+                           Text="{Binding StatsText}"
+                           FontFamily="Consolas"
+                           FontSize="13"
+                           LineBreakMode="CharacterWrap"
+                           VerticalOptions="Center"
+                           Margin="0,10,0,0" />
+                </Grid>
+            </Border>
+
+            <!-- Kaart 4: Tokens (/metrics) -->
+            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource PanelBorder}">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                        <BoxView Grid.Column="0"
+                                 WidthRequest="4"
+                                 HeightRequest="20"
+                                 CornerRadius="2"
+                                 BackgroundColor="{StaticResource Primary}"
+                                 Margin="0,0,10,0"
+                                 VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="Tokens"
+                               Style="{StaticResource SectionTitle}" />
+                    </Grid>
+                    <Label Grid.Row="1"
+                           Text="{Binding TokensText}"
+                           FontFamily="Consolas"
+                           FontSize="13"
+                           LineBreakMode="CharacterWrap"
+                           VerticalOptions="Center"
+                           Margin="0,10,0,0" />
+                </Grid>
+            </Border>
+
+            <!-- Kaart 5: MTP-tokens (/metrics) -->
+            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource PanelBorder}">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                        <BoxView Grid.Column="0"
+                                 WidthRequest="4"
+                                 HeightRequest="20"
+                                 CornerRadius="2"
+                                 BackgroundColor="{StaticResource Primary}"
+                                 Margin="0,0,10,0"
+                                 VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="MTP-tokens"
+                               Style="{StaticResource SectionTitle}" />
+                    </Grid>
+                    <Label Grid.Row="1"
+                           Text="{Binding MtpTokensText}"
+                           FontFamily="Consolas"
+                           FontSize="13"
+                           LineBreakMode="CharacterWrap"
+                           VerticalOptions="Center"
+                           Margin="0,10,0,0" />
+                </Grid>
+            </Border>
+
+            <!-- Kaart 6: KV-cache (/metrics + /slots-fallback) -->
+            <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource PanelBorder}">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                        <BoxView Grid.Column="0"
+                                 WidthRequest="4"
+                                 HeightRequest="20"
+                                 CornerRadius="2"
+                                 BackgroundColor="{StaticResource Primary}"
+                                 Margin="0,0,10,0"
+                                 VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="KV-cache"
+                               Style="{StaticResource SectionTitle}" />
+                    </Grid>
+                    <Label Grid.Row="1"
+                           Text="{Binding KvCacheText}"
+                           FontFamily="Consolas"
+                           FontSize="13"
+                           LineBreakMode="CharacterWrap"
+                           VerticalOptions="Center"
+                           Margin="0,10,0,0" />
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- Laadprofielen (opstartprofielen per model) -->
+        <!-- Live runtime-logboek -->
         <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto" HeightRequest="170">
-                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+            <Grid RowDefinitions="Auto,Auto,Auto" HeightRequest="180">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
                     <BoxView Grid.Column="0"
                              WidthRequest="4"
                              HeightRequest="20"
@@ -183,57 +232,24 @@
                              Margin="0,0,10,0"
                              VerticalOptions="Center" />
                     <Label Grid.Column="1"
-                           Text="Laadprofielen"
+                           Text="Live runtime-logboek"
                            Style="{StaticResource SectionTitle}" />
-                    <Button Grid.Column="2"
-                            Text="Add"
-                            Style="{StaticResource RowButton}"
-                            VerticalOptions="Center"
-                            SemanticProperties.Hint="Nieuw profiel via het Modellen-scherm"
-                            Command="{Binding AddProfileCommand}" />
                 </Grid>
                 <Label Grid.Row="1"
-                       Text="Laadbare varianten van startinstellingen."
-                       Style="{StaticResource SectionSubtitle}"
-                       Margin="14,4,0,6" />
-
-                <Grid Grid.Row="2" ColumnDefinitions="2*,3*,Auto,Auto" Margin="0,0,0,4">
-                    <Label Grid.Column="0" Text="Naam" Style="{StaticResource TableHeaderLabel}" />
-                    <Label Grid.Column="1" Text="Basismodel" Style="{StaticResource TableHeaderLabel}" />
-                    <Label Grid.Column="2" Text="Poort" Style="{StaticResource TableHeaderLabel}" />
-                    <Label Grid.Column="3" Text="Verwijderen" Style="{StaticResource TableHeaderLabel}" />
-                </Grid>
-
-                <CollectionView Grid.Row="3"
-                                ItemsSource="{Binding Profiles}"
-                                VerticalScrollBarVisibility="Always">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:Profile">
-                            <Border Style="{StaticResource TableRowBorder}">
-                                <Grid ColumnDefinitions="2*,3*,Auto,Auto">
-                                    <Label Grid.Column="0"
-                                           Text="{Binding Name}"
-                                           Style="{StaticResource TableCell}"
-                                           FontAttributes="Bold" />
-                                    <Label Grid.Column="1"
-                                           Text="{Binding ModelName}"
-                                           Style="{StaticResource TableCell}"
-                                           Margin="8,0" />
-                                    <Label Grid.Column="2"
-                                           Text="{Binding Port}"
-                                           Style="{StaticResource TableCell}"
-                                           Margin="8,0" />
-                                    <Button Grid.Column="3"
-                                            Text="Delete"
-                                            Style="{StaticResource DangerButton}"
-                                            IsVisible="{Binding IsDefault, Converter={StaticResource InverseBoolToVisibilityConverter}}"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteProfileCommand}"
-                                            CommandParameter="{Binding .}" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                       Text="{Binding StatusText}"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
+                       Margin="14,6,0,0" />
+                <Border Grid.Row="2"
+                        BackgroundColor="#1E1E1E"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 6"
+                        Margin="14,6,0,0">
+                    <ScrollView HeightRequest="90">
+                        <Label Text="{Binding LogText}" Style="{StaticResource LogLabel}" Padding="8" />
+                    </ScrollView>
+                </Border>
             </Grid>
         </Border>
     </Grid>

@@ -11,9 +11,11 @@ SCHERM 1: OVERZICHT / STATUS & MODEL-SELECTIE PAGINA
 ================================================================================
 
 Beschrijving:
-Het hoofdoverzichtsscherm. Dit is de landingpagina waar de gebruiker het 
-huidige modelstatus kan zien en snel een model kan laden/unloaden via de 
-bovenste balk. Toont kaarten met runtime-informatie en logs.
+Het hoofdoverzichtsscherm. Dit is de landingpagina waar de gebruiker het
+huidige modelstatus kan zien en snel een model kan laden/unloaden via de
+bovenste balk. Het midden toont 6 status-kaarten met runtime-informatie;
+onderaan staat het live logboek. (Geen Modelbestanden/Laadprofielen-tabellen
+op deze pagina; die staan op SCHERM 2.)
 
 LAYOUT:
 - Linker sidebar: 4 navigatie-items met iconen
@@ -25,38 +27,54 @@ LAYOUT:
 - Bovenste balk:
   - Modelnaam dropdown: "Qwen3.6 27B UD Q5 K XL" (geselecteerd model)
   - Startprofiel dropdown: "Default"
+  - Runtime dropdown (geselecteerde runtime)
+  - "Modelmap:"-rij (gescande modelfolder)
   - Twee knoppen rechts: "Laden" (primair) en "unload" (secundair)
 
-- Middenbereik (Kaarten):
+- Middenbereik (Kaarten, 3×2 raster):
   - Kaart 1 (Modelstatus):
     - Titel: "Modelstatus"
-    - Inhoud: "Stopped Qwen3.6 27B UD Q5 K XL"
+    - Inhoud (idle): "Stopped Qwen3.6 27B UD Q5 K XL"
+    - Inhoud (laden): "Loading Qwen3.6 27B UD Q5 K XL" + "Loading Time: 34s"
+    - Inhoud (geladen): "Loaded Qwen3.6 27B UD Q5 K XL" + "Loading Time: 34s"
 
   - Kaart 2 (Hardware):
     - Titel: "Hardware"
-    - Inhoud: "No loaded model"
+    - Inhoud (idle): "No loaded model"
+    - Inhoud (geladen): GPU-rig per GPU van het llama-server-proces
+      (nvidia-smi; bv. "GPU 0: NVIDIA RTX 4090 | 94% | 58C | 21.3/24.0 GiB")
 
   - Kaart 3 (Stats):
     - Titel: "Stats"
-    - Inhoud: "Active 0/1 | Queued 0"
-    -         "Busy/decode: 0, 0"
+    - Inhoud (idle): "Active 0/1 | Queued 0"
+    -                "Busy/decode: 0, 0"
+    - Inhoud (geladen): live uit /slots
 
   - Kaart 4 (Tokens):
     - Titel: "Tokens"
-    - Inhoud: "No runtime"
+    - Inhoud (idle): "No runtime"
+    - Inhoud (geladen): rates + totals uit /metrics
+      (bv. "Generated: 102.0 t/s | Total generated: 4,096")
 
   - Kaart 5 (MTP-tokens):
     - Titel: "MTP-tokens"
-    - Inhoud: "Inactive"
+    - Inhoud (idle óf niet-speculatief): "Inactive"
+    - Inhoud (geladen + speculatie): MTP-rates uit /metrics
 
   - Kaart 6 (KV-cache):
     - Titel: "KV-cache"
-    - Inhoud: "Used Unknown"
-    -         "Capacity Unknown"
+    - Inhoud (idle): "Used Unknown"
+    -                "Capacity Unknown"
+    - Inhoud (geladen): live uit /metrics (+ /slots-fallback)
+      (bv. "Used 2.146 t | 1,6% | Capacity 131.072 t | automatic")
 
 - Onderaan (Live runtime-logboek):
   - Titel: "Live runtime-logboek"
   - Status tekst: "No runtime is loaded for the selected model."
+
+- Nieuw (2026-08-19): profiel-editor vinkvak "Metrics endpoint" (default aan)
+  → voegt --metrics toe aan de opstartopdracht (standaard uit bij
+  llama-server; nodig voor de Tokens/MTP-tokens/KV-cache-kaarten).
 
 TECHNISCHE NOTITIES — DATA BRONNEN PER CARD
 --------------------------------------------------------------------------------
@@ -72,19 +90,24 @@ Bron: Lokale application state (ModelRuntimeStatusTracker)
 - Drie staten: Loading, Loaded, Fallback
 - De "Loading Time" wordt berekend vanaf een interne timer (_loadingStartedAt)
 
-### 2. Hardware (GPU info, bv. kolom "Hardware" in de modeltabel)
+### 2. Hardware (GPU info)
 
-Bron: Lokale systeem probes (GpuStatusProbeService + RuntimeGpuSummaryApplicationService)
+Bron: Lokale systeem probe (GpuStatusProbeService + GpuSummaryService),
+ALLEEN nvidia-smi (gebruikersbeslissing 2026-08-19; geen AMD/Intel/CPU-probes)
 
 - Gebruikt systeemcommando's (niet de llama-server gateway!)
-- Voor NVIDIA: nvidia-smi --query-gpu=... --format=csv,noheader,nounits
-- Resultaat wordt gecached in GpuSummaryCache
+- nvidia-smi --query-compute-apps=gpu_uuid,pid → uuid's van het
+  llama-server-proces; daarna nvidia-smi --query-gpu=... --format=csv,noheader,nounits
+  voor die uuid's; bij falen/leeg → volledige --query-gpu-lijst
+- Geen NVIDIA-GPU of nvidia-smi afwezig → "Unavailable"
+- Resultaat wordt gecached in GpuSummaryCache (10 s per sessie-key)
 
 ### 3. Slots (bv. "Active 0/1, Queued 0, Busy/decode 1,0")
 
 Bron: llama-server /slots endpoint (via RuntimeMetricPollerService)
 
 - Pollt http://localhost:{port}/slots van de draaiende llama-server
+  (elke 2 s; /slots is standaard enabled)
 - Parse de JSON response naar RuntimeSlotSnapshot
 - Toont per-slot status en verwerkingsinformatie
 
@@ -93,6 +116,9 @@ Bron: llama-server /slots endpoint (via RuntimeMetricPollerService)
 Bron: llama-server /metrics endpoint (via RuntimeMetricPollerService)
 
 - Pollt http://localhost:{port}/metrics van de draaiende llama-server
+  (alleen wanneer het geladen profiel "Metrics endpoint" heeft aangevinkt,
+  anders /metrics geeft 501 "not enabled" → kaarten vallen terug op
+  /slots-data/last-known)
 - Parse Prometheus formaat data naar PrometheusSample
 - RuntimeMetricSummaryTracker berekent rates, totals, en deltas
 - Genereert rates op twee manieren:
@@ -100,19 +126,20 @@ Bron: llama-server /metrics endpoint (via RuntimeMetricPollerService)
   - Seconds-based rate: tokens / actieve generatie-seconden
     (voorkomt dilutie tijdens idle gaps)
 
-### 5. MTP-tokens (bv. "Inactive" in de Hardware-kolom)
+### 5. MTP-tokens (bv. "Inactive")
 
 Bron: llama-server /metrics endpoint (dezelfde als Tokens)
 
 - Specifiek voor MTP (Multi-Tensor Parallel) speculative decoding
-- Alleen zichtbaar wanneer speculativeType ingesteld is op draft-* of mtp
+- Alleen actief wanneer het geladen profiel SpecType ingesteld is op
+  draft-* of mtp; anders "Inactive"
 
 ### 6. KV-cache (bv. "Used 2.146 t | 1,6%, Capacity 131.072 t")
 
 Bron: llama-server /metrics endpoint (dezelfde als Tokens)
 
 - Haalt kv.cache.usage, kv.cache.tokens, context.size uit de metrics
-- Capacity komt van de slot data of app settings
+- Capacity komt van de slot data of de profiel-CtxSize
 
 ================================================================================
 SCHERM 2: MODELEN - SCAN & STARTPARAMETERS DEFINIËREN

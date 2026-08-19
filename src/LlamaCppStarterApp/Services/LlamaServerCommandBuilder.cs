@@ -215,6 +215,12 @@ public static class LlamaServerCommandBuilder
             args.Add(p.ImageMinTokens.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
+        // --metrics (standaard uit bij llama-server; EnableMetrics is not false = aan, default true)
+        if (p.EnableMetrics is not false)
+        {
+            args.Add("--metrics");
+        }
+
         return args.ToArray();
     }
 

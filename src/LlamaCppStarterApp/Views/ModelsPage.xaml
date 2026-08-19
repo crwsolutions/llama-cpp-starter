@@ -315,6 +315,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -349,7 +350,13 @@
                                 <Picker Grid.Row="5" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.CacheTypeOptions}"
                                    SelectedItem="{Binding CurrentParameters.CacheTypeV, Converter={StaticResource PickerDefaultConverter}}"
-                                   Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
+                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
+
+                                <Label Grid.Row="6" Grid.Column="0" Text="Metrics endpoint" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <CheckBox Grid.Row="6" Grid.Column="1"
+                                      IsChecked="{Binding CurrentParameters.EnableMetrics, Converter={StaticResource BoolNullableConverter}}"
+                                      VerticalOptions="Center" Margin="0,0,0,4"
+                                      SemanticProperties.Hint="--metrics in de opstartopdracht (standaard uit bij llama-server; nodig voor de metrics-kaarten op het Overzicht)" />
                             </Grid>
 
                             <!-- Speculatie / MTP -->

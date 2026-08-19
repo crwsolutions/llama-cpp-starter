@@ -1,7 +1,6 @@
 using LlamaCppStarterApp.Models;
 using LlamaCppStarterApp.Repositories;
 using LlamaCppStarterApp.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace LlamaCppStarterApp.ViewModels;
 
@@ -9,16 +8,26 @@ public partial class OverviewViewModel : BaseViewModel
 {
     private const int MaxLogLines = 2000;
 
+    // Spec-defaults (idle-inhoud van de 6 status-kaarten; kaart-inhoud Engels per spec)
+    private const string IdleHardwareText = "No loaded model";
+    private const string IdleStatsText = "Active 0/1 | Queued 0\nBusy/decode: 0, 0";
+    private const string IdleTokensText = "No runtime";
+    private const string IdleMtpTokensText = "Inactive";
+    private const string IdleKvCacheText = "Used Unknown\nCapacity Unknown";
+
     private readonly IModelRepository _modelRepository;
     private readonly IProfileRepository _profileRepository;
     private readonly IRuntimeRepository _runtimeRepository;
     private readonly IAppSettingsRepository _appSettings;
     private readonly LlamaServerProcessService _processService;
     private readonly ServerHealthService _healthService;
+    private readonly RuntimeMetricPollerService _metricsPoller;
+    private readonly ModelRuntimeStatusTracker _statusTracker = new();
 
     private bool _loaded;
     private readonly System.Text.StringBuilder _logBuffer = new();
     private int _logLineCount;
+    private MetricCardsSnapshot? _lastMetrics;
 
     public OverviewViewModel(
         IModelRepository modelRepository,
@@ -26,7 +35,8 @@ public partial class OverviewViewModel : BaseViewModel
         IRuntimeRepository runtimeRepository,
         IAppSettingsRepository appSettings,
         LlamaServerProcessService processService,
-        ServerHealthService healthService)
+        ServerHealthService healthService,
+        RuntimeMetricPollerService metricsPoller)
     {
         _modelRepository = modelRepository;
         _profileRepository = profileRepository;
@@ -34,11 +44,13 @@ public partial class OverviewViewModel : BaseViewModel
         _appSettings = appSettings;
         _processService = processService;
         _healthService = healthService;
+        _metricsPoller = metricsPoller;
         Title = "Overzicht";
 
         _processService.LogReceived += OnServerLog;
         _processService.StateChanged += OnServerStateChanged;
         _healthService.HealthChanged += OnHealthChanged;
+        _metricsPoller.MetricsUpdated += OnMetricsUpdated;
     }
 
     [ObservableProperty]
@@ -70,6 +82,26 @@ public partial class OverviewViewModel : BaseViewModel
 
     [ObservableProperty]
     public partial bool IsRunning { get; set; }
+
+    // --- Status-kaarten (middenraster 3×2) ---
+
+    [ObservableProperty]
+    public partial string ModelStatusText { get; set; } = "Stopped";
+
+    [ObservableProperty]
+    public partial string HardwareText { get; set; } = IdleHardwareText;
+
+    [ObservableProperty]
+    public partial string StatsText { get; set; } = IdleStatsText;
+
+    [ObservableProperty]
+    public partial string TokensText { get; set; } = IdleTokensText;
+
+    [ObservableProperty]
+    public partial string MtpTokensText { get; set; } = IdleMtpTokensText;
+
+    [ObservableProperty]
+    public partial string KvCacheText { get; set; } = IdleKvCacheText;
 
     internal async Task EnsureLoadedAsync()
     {
@@ -179,6 +211,62 @@ public partial class OverviewViewModel : BaseViewModel
                 StatusText = "No runtime is loaded for the selected model.";
                 break;
         }
+
+        UpdateStatusCards();
+    }
+
+    /// <summary>
+    /// Kaarten-update: Modelstatus via de tracker (Loading/Loaded/Fallback);
+    /// de overige kaarten uit de laatste metrics-snapshot, óf de spec-defaults bij geen sessie.
+    /// </summary>
+    private void UpdateStatusCards()
+    {
+        UpdateModelStatusText();
+
+        var session = _processService.Session;
+        if (session is null)
+        {
+            HardwareText = IdleHardwareText;
+            StatsText = IdleStatsText;
+            TokensText = IdleTokensText;
+            MtpTokensText = IdleMtpTokensText;
+            KvCacheText = IdleKvCacheText;
+            return;
+        }
+
+        var metrics = _lastMetrics;
+        if (metrics is null)
+        {
+            return; // nog geen poller-tick (Starting) → defaults behouden tot de eerste tick
+        }
+
+        HardwareText = metrics.HardwareText;
+        StatsText = metrics.StatsText;
+        TokensText = metrics.TokensText;
+        MtpTokensText = MtpGatedText(metrics.MtpTokensText);
+        KvCacheText = metrics.KvCacheText;
+    }
+
+    /// <summary>Modelstatus-kaart: Loading/Loaded (tracker) óf "Stopped {model}" (fallback).</summary>
+    private void UpdateModelStatusText()
+    {
+        var session = _processService.Session;
+        var modelName = session?.Model.Name ?? SelectedModel?.Name ?? string.Empty;
+        var display = _statusTracker.StatusFor(session?.Model.ModelId, $"Stopped {modelName}", DateTimeOffset.UtcNow);
+        ModelStatusText = display.MetricText;
+    }
+
+    /// <summary>
+    /// MTP-tokens-kaart: "Inactive" tenzij het geladen profiel SpecType op draft-*/mtp begint
+    /// (per technische notitie 5); anders de live poller-tekst.
+    /// </summary>
+    private string MtpGatedText(string pollerMtpText)
+    {
+        var specType = _processService.Session?.Parameters.SpecType;
+        var mtpActive = specType is not null
+            && (specType.StartsWith("draft", StringComparison.OrdinalIgnoreCase)
+                || specType.Contains("mtp", StringComparison.OrdinalIgnoreCase));
+        return mtpActive ? pollerMtpText : IdleMtpTokensText;
     }
 
     private void OnServerLog(object? sender, ServerLogEventArgs e)
@@ -209,7 +297,50 @@ public partial class OverviewViewModel : BaseViewModel
 
     private void OnServerStateChanged(object? sender, ServerStateChangedEventArgs e)
     {
-        MainThread.BeginInvokeOnMainThread(() => _ = RefreshStatusAsync());
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            switch (e.State)
+            {
+                case LlamaServerState.Running:
+                    var session = _processService.Session;
+                    if (session is not null)
+                    {
+                        _statusTracker.StopLoading(true, session.Model.Name, DateTimeOffset.UtcNow);
+                    }
+                    break;
+                case LlamaServerState.Idle or LlamaServerState.Stopping:
+                    _statusTracker.ClearLoadedStatus();
+                    break;
+            }
+
+            _ = RefreshStatusAsync();
+        });
+    }
+
+    private void OnMetricsUpdated(object? sender, MetricCardsUpdatedEventArgs e)
+    {
+        // Poller-events naar de main UI-thread (bestaand marshal-patroon)
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            _lastMetrics = e.Snapshot;
+            if (e.Snapshot.HasRuntime)
+            {
+                HardwareText = e.Snapshot.HardwareText;
+                StatsText = e.Snapshot.StatsText;
+                TokensText = e.Snapshot.TokensText;
+                MtpTokensText = MtpGatedText(e.Snapshot.MtpTokensText);
+                KvCacheText = e.Snapshot.KvCacheText;
+            }
+            else
+            {
+                HardwareText = IdleHardwareText;
+                StatsText = IdleStatsText;
+                TokensText = IdleTokensText;
+                MtpTokensText = IdleMtpTokensText;
+                KvCacheText = IdleKvCacheText;
+            }
+            UpdateModelStatusText();
+        });
     }
 
     private void OnHealthChanged(object? sender, ServerHealthEventArgs e)
@@ -253,6 +384,11 @@ public partial class OverviewViewModel : BaseViewModel
         }
         else
         {
+            _statusTracker.StartLoading(
+                SelectedModel.ModelId,
+                SelectedModel.Name,
+                $"http://127.0.0.1:{SelectedProfile.Port}",
+                DateTimeOffset.UtcNow);
             await RefreshStatusAsync();
         }
     }
@@ -263,82 +399,5 @@ public partial class OverviewViewModel : BaseViewModel
     {
         await _processService.UnloadAsync();
         await RefreshStatusAsync();
-    }
-
-    /// <summary>"Add" → Modellen-scherm in profiel-editor (nieuw profiel voor geselecteerd model).</summary>
-    [RelayCommand]
-    private async Task AddProfileAsync()
-    {
-        if (SelectedModel is null)
-        {
-            StatusText = "Selecteer eerst een model.";
-            return;
-        }
-
-        var modelsVm = App.Services.GetRequiredService<ModelsViewModel>();
-        modelsVm.PendingNewProfileModelId = SelectedModel.Id;
-        await Shell.Current.GoToAsync(nameof(ModelsPage));
-    }
-
-    [RelayCommand]
-    private async Task OpenFolderAsync(Model? model)
-    {
-        if (model is null)
-        {
-            return;
-        }
-
-        var folder = Path.GetDirectoryName(model.Path);
-        if (folder is not null && System.IO.Directory.Exists(folder))
-        {
-            try
-            {
-                await Launcher.OpenAsync(new Uri(folder));
-            }
-            catch (Exception ex)
-            {
-                StatusText = $"Kon map niet openen: {ex.Message}";
-            }
-        }
-    }
-
-    [RelayCommand]
-    private async Task DeleteModelAsync(Model? model)
-    {
-        if (model is null)
-        {
-            return;
-        }
-
-        var name = model.Name;
-        await _modelRepository.DeleteAsync(model.Id);
-        Models.Remove(model);
-
-        if (ReferenceEquals(SelectedModel, model))
-        {
-            SelectedModel = Models.FirstOrDefault();
-        }
-
-        StatusText = $"Model '{name}' verwijderd (incl. profielen).";
-    }
-
-    [RelayCommand]
-    private async Task DeleteProfileAsync(Profile? profile)
-    {
-        if (profile is null || profile.IsDefault)
-        {
-            return;
-        }
-
-        var name = profile.Name;
-        await _profileRepository.DeleteAsync(profile.Id);
-        Profiles.Remove(profile);
-
-        if (ReferenceEquals(SelectedProfile, profile))
-        {
-            SelectedProfile = Profiles.FirstOrDefault(p => p.IsDefault) ?? Profiles.FirstOrDefault();
-        }
-
-        StatusText = $"Profiel '{name}' verwijderd.";
     }
 }

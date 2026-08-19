@@ -174,6 +174,14 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial bool? Jinja { get; set; } = true;
 
+    /// <summary>
+    /// Metrics endpoint: true = --flags meegeven (standaard; nodig voor de Overzicht-metricskaarten),
+    /// false = /metrics uit (llama-server-default), null = niet meegeven (≡ uit).
+    /// Oude Params-blobs zonder key → true via de initializer.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool? EnableMetrics { get; set; } = true;
+
     // --- JSON (de)serialisatie voor de Params-blob ---
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -292,7 +300,8 @@ public partial class ProfileParameters : ObservableObject
         && MmprojPath is null && ImageMinTokens is null
         && Temperature is null && TopP is null && TopK is null && MinP is null
         && PresencePenalty is null && RepeatPenalty is null
-        && Jinja is not false;
+        && Jinja is not false
+        && EnableMetrics is not false;
 
     /// <summary>
     /// Effectieve mmproj-pad: profiel-override (null = auto-gekoppelde mmproj van het model;
