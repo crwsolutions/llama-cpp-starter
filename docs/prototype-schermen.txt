@@ -40,7 +40,9 @@ LAYOUT:
 
   - Kaart 2 (Hardware):
     - Titel: "Hardware"
-    - Inhoud (idle): "No loaded model"
+    - Inhoud (idle; aangepast 2026-08-20): volledige GPU-lijst uit nvidia-smi
+      — de hardware is er altijd, onafhankelijk van een geladen model;
+      alleen vóór de eerste probe: "Unavailable"
     - Inhoud (geladen): GPU-rig per GPU van het llama-server-proces
       (nvidia-smi; bv. "GPU 0: NVIDIA RTX 4090 | 94% | 58C | 21.3/24.0 GiB")
 
@@ -100,7 +102,12 @@ ALLEEN nvidia-smi (gebruikersbeslissing 2026-08-19; geen AMD/Intel/CPU-probes)
   llama-server-proces; daarna nvidia-smi --query-gpu=... --format=csv,noheader,nounits
   voor die uuid's; bij falen/leeg → volledige --query-gpu-lijst
 - Geen NVIDIA-GPU of nvidia-smi afwezig → "Unavailable"
-- Resultaat wordt gecached in GpuSummaryCache (10 s per sessie-key)
+- Resultaat wordt gecached in GpuSummaryCache (10 s; per-sessie-key én "machine"-key
+  voor de volledige lijst)
+- De hardware is er altijd (aangepast 2026-08-20): de kaart is NIET afhankelijk
+  van een geladen model — zonder sessie (of bij falen van de per-PID-match) toont
+  ze de volledige --query-gpu-lijst; de OverviewViewModel pollt GpuSummaryService
+  elke 10 s (eerste probe direct; placeholder vóór eerste probe: "Unavailable")
 
 ### 3. Slots (bv. "Active 0/1, Queued 0, Busy/decode 1,0")
 

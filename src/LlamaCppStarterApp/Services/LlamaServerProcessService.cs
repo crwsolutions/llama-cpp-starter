@@ -105,6 +105,13 @@ public class LlamaServerProcessService
         private set => _session = value;
     }
 
+    /// <summary>
+    /// True while ShutdownServer() is running (app exit). Background pollers
+    /// (e.g. the Overview hardware timer) must stop touching the UI dispatcher
+    /// in that window — the window is already deactivated.
+    /// </summary>
+    public bool IsShuttingDown => _shuttingDown;
+
     /// <summary>Log line from stdout/stderr (stderr gets a "[stderr] " prefix).</summary>
     public event EventHandler<ServerLogEventArgs>? LogReceived;
 

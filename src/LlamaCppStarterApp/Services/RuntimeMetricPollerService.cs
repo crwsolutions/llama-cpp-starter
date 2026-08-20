@@ -3,13 +3,13 @@ using LlamaCppStarterApp.Models;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>Cards snapshot the poller sends to the UI (marshaled to the main thread).</summary>
+/// (Hardware is not part of this snapshot: the Hardware card polls the machine-wide
+/// nvidia-smi listing on its own, independent of a loaded model.)
 public sealed record MetricCardsSnapshot(
     string StatsText,
     string TokensText,
     string MtpTokensText,
-    string KvCacheText,
-    string HardwareText,
-    bool HasRuntime);
+    string KvCacheText);
 
 public sealed class MetricCardsUpdatedEventArgs : EventArgs
 {
@@ -29,7 +29,6 @@ public sealed class RuntimeMetricPollerService
 
     private readonly LlamaServerProcessService _processService;
     private readonly RuntimeMetricSummaryTracker _summaryTracker;
-    private readonly GpuSummaryService _gpuSummary;
     private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(2) };
     private readonly SemaphoreSlim _pollLock = new(1, 1);
 
@@ -40,12 +39,10 @@ public sealed class RuntimeMetricPollerService
 
     public RuntimeMetricPollerService(
         LlamaServerProcessService processService,
-        RuntimeMetricSummaryTracker summaryTracker,
-        GpuSummaryService gpuSummary)
+        RuntimeMetricSummaryTracker summaryTracker)
     {
         _processService = processService;
         _summaryTracker = summaryTracker;
-        _gpuSummary = gpuSummary;
         _processService.StateChanged += OnProcessStateChanged;
     }
 
@@ -102,9 +99,7 @@ public sealed class RuntimeMetricPollerService
                 StatsText: string.Empty,
                 TokensText: string.Empty,
                 MtpTokensText: string.Empty,
-                KvCacheText: string.Empty,
-                HardwareText: string.Empty,
-                HasRuntime: false));
+                KvCacheText: string.Empty));
         }
         finally
         {
@@ -169,7 +164,9 @@ public sealed class RuntimeMetricPollerService
             }
         }
 
-        // 3) Summary tracker (rates, totals, last-known) + GPU summary (cache)
+        // 3) Summary tracker (rates, totals, last-known).
+        // The Hardware card is polled separately by the Overview VM (nvidia-smi is
+        // independent of a loaded model).
         var context = new RuntimeMetricContext(
             session.Parameters.Parallel is > 0 ? session.Parameters.Parallel.Value : 1,
             session.Parameters.CtxSize);
@@ -180,15 +177,12 @@ public sealed class RuntimeMetricPollerService
             slotSnapshot,
             null,
             DateTimeOffset.UtcNow);
-        var hardwareText = await _gpuSummary.SummaryAsync(session, token);
 
         RaiseUpdated(new MetricCardsSnapshot(
             StatsText: RuntimeDashboardService.RuntimeSlotsLabel(samples, slotSnapshot, context.ParallelSlots),
             TokensText: summary.Tokens,
             MtpTokensText: summary.MtpTokens,
-            KvCacheText: summary.KvCache,
-            HardwareText: hardwareText,
-            HasRuntime: true));
+            KvCacheText: summary.KvCache));
     }
 
     private void RaiseUpdated(MetricCardsSnapshot snapshot) =>

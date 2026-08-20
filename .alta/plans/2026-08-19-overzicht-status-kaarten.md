@@ -1,5 +1,22 @@
 # Plan: Overzicht-scherm (scherm 1) — Modelbestanden/Laadprofielen eruit, 6 status-kaarten erin
 
+## Wijziging 2026-08-20 (gebruiker): Hardware-kaart niet afhankelijk van geladen model
+
+De hardware is er altijd → de Hardware-kaart toont ook zónder geladen model de
+nvidia-smi-GPU-lijst (volledige `--query-gpu`-lijst); "No loaded model" vervalt als idle-state.
+Plaatsing (deviatie t.o.v. bovenstaand plan):
+- `GpuSummaryService.SummaryAsync(LoadedSession?)`: met sessie = per-PID (uuid-match) mét
+  cache-hit op sessie-key; anders/val = volledige lijst via gedeelde "machine"-cache-key
+  (per-sessie- en machine-pad evicten elkaar niet).
+- `RuntimeMetricPollerService`: HardwareText/HasRuntime uit de snapshot en uit de poller
+  (de poller draait alleen met server) → Hardware wordt apart gepolld.
+- `OverviewViewModel`: eigen 10 s-`Timer` (eerste probe direct) → `GpuSummaryService`
+  (per-PID indien sessie, anders machine-lijst); `IsShuttingDown`-guard bij app-uitgang
+  (géén MainThread-call na window-deactivering); placeholder vóór eerste probe = "Unavailable".
+- Docs bijgewerkt: `docs/prototype-schermen.txt` (Scherm 1, notitie 2), `README.md`, `AGENTS.md`.
+
+## Origineel plan (2026-08-19)
+
 - Status: Approved (2026-08-19; gebruiker goedgekeurd + "FYI: /metrics geeft 501 terug wanneer niet ingeschakeld")
 - Plan file: `.alta/plans/2026-08-19-overzicht-status-kaarten.md`
 - Created: 2026-08-19
@@ -10,7 +27,7 @@
 - **Weg uit het Overzicht**: panelen "Modelbestanden" en "Laadprofielen" (dienen op Scherm 2 te staan; die staan daar al).
 - **Erin in het Overzicht**: middenbereik = 6 kaarten (3×2 raster) met de exacte titels en idle-inhoud uit de beschrijving:
   1. **Modelstatus** — "Stopped {model}" (idle) / "Loading {model} + Loading Time" / "Loaded {model} + Loading Time"
-  2. **Hardware** — "No loaded model" (idle) / nvidia-smi-GPU-summary
+  2. **Hardware** — nvidia-smi-GPU-summary; idle (zonder model) = volledige GPU-lijst (wijziging 2026-08-20: hardware-kaart niet afhankelijk van een geladen model; "No loaded model" vervallen)
   3. **Stats** — "Active 0/1 | Queued 0\nBusy/decode: 0, 0" (idle-zero's) / live uit `/slots`
   4. **Tokens** — "No runtime" (idle) / rates + totals uit `/metrics`
   5. **MTP-tokens** — "Inactive" (idle óf niet-speculatief) / MTP-rates uit `/metrics`
@@ -92,7 +109,7 @@ Views/ModelsPage.xaml             — Metrics-CheckBox in "Prestaties & Geheugen
 
 ### Behavior per kaart (idle → actief)
 - **Modelstatus**: tracker. `LoadAsync`-start → `StartLoading(modelId, naam, "http://127.0.0.1:{port}"); StateChanged`: Running → `StopLoading(showLoadedDuration: true, …)`; Idle/Stopping → `ClearLoadedStatus()` + fallback "Stopped {SelectedModel}".
-- **Hardware**: `GpuSummaryService.SummaryAsync(Session)`: geen sessie → "No loaded model"; met sessie → nvidia-smi `--query-compute-apps=gpu_uuid,pid` matchen op het llama-server-`ProcessId` → uuid's → `--query-gpu=…` voor die uuid's (max 4 rijen); bij falen/leeg → volledige `--query-gpu`-lijst; bij afwezigheid/fout → "Unavailable". 10 s-caché per sessie-key.
+- **Hardware**: `GpuSummaryService.SummaryAsync(Session)`: met sessie → nvidia-smi `--query-compute-apps=gpu_uuid,pid` matchen op het llama-server-`ProcessId` → uuid's → `--query-gpu=…` voor die uuid's (max 4 rijen); bij falen/leeg → volledige `--query-gpu`-lijst; bij afwezigheid/fout → "Unavailable". 10 s-caché per sessie-key.
 - **Stats**: `RuntimeSlotsLabel(samples, slotSnapshot, configuredSlots)` met `configuredSlots` = geladen profiel `Parallel` (default 1); idle → statisch "Active 0/1 | Queued 0\nBusy/decode: 0, 0" (spec-voorbeeld).
 - **Tokens/MTP/KV-cache**: `RuntimeMetricSummaryTracker.Apply(key, samples, context, slotSnapshot, mtpSnapshot)` → `Tokens`/`MtpTokens`/`KvCache`-teksten; MTP-gate per aanneme 1; idle → "No runtime" / "Inactive" / "Used Unknown\nCapacity Unknown".
 - **Logboek** (onder): onveranderd, incl. "No runtime is loaded for the selected model." statusregel.
@@ -156,7 +173,7 @@ Views/ModelsPage.xaml             — Metrics-CheckBox in "Prestaties & Geheugen
   - [x] `ParsePrometheus` op een voorbeeld-`/metrics`-body → verwachte samples; `ParseSlotSnapshot` op voorbeeld-`/slots`-JSON (zowel array- als object-`next_token`) → verwachte waarden. (Extra: `RuntimeKvCacheLabel`, `RuntimeSlotsLabel`, `ModelRuntimeStatusTracker` Loading/Loaded, `FormatNvidiaSmiCsvLine` — ALL PASSED.)
 - [x] `git diff --stat`: alleen verwachte bestanden + planfile; `docs/prototype-schermen.txt` alleen de Scherm-1-sectie gewijzigd.
 - [ ] Handmatig (Windows, draaiende app):
-  - [ ] Overzicht zonder server: kaarten tonen exact de spec-defaults (Stopped/No loaded model/Active 0/1…/No runtime/Inactive/Used Unknown); Modelbestanden- én Laadprofielen-tabellen zijn weg; topbar en logboek ongewijzigd.
+  - [ ] Overzicht zonder server: kaarten tonen exact de spec-defaults (Stopped/volledige GPU-lijst (2026-08-20: hardware onafhankelijk van model)/Active 0/1…/No runtime/Inactive/Used Unknown); Modelbestanden- én Laadprofielen-tabellen zijn weg; topbar en logboek ongewijzigd.
   - [ ] Model laden (Default-profiel): Modelstatus → "Loading …" → "Loaded … + Loading Time"; Stats live via `/slots`; Tokens/MTP/KV-cache live via `/metrics`; Hardware toont nvidia-smi-rijen van de GPU's van het llama-server-proces (of "Unavailable" zonder NVIDIA-GPU); MTP-tokens "Inactive" mits `SpecType` geen `draft-*`/`mtp`.
   - [ ] Metrics-toggel in profiel editor: vinkweg + opslaan → bij volgende load geen `--metrics` (zichtbaar in "Opstarten:"-logregel) → Metrics-kaarten vallen terug op slot-data/fallback.
   - [ ] Unload → alle kaarten terug naar defaults; geen weestproces.
