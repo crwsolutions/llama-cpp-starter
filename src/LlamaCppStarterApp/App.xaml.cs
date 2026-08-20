@@ -19,21 +19,19 @@ public partial class App : Application
     {
         var window = new Window(new AppShell());
 
-        // App-uitgang: draaiende llama-server unloaden zodat er geen weestproces achterblijft.
+        // App-uitgang: draaiende llama-server synchroon stoppen zodat er geen
+        // weestproces achterblijft (zie LlamaServerProcessService.ShutdownServer).
         _processService = Services.GetService<LlamaServerProcessService>();
         window.Destroying += OnWindowDestroying;
 
         return window;
     }
 
-    private async void OnWindowDestroying(object? sender, EventArgs e)
+    private void OnWindowDestroying(object? sender, EventArgs e)
     {
         try
         {
-            if (_processService is not null)
-            {
-                await _processService.UnloadAsync();
-            }
+            _processService?.ShutdownServer();
         }
         catch (Exception ex)
         {

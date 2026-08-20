@@ -42,6 +42,9 @@ src/LlamaCppStarterApp/
                    --metrics (EnableMetrics is not false; default aan); pad met spaties quoten),
                    LlamaServerProcessService (singleton; één current server; Load/Unload:
                    POST /exit → max 30 s wachten → Kill(entireProcessTree);
+                   ShutdownServer() = synchroon, blokkerend exit-pad (app-uitgang):
+                   POST /exit 2 s → 5 s wachten → Kill(entireProcessTree); StateChanged/LogReceived
+                   onderdrukt via _shuttingDown zodat de UI-dispatcher niet geraakt wordt;
                    LoadAsync lost --spec-draft-model op via ModelCompanionService;
                    LoadedSession record (Runtime, Model, Parameters, Port, ProcessId) als
                    public Session, null bij stop),
@@ -72,7 +75,7 @@ Kernmechanismen:
 - **GlobalLaunchDefaults**: app-globale defaults (exacte referentie-opdracht) als `AppSettings`-rij `GlobalLaunchDefaults` (JSON van `ProfileParameters`, gemigreerd/gedeeld met `ProfileParameters.GlobalLaunchDefaults`); de scanner seedt elk nieuw Default-profiel met deze waarde.
 - **Profielen**: `ProfileParameters` serialiseert naar één JSON-blob in `Profiles.Params` (voorwaarts-compatibel; nieuwe velden kosten geen migratie). Corrupte blob → `ProfileParameters.TryParse` → fallback leeg profiel + melding in UI (móét niet crashen). Default-profiel is niet te hernoemen (naam-Entry disabled + `SaveProfileAsync`-guard) en niet te verwijderen.
 - **Command-constructie**: `LlamaServerCommandBuilder.BuildArgs` is pure static en reproduceert de referentie-opdracht uit het plan (vlag-volgorde en double-formattering per veld, bv. `--temp 1.0`, `--min-p 0.00`); nieuwe vlaggen: `--rope-*` (na `--cache-type-v`), `--cache-prompt`/`--no-cache-prompt` (na `--ctx-checkpoints`), `--spec-draft-model` (na `--spec-draft-n-max`), `--metrics` (EnableMetrics is not false; default aan; na `--image-min-tokens`). Wijzigingen hier handmatig verifiëren (geen test-project).
-- **Procesbeheer**: process-events naar UI marshalen via `MainThread.BeginInvokeOnMainThread` (AppendOutput-patroon → per-regel `LogLines`-collectie (`ObservableCollection<string>`, trim max 2000 regels) voor het Overzicht-logboek-`CollectionView`; smart auto-follow (volg onderkant tenzij gebruiker omhoog scrolt) in de `OverviewPage` code-behind via `Scrolled` + `CollectionChanged`). App-uitgang: `Window.Destroying` → `LlamaServerProcessService.UnloadAsync()` (geen weestprocessen).
+- **Procesbeheer**: process-events naar UI marshalen via `MainThread.BeginInvokeOnMainThread` (AppendOutput-patroon → per-regel `LogLines`-collectie (`ObservableCollection<string>`, trim max 2000 regels) voor het Overzicht-logboek-`CollectionView`; smart auto-follow (volg onderkant tenzij gebruiker omhoog scrolt) in de `OverviewPage` code-behind via `Scrolled` + `CollectionChanged`). App-uitgang: `Window.Destroying` → `LlamaServerProcessService.ShutdownServer()` = synchroon, blokkerend op de UI-thread (POST /exit 2 s → 5 s wachten → `Kill(entireProcessTree)`), zodat het kill doorloopt vóór de app stopt (geen weestprocessen). GEEN `async void`/`await` in de Destroying-handler; tijdens shutdown StateChanged/LogReceived onderdrukken (via `_shuttingDown`), anders gooien de `MainThread.BeginInvokeOnMainThread`-listeners "Window was already deactivated" en breekt de stop-sequence af vóór het kill.
 - **Map-instellingen**: `ModelsDirectory`/`RuntimeDirectory` in `AppSettings`-tabel; scan-schermen lezen/schrijven ze (niet hard-coden).
 - **Navigatie**: Shell-routes `OverviewPage`, `ModelsPage`, `RuntimesPage`, `SettingsPage`.
 

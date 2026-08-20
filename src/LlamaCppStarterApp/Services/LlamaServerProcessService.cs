@@ -24,15 +24,24 @@ public sealed record LoadedSession(Runtime Runtime, Model Model, ProfileParamete
 
 /// <summary>
 /// Beheert één "current server" (llama-server.exe proces).
-/// Load/Unload met best-effort POST /exit, max 30 s wachten, daarna Kill(entireProcessTree).
+/// Unload: POST /exit (5 s timeout) → max 30 s wachten → Kill(entireProcessTree).
+/// App-uitgang: ShutdownServer() — synchroon, kort (POST /exit 2 s → 5 s → kill)
+/// en zonder UI-events, zodat het kill ook doorgaat als de window al is gedeactiveerd.
 /// </summary>
 public class LlamaServerProcessService
 {
     private const int UnloadWaitSeconds = 30;
     private const int ExitPostTimeoutMs = 5000;
+    private const int ExitPostFastTimeoutMs = 2000;
+    private const int ExitShutdownWaitSeconds = 5;
 
     private readonly SemaphoreSlim _operationLock = new(1, 1);
     private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromMilliseconds(ExitPostTimeoutMs) };
+
+    // true tijdens app-uitgang (Shutdown): dan worden StateChanged/LogReceived
+    // onderdrukt, zodat de stop-sequence de UI-dispatcher niet raakt en de kill
+    // doorloopt ook al de window al gedeactiveerd/vernietigd is (geen weestproces).
+    private volatile bool _shuttingDown;
 
     private Process? _process;
     private LlamaServerState _state = LlamaServerState.Idle;
@@ -217,6 +226,10 @@ public class LlamaServerProcessService
         }
     }
 
+    /// <summary>
+    /// Unload de current server: POST /exit (5 s timeout), max 30 s wachten,
+    /// daarna Kill(entireProcessTree).
+    /// </summary>
     public async Task UnloadAsync()
     {
         await _operationLock.WaitAsync();
@@ -237,7 +250,8 @@ public class LlamaServerProcessService
                 var host = string.IsNullOrWhiteSpace(_hostBind) || _hostBind == "0.0.0.0"
                     ? "127.0.0.1"
                     : _hostBind;
-                await _httpClient.PostAsync($"http://{host}:{_port}/exit", new StringContent(""));
+                using var postCts = new CancellationTokenSource(ExitPostTimeoutMs);
+                await _httpClient.PostAsync($"http://{host}:{_port}/exit", new StringContent(""), postCts.Token);
             }
             catch
             {
@@ -255,7 +269,10 @@ public class LlamaServerProcessService
                 // 3) Timeout → hard kill van het hele procesboom
                 try
                 {
-                    process.Kill(entireProcessTree: true);
+                    if (!process.HasExited)
+                    {
+                        process.Kill(entireProcessTree: true);
+                    }
                     await process.WaitForExitAsync();
                 }
                 catch (Exception ex)
@@ -278,10 +295,115 @@ public class LlamaServerProcessService
     }
 
     /// <summary>
+    /// App-uitgang: de server synchroon stoppen zodat er geen weestproces achterblijft.
+    /// Blokkerend (max ~7 s: POST /exit 2 s + 5 s wachten + kill) op de aanroepende
+    /// (UI-)thread: de afsluitflow van MAUI gaat niet door tot deze methode retour is,
+    /// dus het kill haalt het vóór de app stopt. Gedurende deze methode worden
+    /// StateChanged/LogReceived onderdrukt (via _shuttingDown), zodat er geen
+    /// MainThread.BeginInvokeOnMainThread naar de al gedeactiveerde window gaat —
+    /// die path gooit anders "Window was already deactivated" en brak de stop-sequence
+    /// af vóór het kill.
+    /// </summary>
+    public void ShutdownServer()
+    {
+        // Concurrente unload/load is bezig: niet blokkeren op het lock (de UI-thread
+        // zou anders een deadlock met de draaiende async-continuatie kunnen veroorzaken),
+        // maar het proces direct (best-effort) neerhalen zodat er toch geen weestproces is.
+        if (!_operationLock.Wait(0))
+        {
+            var running = _process;
+            if (running is not null)
+            {
+                try
+                {
+                    running.Kill(entireProcessTree: true);
+                    running.WaitForExit();
+                }
+                catch
+                {
+                    // best-effort
+                }
+            }
+
+            return;
+        }
+
+        _shuttingDown = true;
+        try
+        {
+            var process = _process;
+            if (process is null || _state is not (LlamaServerState.Running or LlamaServerState.Starting))
+            {
+                return;
+            }
+
+            _state = LlamaServerState.Stopping;
+
+            // 1) Best-effort POST /exit (2 s timeout; .Result = blokkerend, géén async
+            //    await → géén continuatie die de afsluitflow kan missen)
+            try
+            {
+                var host = string.IsNullOrWhiteSpace(_hostBind) || _hostBind == "0.0.0.0"
+                    ? "127.0.0.1"
+                    : _hostBind;
+                using var postCts = new CancellationTokenSource(ExitPostFastTimeoutMs);
+                _httpClient.PostAsync($"http://{host}:{_port}/exit", new StringContent(""), postCts.Token).GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // negeren; fallback op proces-wachten/kill
+            }
+
+            // 2) Max 5 s wachten op proceseindiging
+            bool exited;
+            try
+            {
+                exited = process.WaitForExit(ExitShutdownWaitSeconds * 1000);
+            }
+            catch (Exception)
+            {
+                exited = false;
+            }
+
+            // 3) Nog niet gestopt → hard kill van het hele procesboom
+            if (!exited)
+            {
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                    process.WaitForExit();
+                }
+                catch
+                {
+                    // laatste redmiddel; het proces verdwijnt met de app-afsluiting
+                }
+            }
+
+            _lastExitCode = SafeExitCode(process);
+            _state = LlamaServerState.Idle;
+            _process = null;
+            _session = null;
+            _modelName = null;
+        }
+        finally
+        {
+            _shuttingDown = false;
+            _operationLock.Release();
+        }
+    }
+
+    /// <summary>
     /// Markeert de server als Running zodra health-polling een 200 op /health ziet.
     /// </summary>
     public void MarkRunning()
     {
+        // Tijdens app-uitgang niet naar Running flippen: een health-poller-tick kan
+        // in de race lopen met ShutdownServer (process al gestopt of op het punt van stoppen).
+        if (_shuttingDown)
+        {
+            return;
+        }
+
         if (_state == LlamaServerState.Starting)
         {
             State = LlamaServerState.Running;
@@ -327,6 +449,15 @@ public class LlamaServerProcessService
         }
 
         _state = value;
+
+        // Bij app-uitgang de UI-events niet sturen: de listeners marshalen via
+        // MainThread.BeginInvokeOnMainThread naar de al gedeactiveerde window
+        // ("Window was already deactivated").
+        if (_shuttingDown)
+        {
+            return;
+        }
+
         StateChanged?.Invoke(this, new ServerStateChangedEventArgs(value));
     }
 
@@ -342,5 +473,14 @@ public class LlamaServerProcessService
         }
     }
 
-    private void RaiseLog(string line) => LogReceived?.Invoke(this, new ServerLogEventArgs(line));
+    private void RaiseLog(string line)
+    {
+        // Bij app-uitgang géén log-events (zelfde reden als SetState).
+        if (_shuttingDown)
+        {
+            return;
+        }
+
+        LogReceived?.Invoke(this, new ServerLogEventArgs(line));
+    }
 }
