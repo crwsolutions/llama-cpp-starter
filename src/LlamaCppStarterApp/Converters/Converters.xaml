@@ -16,4 +16,5 @@
     <converters:IntNullableConverter x:Key="IntNullableConverter" />
     <converters:DoubleNullableConverter x:Key="DoubleNullableConverter" />
     <converters:PickerDefaultConverter x:Key="PickerDefaultConverter" />
+    <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
 </ResourceDictionary>

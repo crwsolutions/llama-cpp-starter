@@ -57,3 +57,24 @@ public class StringToVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// bool → status color: true → StatusActive (green), false/null → StatusIdle (gray).
+/// Feeds the running-indicator dot and the Modelstatus card accent.
+/// Colors come from the Colors.xaml resources (merged into the app resources).
+/// </summary>
+public class BoolToColorConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        // Application.Current is non-null: the converter is only reached through XAML binding,
+        // which exists only after the app has been built.
+        var app = Application.Current!;
+        return (Color)app.Resources[value is true ? "StatusActive" : "StatusIdle"]!;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

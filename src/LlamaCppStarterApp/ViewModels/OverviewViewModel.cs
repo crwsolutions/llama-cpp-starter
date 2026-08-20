@@ -103,15 +103,42 @@ public partial class OverviewViewModel : BaseViewModel
     }
 
     [NotifyPropertyChangedFor(nameof(CommandPreview))]
+    [NotifyPropertyChangedFor(nameof(LoadButtonText))]
     [ObservableProperty]
     public partial Model? SelectedModel { get; set; }
 
     [NotifyPropertyChangedFor(nameof(CommandPreview))]
+    [NotifyPropertyChangedFor(nameof(LoadButtonText))]
     [ObservableProperty]
     public partial Profile? SelectedProfile { get; set; }
 
+    [NotifyPropertyChangedFor(nameof(LoadButtonText))]
     [ObservableProperty]
     public partial Runtime? SelectedRuntime { get; set; }
+
+    // "Laden" while the same model + profile + runtime is already running = reload;
+    // "Laad om" when the selection differs from the loaded session (auto unload + load).
+    // Not an [ObservableProperty]: computed on demand, kept current by the
+    // NotifyPropertyChangedFor attributes on the selection properties and IsRunning.
+    public string LoadButtonText
+    {
+        get
+        {
+            var session = _processService.Session;
+            return IsRunning && session is not null && SelectionDiffersFromSession(session)
+                ? "Laad om"
+                : "Laden";
+        }
+    }
+
+    /// <summary>True when the selected model/profile/runtime differs from the loaded session.</summary>
+    private bool SelectionDiffersFromSession(LoadedSession session) =>
+        SelectedModel is null
+        || SelectedProfile is null
+        || SelectedRuntime is null
+        || SelectedModel.Id != session.Model.Id
+        || SelectedProfile.Id != session.LoadedProfileId
+        || SelectedRuntime.Id != session.Runtime.Id;
 
     [ObservableProperty]
     public partial string StatusText { get; set; } = "No runtime is loaded for the selected model.";
@@ -121,6 +148,7 @@ public partial class OverviewViewModel : BaseViewModel
     [ObservableProperty]
     public partial ObservableCollection<string> LogLines { get; set; } = new();
 
+    [NotifyPropertyChangedFor(nameof(LoadButtonText))]
     [ObservableProperty]
     public partial bool IsRunning { get; set; }
 
@@ -468,10 +496,19 @@ public partial class OverviewViewModel : BaseViewModel
         });
     }
 
-    /// <summary>Load: start the selected model + profile + runtime.</summary>
+    /// <summary>
+    /// Load: start the selected model + profile + runtime. If a server is already running,
+    /// unload it first and then load (no confirmation): a different combination = swap,
+    /// the same combination = reload.
+    /// </summary>
     [RelayCommand]
     private async Task LoadAsync()
     {
+        if (IsBusy)
+        {
+            return; // Defensive guard: the button is disabled while IsBusy, but a direct command call is still possible.
+        }
+
         if (SelectedModel is null)
         {
             StatusText = "Selecteer eerst een model.";
@@ -490,8 +527,25 @@ public partial class OverviewViewModel : BaseViewModel
             return;
         }
 
-        var parameters = ProfileParameters.FromJson(SelectedProfile.ParamsJson);
-        var started = await _processService.LoadAsync(SelectedRuntime, SelectedModel, parameters, SelectedProfile.Port);
+        // Capture the selection before the awaits so it cannot change mid-swap.
+        var model = SelectedModel;
+        var profile = SelectedProfile;
+        var runtime = SelectedRuntime;
+        var port = profile.Port;
+        var parameters = ProfileParameters.FromJson(profile.ParamsJson);
+
+        // A server is already running → stop it first, then load the selection
+        // (swap when the combination differs, reload when it is the same).
+        var session = _processService.Session;
+        if (session is not null)
+        {
+            StatusText = SelectionDiffersFromSession(session)
+                ? "Verwisselen: draaiende server wordt gestopt…"
+                : "Herladen: draaiende server wordt gestopt…";
+            await UnloadAsync();
+        }
+
+        var started = await _processService.LoadAsync(runtime, model, profile.Id, parameters, port);
         if (!started)
         {
             StatusText = "Kon server niet starten (zie logboek).";
@@ -499,9 +553,9 @@ public partial class OverviewViewModel : BaseViewModel
         else
         {
             _statusTracker.StartLoading(
-                SelectedModel.ModelId,
-                SelectedModel.Name,
-                $"http://127.0.0.1:{SelectedProfile.Port}",
+                model.ModelId,
+                model.Name,
+                $"http://127.0.0.1:{port}",
                 DateTimeOffset.UtcNow);
             await RefreshStatusAsync();
         }
