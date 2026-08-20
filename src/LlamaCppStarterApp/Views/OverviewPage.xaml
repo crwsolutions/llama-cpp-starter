@@ -6,7 +6,7 @@
              x:Class="LlamaCppStarterApp.Views.OverviewPage"
              Title="Overzicht">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="20,16">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="20,16">
 
         <!-- Topbar: model / profiel / runtime dropdowns + Laden/Unload -->
         <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
@@ -222,7 +222,7 @@
 
         <!-- Live runtime-logboek -->
         <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
-            <Grid RowDefinitions="Auto,Auto,Auto" HeightRequest="180">
+            <Grid RowDefinitions="Auto,*,Auto" >
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
                     <BoxView Grid.Column="0"
                              WidthRequest="4"
@@ -235,20 +235,38 @@
                            Text="Live runtime-logboek"
                            Style="{StaticResource SectionTitle}" />
                 </Grid>
-                <Label Grid.Row="1"
+                <Label Grid.Row="2"
                        Text="{Binding StatusText}"
                        FontSize="12"
                        FontAttributes="Bold"
                        TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
-                       Margin="14,6,0,0" />
-                <Border Grid.Row="2"
+                       Margin="14,12,0,0" />
+                <Border Grid.Row="1"
                         BackgroundColor="#1E1E1E"
-                        StrokeThickness="0"
+                        StrokeThickness="0" Padding="6"
                         StrokeShape="RoundRectangle 6"
-                        Margin="14,6,0,0">
-                    <ScrollView HeightRequest="90">
-                        <Label Text="{Binding LogText}" Style="{StaticResource LogLabel}" Padding="8" />
-                    </ScrollView>
+                        Margin="0,6,0,0">
+                    <CollectionView 
+                                    ItemsSource="{Binding LogLines, Mode=OneWay}"
+                                    ItemsUpdatingScrollMode="KeepLastItemInView"
+                                    SelectionMode="None"
+                                    Scrolled="OnLogScrolled"
+                                    VerticalScrollBarVisibility="Always"
+                                    BackgroundColor="Transparent">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Label Text="{Binding ., Mode=OneTime}"
+                                       FontFamily="Consolas"
+                                       FontSize="12"
+                                       TextColor="#D4D4D4"
+                                       Padding="8,2" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <Label Text="Nog geen output..." TextColor="Gray"
+                                   HorizontalOptions="Center" VerticalOptions="Center" Margin="20" />
+                        </CollectionView.EmptyView>
+                    </CollectionView>
                 </Border>
             </Grid>
         </Border>

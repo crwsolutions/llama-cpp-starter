@@ -26,8 +26,14 @@ public static class MauiProgram
             })
             .AddViews();
 
+        builder.ConfigureMauiHandlers(handlers =>
+        {
+#if WINDOWS
+    handlers.AddHandler<CollectionView, CustomCollectionViewHandler>();
+#endif
+        });
 #if DEBUG
-		builder.Logging.AddDebug();
+        builder.Logging.AddDebug();
 #endif
 
         // Register repositories

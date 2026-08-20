@@ -25,8 +25,6 @@ public partial class OverviewViewModel : BaseViewModel
     private readonly ModelRuntimeStatusTracker _statusTracker = new();
 
     private bool _loaded;
-    private readonly System.Text.StringBuilder _logBuffer = new();
-    private int _logLineCount;
     private MetricCardsSnapshot? _lastMetrics;
 
     public OverviewViewModel(
@@ -77,8 +75,10 @@ public partial class OverviewViewModel : BaseViewModel
     [ObservableProperty]
     public partial string StatusText { get; set; } = "No runtime is loaded for the selected model.";
 
+    // Live runtime-logboek: per-regel ObservableCollection (CollectionView virtualiseert;
+    // oude regels trimmed zodra MaxLogLines overschreden)
     [ObservableProperty]
-    public partial string LogText { get; set; } = string.Empty;
+    public partial ObservableCollection<string> LogLines { get; set; } = new();
 
     [ObservableProperty]
     public partial bool IsRunning { get; set; }
@@ -277,22 +277,14 @@ public partial class OverviewViewModel : BaseViewModel
 
     private void AppendOutput(string line)
     {
-        _logBuffer.AppendLine(line);
-        _logLineCount++;
+        LogLines.Add(line);
 
-        // Buffer beperken tot ~2000 regels (oudste regels weggooien)
-        if (_logLineCount > MaxLogLines)
+        // Log beperken tot MaxLogLines regels (oudste regels weggooien;
+        // in de praktijk precies 1 verwijdering per toevoeging)
+        while (LogLines.Count > MaxLogLines)
         {
-            var lines = _logBuffer.ToString().Split('\n');
-            _logBuffer.Clear();
-            foreach (var l in lines.Skip(lines.Length - MaxLogLines))
-            {
-                _logBuffer.AppendLine(l);
-            }
-            _logLineCount = MaxLogLines;
+            LogLines.RemoveAt(0);
         }
-
-        LogText = _logBuffer.ToString();
     }
 
     private void OnServerStateChanged(object? sender, ServerStateChangedEventArgs e)
