@@ -250,7 +250,6 @@
                                     ItemsSource="{Binding LogLines, Mode=OneWay}"
                                     ItemsUpdatingScrollMode="KeepLastItemInView"
                                     SelectionMode="None"
-                                    Scrolled="OnLogScrolled"
                                     VerticalScrollBarVisibility="Always"
                                     BackgroundColor="Transparent">
                         <CollectionView.ItemTemplate>

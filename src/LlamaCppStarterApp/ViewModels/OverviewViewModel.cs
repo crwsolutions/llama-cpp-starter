@@ -8,6 +8,12 @@ public partial class OverviewViewModel : BaseViewModel
 {
     private const int MaxLogLines = 2000;
 
+    // AppSettings-keys voor de geselecteerde Model/Startprofiel/Runtime-dropdowns,
+    // zodat de laatste selectie behouden blijft over een app-herstart.
+    public const string SelectedModelIdSetting = "OverviewSelectedModelId";
+    public const string SelectedProfileIdSetting = "OverviewSelectedProfileId";
+    public const string SelectedRuntimeIdSetting = "OverviewSelectedRuntimeId";
+
     // Spec-defaults (idle-inhoud van de 6 status-kaarten; kaart-inhoud Engels per spec)
     private const string IdleHardwareText = "No loaded model";
     private const string IdleStatsText = "Active 0/1 | Queued 0\nBusy/decode: 0, 0";
@@ -26,6 +32,7 @@ public partial class OverviewViewModel : BaseViewModel
 
     private bool _loaded;
     private MetricCardsSnapshot? _lastMetrics;
+    private int? _savedProfileId;
 
     public OverviewViewModel(
         IModelRepository modelRepository,
@@ -115,13 +122,23 @@ public partial class OverviewViewModel : BaseViewModel
                 Models = new ObservableCollection<Model>(await _modelRepository.GetAllAsync());
                 Runtimes = new ObservableCollection<Runtime>(await _runtimeRepository.GetAllAsync());
 
+                // Herstel de laatste dropdown-keuze (overleefdt app-herstart).
+                // Stale/ontbrekende ID's vallen terug op de bestaande default-selectie ([0] / Default-profiel).
+                var savedModelId = TryParseId(await _appSettings.GetValueAsync(SelectedModelIdSetting));
+                var savedRuntimeId = TryParseId(await _appSettings.GetValueAsync(SelectedRuntimeIdSetting));
+                var savedProfileId = TryParseId(await _appSettings.GetValueAsync(SelectedProfileIdSetting));
+
                 if (Models.Count > 0)
                 {
-                    SelectedModel = Models[0];
+                    var restored = savedModelId is int mid ? Models.FirstOrDefault(m => m.Id == mid) : null;
+                    // Profiel-herstel alleen wanneer het model daadwerkelijk uit de bewaarde ID komt
+                    // (profiel-IDs zijn globaal uniek maar horen bij één model → bij model-fallback geen profiel-match).
+                    _savedProfileId = restored is not null ? savedProfileId : null;
+                    SelectedModel = restored ?? Models[0];
                 }
                 if (Runtimes.Count > 0)
                 {
-                    SelectedRuntime = Runtimes[0];
+                    SelectedRuntime = (savedRuntimeId is int rid ? Runtimes.FirstOrDefault(r => r.Id == rid) : null) ?? Runtimes[0];
                 }
 
                 await RefreshStatusAsync();
@@ -161,6 +178,8 @@ public partial class OverviewViewModel : BaseViewModel
         await RefreshStatusAsync();
     }
 
+    private static int? TryParseId(string? value) => int.TryParse(value, out var id) ? id : null;
+
     private async Task LoadProfilesAsync()
     {
         var model = SelectedModel;
@@ -185,11 +204,26 @@ public partial class OverviewViewModel : BaseViewModel
 
         Profiles = new ObservableCollection<Profile>(profiles);
         SelectedProfile = (prevProfileId is int pid ? profiles.FirstOrDefault(p => p.Id == pid) : null)
+            ?? (_savedProfileId is int spid ? profiles.FirstOrDefault(p => p.Id == spid) : null)
             ?? profiles.FirstOrDefault(p => p.IsDefault)
             ?? profiles.FirstOrDefault();
     }
 
-    partial void OnSelectedModelChanged(Model? value) => _ = LoadProfilesAsync();
+    partial void OnSelectedModelChanged(Model? value)
+    {
+        _ = _appSettings.SetAsync(SelectedModelIdSetting, value?.Id.ToString() ?? string.Empty);
+        _ = LoadProfilesAsync();
+    }
+
+    partial void OnSelectedProfileChanged(Profile? value)
+    {
+        _ = _appSettings.SetAsync(SelectedProfileIdSetting, value?.Id.ToString() ?? string.Empty);
+    }
+
+    partial void OnSelectedRuntimeChanged(Runtime? value)
+    {
+        _ = _appSettings.SetAsync(SelectedRuntimeIdSetting, value?.Id.ToString() ?? string.Empty);
+    }
 
     private async Task RefreshStatusAsync()
     {
