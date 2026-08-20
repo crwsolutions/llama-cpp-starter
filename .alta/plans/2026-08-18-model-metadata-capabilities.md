@@ -41,6 +41,8 @@
 7. **Draft-resolutie in de command**: `--spec-draft-model` wordt op het moment van **Laden** (Overzicht `LoadAsync`) geresolvieerd via `ModelCompanionService.ResolveDraftModelPath(model, p.SpecType, configured: p.SpecDraftPath)`; embedded MTP (`draft-mtp` + `nextn_predict_layers > 0` in hoofdmiddel) → geen `--spec-draft-model`. Nieuw veld `SpecDraftPath (string?)` (override, null = auto).
 8. **Vision-gating**: Vision-sectie in het Startinstellingen-paneel is zichtbaar ⇔ `SelectedModelCapability?.LikelyVision == true` (niet geselecteerd model → sectie verborgen).
 9. **Naam**: `FriendlyName` (PascalCase, spatie-gescheiden) vervangt de ruwe bestandsnaam in `Model.Name` bij (re-)scan; bestaande rijen worden bij de volgende scan bijgewerkt (upsert).
+10. **HasMtp toegevoegd (2026-08-20, na afloop; gebruiker)**: `ModelCapabilitySummary` is 11 → 12 velden (HasMtp, nextn-detectie in `Inspect` + "MTP"-chip in `SummaryText`). Geen cache-format-migratie: gebruiker recreate de database. AGENTS.md + code-comment zijn aangepast (12 velden).
+11. **MTP-conditionele Default-seeding (2026-08-20; gebruiker)**: scanner seedt modellen **zonder MTP** met `GlobalLaunchDefaults` minus `SpecType`/`SpecDraftNMax` (`Clone()` + null in de seed; geen mutatie van de gedeelde defaults-instance). De `GlobalLaunchDefaults`-rij zelf blijft de exacte referentie-opdracht (MTP-modellen houden `draft-mtp`/`4`). Detectie = `ModelCapabilityService.HasMtp(metadata, nameText)` (public static, zelfde regels als de chip).
 
 ## Design notes
 

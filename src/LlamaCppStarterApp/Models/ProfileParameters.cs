@@ -238,6 +238,56 @@ public partial class ProfileParameters : ObservableObject
     /// <summary>JSON of <see cref="GlobalLaunchDefaults"/> (seed for the AppSettings row GlobalLaunchDefaults).</summary>
     public static string GlobalLaunchDefaultsJson() => GlobalLaunchDefaults.ToJson();
 
+    /// <summary>Field-by-field copy (new instance, so callers never mutate the shared defaults instance).</summary>
+    public ProfileParameters Clone() => new()
+    {
+        CtxSize = CtxSize,
+        SplitMode = SplitMode,
+        Ngl = Ngl,
+        TensorSplit = TensorSplit,
+        Threads = Threads,
+        HostBind = HostBind,
+        NoHost = NoHost,
+        Parallel = Parallel,
+        Keep = Keep,
+        CtxCheckpoints = CtxCheckpoints,
+        BatchSize = BatchSize,
+        UbatchSize = UbatchSize,
+        FlashAttn = FlashAttn,
+        CacheTypeK = CacheTypeK,
+        CacheTypeV = CacheTypeV,
+        RopeScaling = RopeScaling,
+        RopeScale = RopeScale,
+        RopeFreqBase = RopeFreqBase,
+        RopeFreqScale = RopeFreqScale,
+        SpecType = SpecType,
+        SpecDraftNMax = SpecDraftNMax,
+        SpecDraftPath = SpecDraftPath,
+        CachePrompt = CachePrompt,
+        MmprojPath = MmprojPath,
+        ImageMinTokens = ImageMinTokens,
+        Temperature = Temperature,
+        TopP = TopP,
+        TopK = TopK,
+        MinP = MinP,
+        PresencePenalty = PresencePenalty,
+        RepeatPenalty = RepeatPenalty,
+        Jinja = Jinja,
+        EnableMetrics = EnableMetrics
+    };
+
+    /// <summary>
+    /// Clone with the speculative/MTP launch fields cleared (no --spec-type/--spec-draft-n-max flags).
+    /// SpecDraftPath is an explicit user override and is left untouched.
+    /// </summary>
+    public ProfileParameters WithoutMtpSpec()
+    {
+        var clone = Clone();
+        clone.SpecType = null;
+        clone.SpecDraftNMax = null;
+        return clone;
+    }
+
     // Note: pass the concrete type explicitly. `this`/the generic variant resolves a
     // partial class to the declared type, so the source-generated properties
     // (the [ObservableProperty] fields) would NOT (de)serialize → empty profiles.

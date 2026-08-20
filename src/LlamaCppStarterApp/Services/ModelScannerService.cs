@@ -156,7 +156,8 @@ public class ModelScannerService
 
     /// <summary>
     /// Default profile seeding for all scanned models without a Default: ParamsJson =
-    /// GlobalLaunchDefaults from AppSettings (fallback: app-global defaults).
+    /// GlobalLaunchDefaults from AppSettings (fallback: app-global defaults); for models
+    /// WITHOUT MTP (nextn) the speculative fields are cleared (no --spec-type/--spec-draft-n-max).
     /// </summary>
     private async Task SeedDefaultProfilesAsync(List<Model> models)
     {
@@ -167,22 +168,39 @@ public class ModelScannerService
             && !parsed.IsEmpty()
             ? parsed
             : ProfileParameters.GlobalLaunchDefaults;
-        var paramsJson = parameters.ToJson();
 
         foreach (var model in models)
         {
             var profiles = await _profileRepository.GetByModelAsync(model.Id);
-            if (profiles.All(p => !p.IsDefault))
+            if (profiles.Any(p => p.IsDefault))
             {
-                await _profileRepository.UpsertAsync(new Profile
-                {
-                    Name = "Default",
-                    ModelId = model.Id,
-                    IsDefault = true,
-                    Port = 8080,
-                    ParamsJson = paramsJson
-                });
+                continue;
             }
+
+            // Same detection as the capability "MTP" chip (per selection, not stored in the metadata blob).
+            var hasMtp = await Task.Run(() =>
+            {
+                var metadata = GgufMetadataReader.TryRead(model.Path);
+                var nameText = $"{model.Name} {Path.GetFileName(model.Path)} {model.MetadataJson ?? string.Empty}";
+                return ModelCapabilityService.HasMtp(metadata, nameText);
+            });
+
+            // Clone: parameters may be the shared app-global defaults instance.
+            var seed = parameters.Clone();
+            if (!hasMtp)
+            {
+                seed.SpecType = null;
+                seed.SpecDraftNMax = null;
+            }
+
+            await _profileRepository.UpsertAsync(new Profile
+            {
+                Name = "Default",
+                ModelId = model.Id,
+                IsDefault = true,
+                Port = 8080,
+                ParamsJson = seed.ToJson()
+            });
         }
     }
 

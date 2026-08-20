@@ -6,7 +6,8 @@ using LlamaCppStarterApp.Models;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Capability listing per model (11 fields, exact names/order per spec).
+/// Capability listing per model (12 fields: the original 11 spec fields keep their
+/// exact names/order; HasMtp was added afterwards).
 /// Ported from the reference project (ModelCapabilityService), adapted to the
 /// starter Model (Path/Name/MetadataJson) and to the DB cache (see <see cref="TryReadCached"/>).
 /// </summary>
@@ -21,7 +22,8 @@ public sealed record ModelCapabilitySummary(
     bool IsMoe,
     bool LikelyReasoning,
     bool IsEmbedding,
-    bool IsFim);
+    bool IsFim,
+    bool HasMtp);
 
 /// <summary>
 /// Pure static capability inspection: reads the GGUF file itself (per selection,
@@ -33,7 +35,7 @@ public static class ModelCapabilityService
     private sealed record HuggingFaceModelHints(HashSet<string> Capabilities, bool HasVisionProjector);
 
     public static ModelCapabilitySummary Empty()
-        => new(false, "unknown", "unknown", 0, false, false, false, false, false, false, false);
+        => new(false, "unknown", "unknown", 0, false, false, false, false, false, false, false, false);
 
     /// <summary>
     /// Fingerprint of what the inspection depends on: model path + size + lastwrite,
@@ -151,6 +153,7 @@ public static class ModelCapabilityService
         var isFim = combined.Contains("fim", StringComparison.OrdinalIgnoreCase)
             || metadata.Keys.Any(key => key.Contains("fim", StringComparison.OrdinalIgnoreCase))
             || hfHints.Capabilities.Contains("fim");
+        var hasMtp = HasMtp(metadata, combined);
         return new ModelCapabilitySummary(
             metadata.Count > 0,
             string.IsNullOrWhiteSpace(architecture) ? "unknown" : architecture,
@@ -162,7 +165,28 @@ public static class ModelCapabilityService
             isMoe,
             likelyReasoning,
             isEmbedding,
-            isFim);
+            isFim,
+            hasMtp);
+    }
+
+    /// <summary>
+    /// MTP detection: a nextn field in the model architecture's GGUF metadata
+    /// (e.g. "qwen3_next.nextn_predict_layers"), or a nextn marker in the
+    /// model name/metadata text. <paramref name="nameText"/> = name + file name (+ metadata blob).
+    /// </summary>
+    public static bool HasMtp(IReadOnlyDictionary<string, object?> metadata, string nameText)
+    {
+        var architecture = metadata.TryGetValue("general.architecture", out var value)
+            ? value?.ToString() ?? ""
+            : "";
+        var metadataText = string.Join(" ", metadata.Select(pair => $"{pair.Key} {pair.Value}"));
+        var combined = $"{metadataText} {nameText}";
+        return !string.IsNullOrWhiteSpace(architecture)
+            && (metadata.Keys.Any(key =>
+                    key.Equals($"{architecture}.nextn_predict_layers", StringComparison.OrdinalIgnoreCase)
+                    || key.Contains("nextn", StringComparison.OrdinalIgnoreCase))
+                || combined.Contains(".nextn.", StringComparison.OrdinalIgnoreCase)
+                || combined.Contains("nextn.pre_projection", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>Read-only chip text for the UI, separated by "  |  " (per spec).</summary>
@@ -178,6 +202,7 @@ public static class ModelCapabilityService
         if (capabilities.HasVisionProjector) chips.Add("Vision: mmproj found");
         else if (capabilities.LikelyVision) chips.Add("Vision: likely, projector not found");
         if (capabilities.IsMoe) chips.Add("MoE");
+        if (capabilities.HasMtp) chips.Add("MTP");
         if (capabilities.LikelyReasoning) chips.Add("Reasoning likely");
         if (capabilities.IsEmbedding) chips.Add("Embedding/reranker");
         if (capabilities.IsFim) chips.Add("FIM");
