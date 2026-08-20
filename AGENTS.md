@@ -103,6 +103,5 @@ dotnet run --project src/LlamaCppStarterApp -f net10.0-windows10.0.19041.0
 
 - Bestaand patroon volgen: repo per domeinobject met interface, eigen connectie per call; VM's erven van `BaseViewModel` (`IsBusy`, `Title`).
 - NL-teksten in de UI; code/comments in bestaande stijl.
-- `docs/prototype-schermen.txt` bevat user-wijzigingen: niet committen zonder toestemming.
 - Plans staan onder `.alta/plans/` (niet geïgnoreerd) en horen gecommit te worden met de bijbehorende implementatie.
 - Geen nieuwe dependencies/frameworks/lagen toevoegen voor kleine wijzigingen; smallest coherent change.
