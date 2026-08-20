@@ -1,8 +1,8 @@
 namespace LlamaCppStarterApp.ViewModels;
 
 /// <summary>
-/// Placeholder — Instellingen-content komt later.
-/// (Map-instellingen worden intern al gepersisteerd in AppSettings door de scan-schermen.)
+/// Placeholder — the Settings content comes later.
+/// (Folder settings are already persisted internally in AppSettings by the scan screens.)
 /// </summary>
 public partial class SettingsViewModel : BaseViewModel
 {

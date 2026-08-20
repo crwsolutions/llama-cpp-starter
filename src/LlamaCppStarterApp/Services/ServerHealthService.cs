@@ -9,8 +9,8 @@ public class ServerHealthEventArgs : EventArgs
 }
 
 /// <summary>
-/// Lichte poll op http://{host}:{port}/health (elke 2 s, alleen terwijl de server
-/// Starting/Running is). Host = HostBind indien gelokaliseerd, anders 127.0.0.1.
+/// Light poll of http://{host}:{port}/health (every 2 s, only while the server
+/// is Starting/Running). Host = HostBind when localized, otherwise 127.0.0.1.
 /// </summary>
 public class ServerHealthService
 {
@@ -60,7 +60,7 @@ public class ServerHealthService
         {
             if (_cts is not null)
             {
-                return; // al aan het pollen
+                return; // already polling
             }
 
             _cts = new CancellationTokenSource();

@@ -19,8 +19,8 @@ public partial class App : Application
     {
         var window = new Window(new AppShell());
 
-        // App-uitgang: draaiende llama-server synchroon stoppen zodat er geen
-        // weestproces achterblijft (zie LlamaServerProcessService.ShutdownServer).
+        // App exit: stop a running llama-server synchronously so no orphan
+        // process is left behind (see LlamaServerProcessService.ShutdownServer).
         _processService = Services.GetService<LlamaServerProcessService>();
         window.Destroying += OnWindowDestroying;
 

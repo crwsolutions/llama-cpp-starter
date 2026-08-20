@@ -3,12 +3,12 @@ using System.Text.RegularExpressions;
 
 namespace LlamaCppStarterApp.Services;
 
-/// <summary>Eén geparste regel uit een Prometheus-/metrics-body.</summary>
+/// <summary>One parsed line from a Prometheus/metrics body.</summary>
 public sealed record PrometheusSample(string Name, string Labels, double Value, string RawValue, string Type, string Help);
 
 /// <summary>
-/// Pure-static parser voor Prometheus-formaat (llama-server /metrics).
-/// Port uit het referentieproject (LocalLlmConsole.Services.RuntimeMetrics).
+/// Pure static parser for Prometheus format (llama-server /metrics).
+/// Ported from the reference project (LocalLlmConsole.Services.RuntimeMetrics).
 /// </summary>
 public static class RuntimeMetrics
 {

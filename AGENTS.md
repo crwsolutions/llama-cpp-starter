@@ -102,6 +102,6 @@ dotnet run --project src/LlamaCppStarterApp -f net10.0-windows10.0.19041.0
 ## Conventies
 
 - Bestaand patroon volgen: repo per domeinobject met interface, eigen connectie per call; VM's erven van `BaseViewModel` (`IsBusy`, `Title`).
-- NL-teksten in de UI; code/comments in bestaande stijl.
+- NL-teksten in de UI (labels, placeholders, hints, statusmeldingen, serverlog-regels); code-comments (.cs én .xaml) in het Engels (sinds 2026-08-20; UI-referenties in comments, bv. "Startinstellingen"-paneel of "Modelstatus"-kaart, mogen NL blijven).
 - Plans staan onder `.alta/plans/` (niet geïgnoreerd) en horen gecommit te worden met de bijbehorende implementatie.
 - Geen nieuwe dependencies/frameworks/lagen toevoegen voor kleine wijzigingen; smallest coherent change.

@@ -55,7 +55,7 @@ public partial class RuntimesViewModel : BaseViewModel
         }
     }
 
-    /// <summary>FolderPicker: map kiezen (na kiezen direct scannen) en onthouden in AppSettings.</summary>
+    /// <summary>FolderPicker: pick a folder (scan immediately after picking) and remember it in AppSettings.</summary>
     [RelayCommand]
     private async Task ChooseFolderAsync()
     {
@@ -105,7 +105,7 @@ public partial class RuntimesViewModel : BaseViewModel
         }
     }
 
-    /// <summary>Delete = alleen de DB-rij, bestanden blijven staan.</summary>
+    /// <summary>Delete = only the DB row, the files stay in place.</summary>
     [RelayCommand]
     private async Task DeleteAsync(Runtime? runtime)
     {

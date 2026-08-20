@@ -49,19 +49,19 @@ public partial class ModelsViewModel : BaseViewModel
     [ObservableProperty]
     public partial Profile? SelectedProfile { get; set; }
 
-    /// <summary>Eén instantie per geselecteerd profiel; rechtsonder-paneel bindt hier direct aan.</summary>
+    /// <summary>One instance per selected profile; the bottom-right panel binds directly to it.</summary>
     [ObservableProperty]
     public partial ProfileParameters? CurrentParameters { get; set; }
 
-    /// <summary>Read-only runtime command-preview (live bij invoer).</summary>
+    /// <summary>Read-only runtime command preview (live on input).</summary>
     [ObservableProperty]
     public partial string CommandPreview { get; set; } = string.Empty;
 
-    /// <summary>Capability-chips (metadata-samenvatting) van het geselecteerde model; leeg = nog niet geselecteerd.</summary>
+    /// <summary>Capability chips (metadata summary) of the selected model; empty = not selected yet.</summary>
     [ObservableProperty]
     public partial string SelectedModelCapabilitySummaryText { get; set; } = string.Empty;
 
-    /// <summary>True als het geselecteerde model (waarschijnlijk) vision-capable is → Vision-sectie zichtbaar.</summary>
+    /// <summary>True if the selected model is (likely) vision capable → Vision section visible.</summary>
     [ObservableProperty]
     public partial bool SelectedModelHasVision { get; set; }
 
@@ -77,7 +77,7 @@ public partial class ModelsViewModel : BaseViewModel
                 Models = new ObservableCollection<Model>(await _modelRepository.GetAllAsync());
                 if (Models.Count > 0)
                 {
-                    // Triggert OnSelectedModelChanged → profielen + capabilities laden.
+                    // Triggers OnSelectedModelChanged → loads profiles + capabilities.
                     SelectedModel = Models[0];
                 }
             }
@@ -131,7 +131,7 @@ public partial class ModelsViewModel : BaseViewModel
             profile.ModelName = model.Name;
         }
 
-        // Model is tijdens het laden gewisseld → resultaat negeren
+        // Model changed while loading → ignore the result
         if (!ReferenceEquals(SelectedModel, model))
         {
             return;
@@ -144,8 +144,8 @@ public partial class ModelsViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Capability van het geselecteerde model: DB-blob + fingerprint-check; bij miss/stale
-    /// draait Inspect in de achtergrond, daarna wordt de cache-blob opgeslagen.
+    /// Capability of the selected model: DB blob + fingerprint check; on miss/stale
+    /// Inspect runs in the background, after which the cache blob is stored.
     /// </summary>
     private async Task LoadCapabilityAsync()
     {
@@ -166,7 +166,7 @@ public partial class ModelsViewModel : BaseViewModel
         else
         {
             var inspected = await Task.Run(() => ModelCapabilityService.Inspect(model));
-            // Model is tijdens de inspectie gewisseld → resultaat negeren
+            // Model changed during the inspection → ignore the result
             if (!ReferenceEquals(SelectedModel, model))
             {
                 return;
@@ -194,7 +194,7 @@ public partial class ModelsViewModel : BaseViewModel
 
         _selectedProfileOriginalName = value.Name;
 
-        // Corrupte/oude blob → fallback naar leeg profiel + melding (crashen mag niet)
+        // Corrupt/old blob → fall back to an empty profile + message (must not crash)
         ProfileParameters.TryParse(value.ParamsJson, out var parameters, out var error);
         if (error is not null)
         {
@@ -233,13 +233,13 @@ public partial class ModelsViewModel : BaseViewModel
             return;
         }
 
-        // Zelfde resolutie als de echte load (pure static) → preview toont exact wat wordt opgestart.
+        // Same resolution as the real load (pure static) → the preview shows exactly what is started.
         var draftModelPath = ModelCompanionService.ResolveDraftModelPath(SelectedModel.Path, CurrentParameters.SpecType, CurrentParameters.SpecDraftPath);
         var args = LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, CurrentParameters, SelectedProfile.Port, draftModelPath);
         CommandPreview = LlamaServerCommandBuilder.BuildCommandLine(args);
     }
 
-    /// <summary>Modellenmap scannen (GGUF-bestanden; Default-profielen worden in de scanner geseed).</summary>
+    /// <summary>Scan the models folder (GGUF files; Default profiles are seeded by the scanner).</summary>
     [RelayCommand]
     private async Task ScanModelsAsync()
     {
@@ -277,7 +277,7 @@ public partial class ModelsViewModel : BaseViewModel
         }
     }
 
-    /// <summary>Andere modellenmap kiezen (onthouden in AppSettings) en direct scannen.</summary>
+    /// <summary>Pick a different models folder (remembered in AppSettings) and scan immediately.</summary>
     [RelayCommand]
     private async Task ChooseFolderAsync()
     {
@@ -299,7 +299,7 @@ public partial class ModelsViewModel : BaseViewModel
         }
     }
 
-    /// <summary>Leeg profiel aanmaken voor het geselecteerde model.</summary>
+    /// <summary>Create an empty profile for the selected model.</summary>
     [RelayCommand]
     private async Task AddProfileAsync() => await AddProfileCoreAsync();
 
@@ -333,7 +333,7 @@ public partial class ModelsViewModel : BaseViewModel
         StatusText = $"Nieuw profiel '{name}' aangemaakt voor {SelectedModel.Name}.";
     }
 
-    /// <summary>Opslaan: ProfileParameters → JSON-blob → repo. Hernoemen van het Default-profiel is geblokkeerd.</summary>
+    /// <summary>Save: ProfileParameters → JSON blob → repo. Renaming the Default profile is blocked.</summary>
     [RelayCommand]
     private async Task SaveProfileAsync()
     {
@@ -353,7 +353,7 @@ public partial class ModelsViewModel : BaseViewModel
             && _selectedProfileOriginalName is not null
             && !string.Equals(SelectedProfile.Name, _selectedProfileOriginalName, StringComparison.Ordinal))
         {
-            // Naam ongedaan maken en geen opslag doen.
+            // Revert the name and do not save.
             SelectedProfile.Name = _selectedProfileOriginalName;
             StatusText = "Het Default-profiel kan niet worden gehernoemd.";
             return;
@@ -365,7 +365,7 @@ public partial class ModelsViewModel : BaseViewModel
         StatusText = $"Profiel '{SelectedProfile.Name}' opgeslagen.";
     }
 
-    /// <summary>Verwijderen; Default-profiel is geblokkeerd.</summary>
+    /// <summary>Delete; the Default profile is blocked.</summary>
     [RelayCommand]
     private async Task DeleteProfileAsync()
     {
@@ -386,7 +386,7 @@ public partial class ModelsViewModel : BaseViewModel
         StatusText = $"Profiel '{name}' verwijderd.";
     }
 
-    /// <summary>Model verwijderen (profielen verdwijnen via ON DELETE CASCADE).</summary>
+    /// <summary>Delete a model (profiles disappear via ON DELETE CASCADE).</summary>
     [RelayCommand]
     private async Task DeleteModelAsync(Model? model)
     {

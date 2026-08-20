@@ -1,9 +1,9 @@
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Eenvoudige key + 10 s-freshness cache voor de nvidia-smi-opsomming
-/// (per sessie-key), zodat de poller nvidia-smi niet elke 2 s hoeft te draaien.
-/// Port 1:1 uit het referentieproject (LocalLlmConsole.Services.GpuSummaryCache).
+/// Simple key + 10 s freshness cache for the nvidia-smi listing
+/// (per session key), so the poller does not have to run nvidia-smi every 2 s.
+/// 1:1 port from the reference project (LocalLlmConsole.Services.GpuSummaryCache).
 /// </summary>
 public sealed class GpuSummaryCache
 {

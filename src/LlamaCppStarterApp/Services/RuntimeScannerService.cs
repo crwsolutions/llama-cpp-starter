@@ -13,7 +13,7 @@ public class RuntimeScannerService
     }
 
     /// <summary>
-    /// Recursief zoeken naar llama-server.exe in de opgegeven map. Upsert op ExecutablePath.
+    /// Recursively find llama-server.exe in the given folder. Upsert on ExecutablePath.
     /// </summary>
     public async Task<List<Runtime>> ScanAsync(string directory)
     {

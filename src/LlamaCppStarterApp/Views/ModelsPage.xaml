@@ -9,7 +9,7 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Padding="20,16">
 
-        <!-- Topbar: scannen / map kiezen / pad -->
+        <!-- Topbar: scan / pick folder / path -->
         <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
             <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                 <Button Grid.Column="0"
@@ -39,13 +39,13 @@
             </Grid>
         </Border>
 
-        <!-- Midden: links tabellen, rechts Startinstellingen -->
+        <!-- Middle: tables on the left, Startinstellingen on the right -->
         <Grid Grid.Row="1" ColumnDefinitions="*,440" Margin="0,12,0,0" ColumnSpacing="12">
 
-            <!-- Linkerkolom: Modelbestanden + Laadprofielen -->
+            <!-- Left column: Modelbestanden + Laadprofielen -->
             <Grid Grid.Column="0" RowDefinitions="*,Auto" RowSpacing="12">
 
-                <!-- Modelbestanden -->
+                <!-- Modelbestanden (model files) -->
                 <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
                     <Grid RowDefinitions="Auto,Auto,Auto,*">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -115,7 +115,7 @@
                     </Grid>
                 </Border>
 
-                <!-- Laadprofielen (opstartprofielen per model) -->
+                <!-- Laadprofielen (launch profiles per model) -->
                 <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
                     <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
@@ -186,12 +186,12 @@
                 </Border>
             </Grid>
 
-            <!-- Rechtkolom: Startinstellingen (editabel, direct gebonden aan de geselecteerde ProfileParameters).
-                 Metadata (boven) en Opslaan/Verwijderen (onder) blijven vast; het formulier daartussen scrolt. -->
+            <!-- Right column: Startinstellingen (editable, directly bound to the selected ProfileParameters).
+                 Metadata (top) and Opslaan/Verwijderen (bottom) stay fixed; the form in between scrolls. -->
             <Border Grid.Column="1" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*,Auto">
 
-                    <!-- Boven: Metadata (capability-chips) — altijd zichtbaar -->
+                    <!-- Top: Metadata (capability chips) — always visible -->
                     <Grid Grid.Row="0"
                           IsVisible="{Binding SelectedModelCapabilitySummaryText, Converter={StaticResource StringToVisibilityConverter}}">
                         <Grid.RowDefinitions>
@@ -209,12 +209,12 @@
                                Margin="14,4,0,8" />
                     </Grid>
 
-                    <!-- Midden (scrolt): Naam/Poort + parametersecties + Runtime Command -->
+                    <!-- Middle (scrolls): Name/Port + parameter sections + Runtime Command -->
                     <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Default">
                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
 
-                            <!-- Kop: Naam + Poort -->
+                            <!-- Header: Name + Port -->
                             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <Entry Grid.Column="0"
                                        Text="{Binding SelectedProfile.Name, Mode=TwoWay}"
@@ -228,7 +228,7 @@
                                        Placeholder="Poort" />
                             </Grid>
 
-                            <!-- Basisstart -->
+                            <!-- Basic launch -->
                             <Grid Grid.Row="1" Margin="0,14,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -306,7 +306,7 @@
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
                             </Grid>
 
-                            <!-- Prestaties & Geheugen -->
+                            <!-- Performance & Memory -->
                             <Grid Grid.Row="2" Margin="0,14,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -359,7 +359,7 @@
                                       SemanticProperties.Hint="--metrics in de opstartopdracht (standaard uit bij llama-server; nodig voor de metrics-kaarten op het Overzicht)" />
                             </Grid>
 
-                            <!-- Speculatie / MTP -->
+                            <!-- Speculation / MTP -->
                             <Grid Grid.Row="3" Margin="0,14,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -385,7 +385,7 @@
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
                             </Grid>
 
-                            <!-- Vision (alleen zichtbaar bij LikelyVision van het geselecteerde model) -->
+                            <!-- Vision (only visible for LikelyVision of the selected model) -->
                             <Grid Grid.Row="4" Margin="0,14,0,0"
                               IsVisible="{Binding SelectedModelHasVision, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Grid.RowDefinitions>
@@ -412,7 +412,7 @@
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
                             </Grid>
 
-                            <!-- Standaardwaarden generatie -->
+                            <!-- Generation defaults -->
                             <Grid Grid.Row="5" Margin="0,14,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -478,7 +478,7 @@
                         </Grid>
                     </ScrollView>
 
-                    <!-- Onder: Opslaan / Verwijderen — altijd zichtbaar -->
+                    <!-- Bottom: Opslaan / Verwijderen — always visible -->
                     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="8" Margin="0,8,0,0" RowDefinitions="auto,auto,auto"
                           IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
                                 <Label Grid.Row="0"
@@ -510,7 +510,7 @@
             </Border>
         </Grid>
 
-        <!-- Statusregel -->
+        <!-- Status line -->
         <Label Grid.Row="2"
                Text="{Binding StatusText}"
                Style="{StaticResource SectionSubtitle}"

@@ -4,8 +4,8 @@ using System.Text.RegularExpressions;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Formatter voor nvidia-smi-CSV-regels (en normalisatie). Port van de twee gebruikte
-/// onderdelen van het referentieproject (LocalLlmConsole.Services.GpuStatusService).
+/// Formatter for nvidia-smi CSV lines (and normalization). Port of the two used
+/// parts of the reference project (LocalLlmConsole.Services.GpuStatusService).
 /// </summary>
 public static class GpuStatusService
 {

@@ -6,9 +6,9 @@ using LlamaCppStarterApp.Models;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Capability-opsomming per model (11 velden, exacte naam/volgorde per spec).
-/// Port uit het referentieproject (ModelCapabilityService), aangepast op het
-/// starter-Model (Path/Name/MetadataJson) en op DB-caché (zie <see cref="TryReadCached"/>).
+/// Capability listing per model (11 fields, exact names/order per spec).
+/// Ported from the reference project (ModelCapabilityService), adapted to the
+/// starter Model (Path/Name/MetadataJson) and to the DB cache (see <see cref="TryReadCached"/>).
 /// </summary>
 public sealed record ModelCapabilitySummary(
     bool HasMetadata,
@@ -24,9 +24,9 @@ public sealed record ModelCapabilitySummary(
     bool IsFim);
 
 /// <summary>
-/// Pure static capability-inspectie: leest het GGUF-bestand zelf (per selectie,
-/// niet bij scan), voegt HF-hints uit de metadata-blob en companion-detectie toe,
-/// en bouwt de read-only chip-samenvatting ("  |  "-gescheiden) voor de UI.
+/// Pure static capability inspection: reads the GGUF file itself (per selection,
+/// not at scan time), adds HF hints from the metadata blob and companion detection,
+/// and builds the read-only chip summary ("  |  "-separated) for the UI.
 /// </summary>
 public static class ModelCapabilityService
 {
@@ -36,8 +36,8 @@ public static class ModelCapabilityService
         => new(false, "unknown", "unknown", 0, false, false, false, false, false, false, false);
 
     /// <summary>
-    /// Fingerprint van wat de inspectie beïnvloedt: model-pad + size + lastwrite,
-    /// plus het auto-gevonden projector-pad + zijn size + lastwrite.
+    /// Fingerprint of what the inspection depends on: model path + size + lastwrite,
+    /// plus the auto-found projector path + its size + lastwrite.
     /// </summary>
     public static string Fingerprint(Model model)
     {
@@ -68,15 +68,15 @@ public static class ModelCapabilityService
         }
         catch
         {
-            // Fallback op null-waarden: fingerprint mist alleen als het bestand onleesbaar is.
+            // Fall back to null values: the fingerprint is only missed if the file is unreadable.
         }
 
         return $"{model.Path}|{length}|{updated:O}|{projectorPath}|{projectorLength}|{projectorUpdated:O}";
     }
 
     /// <summary>
-    /// Lees de capability-JSON-blob van het model; geldig alleen zodra de fingerprint
-    /// nog klopt (bestand/projector niet gewijzigd). false = miss of stale (herinspecteer).
+    /// Read the model's capability JSON blob; valid only while the fingerprint
+    /// still matches (file/projector not modified). false = miss or stale (re-inspect).
     /// </summary>
     public static bool TryReadCached(Model model, out ModelCapabilitySummary summary, out string summaryText)
     {
@@ -104,18 +104,18 @@ public static class ModelCapabilityService
         }
         catch (JsonException)
         {
-            // Corrupte blob → behandelen als miss (crashen mag niet).
+            // Corrupt blob → treat as a miss (must not crash).
             summary = Empty();
             summaryText = SummaryText(summary);
             return false;
         }
     }
 
-    /// <summary>Cache-blob: fingerprint + samenvatting + summary-tekst in één JSON-document.</summary>
+    /// <summary>Cache blob: fingerprint + summary + summary text in a single JSON document.</summary>
     public static string BuildCacheJson(Model model, ModelCapabilitySummary summary, string summaryText)
         => JsonSerializer.Serialize(new { fingerprint = Fingerprint(model), summaryText, summary });
 
-    /// <summary>GGUF-bestand + HF-hints uit de metadata-blob + companion-scan → summary.</summary>
+    /// <summary>GGUF file + HF hints from the metadata blob + companion scan → summary.</summary>
     public static ModelCapabilitySummary Inspect(Model model)
     {
         var metadata = GgufMetadataReader.TryRead(model.Path);
@@ -165,7 +165,7 @@ public static class ModelCapabilityService
             isFim);
     }
 
-    /// <summary>Read-only chips-tekst voor de UI, gescheiden door "  |  " (per spec).</summary>
+    /// <summary>Read-only chip text for the UI, separated by "  |  " (per spec).</summary>
     public static string SummaryText(ModelCapabilitySummary capabilities)
     {
         var chips = new List<string>
@@ -185,7 +185,7 @@ public static class ModelCapabilityService
         return string.Join("  |  ", chips);
     }
 
-    /// <summary>Contextlengte: eerst "{architecture}.context_length", anders eerste "*.context_length" > 0.</summary>
+    /// <summary>Context length: first "{architecture}.context_length", otherwise the first "*.context_length" > 0.</summary>
     public static int ContextLength(IReadOnlyDictionary<string, object?> metadata, string architecture)
     {
         if (!string.IsNullOrWhiteSpace(architecture)
@@ -249,7 +249,7 @@ public static class ModelCapabilityService
         }
     }
 
-    // --- Interne helpers ---
+    // --- Internal helpers ---
 
     private static string StringMetadata(IReadOnlyDictionary<string, object?> metadata, string key)
         => metadata.TryGetValue(key, out var value) ? value?.ToString() ?? "" : "";
@@ -261,9 +261,9 @@ public static class ModelCapabilityService
         => node?[key] is JsonValue value && value.TryGetValue<bool>(out var result) && result;
 
     /// <summary>
-    /// Defensieve HF-hint-parser: CapabilityHints/pipelineTag/Tags/HasVisionProjector
-    /// uit de metadata-blob + ruwe-tekstscan. Starter-blob heeft geen HF-velden;
-    /// afwezig/corrupt → geen hints (crashen mag niet).
+    /// Defensive HF-hint parser: CapabilityHints/pipelineTag/Tags/HasVisionProjector
+    /// from the metadata blob + raw text scan. The starter blob has no HF fields;
+    /// missing/corrupt → no hints (must not crash).
     /// </summary>
     private static HuggingFaceModelHints HuggingFaceHintsFromMetadata(string? metadataJson)
     {
@@ -296,7 +296,7 @@ public static class ModelCapabilityService
         }
         catch (JsonException)
         {
-            // Oude/andere metadata betekent simpelweg: geen HF-hints.
+            // Old/other metadata simply means: no HF hints.
         }
 
         return new HuggingFaceModelHints(capabilities, hasVisionProjector);

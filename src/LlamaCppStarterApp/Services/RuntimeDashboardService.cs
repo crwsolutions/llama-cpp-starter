@@ -4,8 +4,8 @@ using System.Text.Json.Nodes;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Per-slot + geslagmaakte token-tellingen uit een /slots-JSON (laatste én nieuwere
-/// llama.cpp-formaten; next_token als object óf array). Port uit het referentieproject.
+/// Per-slot + aggregated token counts from a /slots JSON (older and newer
+/// llama.cpp formats; next_token as object or array). Ported from the reference project.
 /// </summary>
 public sealed record RuntimeSlotSnapshot(
     double PromptTokensProcessed,
@@ -28,7 +28,7 @@ public sealed record RuntimeSlotCounterSnapshot(
     double? MtpGeneratedTokens = null,
     double? MtpAcceptedTokens = null);
 
-/// <summary>MTP-telleraantallen (log-gebaseerd in het referentieproject; hier altijd null — de kaarten gebruiken /metrics).</summary>
+/// <summary>MTP counter values (log-based in the reference project; always null here — the cards use /metrics).</summary>
 public sealed record RuntimeMtpTokenSnapshot(
     double? GeneratedTokens,
     double? AcceptedTokens,
@@ -36,9 +36,9 @@ public sealed record RuntimeMtpTokenSnapshot(
     double? AcceptedSeconds = null);
 
 /// <summary>
-/// Pure-static parsers/labels voor de Overzicht-statuskaarten (/slots + /metrics).
-/// Port van de gebruikte onderdelen van het referentieproject (LocalLlmConsole.Services.RuntimeDashboardService);
-/// de overige referentie-rest (log-parsers, context/size-labels) is hier niet nodig.
+/// Pure static parsers/labels for the Overview status cards (/slots + /metrics).
+/// Ported from the used parts of the reference project (LocalLlmConsole.Services.RuntimeDashboardService);
+/// the remaining reference pieces (log parsers, context/size labels) are not needed here.
 /// </summary>
 public static class RuntimeDashboardService
 {

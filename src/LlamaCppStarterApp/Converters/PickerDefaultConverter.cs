@@ -3,8 +3,8 @@ using LlamaCppStarterApp.Models;
 namespace LlamaCppStarterApp.Converters;
 
 /// <summary>
-/// Picker-item ↔ nullable string. Null wordt weergegeven als "(default)"
-/// (eerste item in de optielijsten van het Startinstellingen-paneel).
+/// Picker item ↔ nullable string. Null is displayed as "(default)"
+/// (first item in the option lists of the Startinstellingen panel).
 /// </summary>
 public class PickerDefaultConverter : IValueConverter
 {

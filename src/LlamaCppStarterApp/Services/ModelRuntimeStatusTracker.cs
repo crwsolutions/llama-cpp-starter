@@ -14,10 +14,10 @@ public sealed record ModelRuntimeStatusDisplay(
     string? StatusText = null);
 
 /// <summary>
-/// Houdt de Modelstatus-kaart bij: Loading/Loaded/Fallback + Loading Time
-/// (teller vanaf _loadingStartedAt). Port 1:1 uit het referentieproject
-/// (LocalLlmConsole.Services.ModelRuntimeStatusTracker; ElapsedFormatter lokaal).
-/// Wordt in de OverviewViewModel geconstrueerd — geen DI nodig.
+/// Maintains the Modelstatus card: Loading/Loaded/Fallback + Loading Time
+/// (counter from _loadingStartedAt). 1:1 port from the reference project
+/// (LocalLlmConsole.Services.ModelRuntimeStatusTracker; ElapsedFormatter local).
+/// Constructed in the OverviewViewModel — no DI needed.
 /// </summary>
 public sealed class ModelRuntimeStatusTracker
 {
@@ -106,7 +106,7 @@ public sealed class ModelRuntimeStatusTracker
         => string.IsNullOrWhiteSpace(selectedModelId)
             || string.Equals(selectedModelId, statusModelId, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Elapsed-formatter uit het referentieproject (DisplayFormatService.Elapsed).</summary>
+    /// <summary>Elapsed formatter from the reference project (DisplayFormatService.Elapsed).</summary>
     private static string Elapsed(TimeSpan elapsed)
     {
         if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;

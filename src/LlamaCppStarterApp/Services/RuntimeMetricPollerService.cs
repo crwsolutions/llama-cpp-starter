@@ -2,7 +2,7 @@ using LlamaCppStarterApp.Models;
 
 namespace LlamaCppStarterApp.Services;
 
-/// <summary>Kaarten-snapshot die de poller naar de UI stuurt (naar main thread maren).</summary>
+/// <summary>Cards snapshot the poller sends to the UI (marshaled to the main thread).</summary>
 public sealed record MetricCardsSnapshot(
     string StatsText,
     string TokensText,
@@ -18,10 +18,10 @@ public sealed class MetricCardsUpdatedEventArgs : EventArgs
 }
 
 /// <summary>
-/// Pollt per tick /slots (altijd) en /metrics (alleen EnableMetrics is not false) van de
-/// current server (ServerHealthService-patroon: StateChanged → start/stop, 2 s-tick, 2 s timeout).
-/// Niet-success status op /metrics (bv. 501 "not enabled") = metrics niet beschikbaar:
-/// leeg-lijst, géén log-spam/fout; /slots-data + last-known-retentie blijven gelden.
+/// Polls /slots (always) and /metrics (only when EnableMetrics is not false) of the
+/// current server per tick (ServerHealthService pattern: StateChanged → start/stop, 2 s tick, 2 s timeout).
+/// Non-success status on /metrics (e.g. 501 "not enabled") = metrics not available:
+/// empty list, no log spam/error; /slots data + last-known retention remain valid.
 /// </summary>
 public sealed class RuntimeMetricPollerService
 {
@@ -35,7 +35,7 @@ public sealed class RuntimeMetricPollerService
 
     private CancellationTokenSource? _cts;
 
-    /// <summary>Kaarten-data voor de Overzicht-kaarten (op de thread waar MetricsUpdated brand).</summary>
+    /// <summary>Card data for the Overview cards (on the thread where MetricsUpdated fires).</summary>
     public event EventHandler<MetricCardsUpdatedEventArgs>? MetricsUpdated;
 
     public RuntimeMetricPollerService(
@@ -72,7 +72,7 @@ public sealed class RuntimeMetricPollerService
         {
             if (_cts is not null)
             {
-                return; // al aan het pollen
+                return; // already polling
             }
 
             _cts = new CancellationTokenSource();
@@ -138,7 +138,7 @@ public sealed class RuntimeMetricPollerService
 
     private async Task TickAsync(LoadedSession session, CancellationToken token)
     {
-        // 1) /slots — altijd (enabled door llama-server)
+        // 1) /slots — always (enabled by llama-server)
         RuntimeSlotSnapshot? slotSnapshot = null;
         try
         {
@@ -147,11 +147,11 @@ public sealed class RuntimeMetricPollerService
         }
         catch
         {
-            // server nog niet bereikbaar → alleen last-known-retentie
+            // server not reachable yet → last-known retention only
         }
 
-        // 2) /metrics — alleen wanneer EnableMetrics is not false.
-        // Niet-success (bv. 501) = endpoint niet ingeschakeld: leeg-lijst, géén fout-log.
+        // 2) /metrics — only when EnableMetrics is not false.
+        // Non-success (e.g. 501) = endpoint not enabled: empty list, no error log.
         IReadOnlyList<PrometheusSample> samples = [];
         if (session.Parameters.EnableMetrics is not false)
         {
@@ -165,11 +165,11 @@ public sealed class RuntimeMetricPollerService
             }
             catch
             {
-                // niet bereikbaar/timeout → leeg-lijst (last-known-retentie via de tracker)
+                // not reachable/timeout → empty list (last-known retention via the tracker)
             }
         }
 
-        // 3) Summary-tracker (rates, totals, last-known) + GPU-summary (cache)
+        // 3) Summary tracker (rates, totals, last-known) + GPU summary (cache)
         var context = new RuntimeMetricContext(
             session.Parameters.Parallel is > 0 ? session.Parameters.Parallel.Value : 1,
             session.Parameters.CtxSize);

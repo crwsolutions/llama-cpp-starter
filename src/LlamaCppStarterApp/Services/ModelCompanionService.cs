@@ -5,10 +5,10 @@ using LlamaCppStarterApp.Models;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Pure static detectie van companion-bestanden (vision-projectors, draft/MTP-heads)
-/// in de map van het hoofdmiddel. Port uit het referentieproject (ModelCatalogService.Companions):
-/// alleen dezelfde map wordt gepeild, family-versie + parametergrootte moeten matchen
-/// (f16-projector krijgt prioriteit). Elke filesystem-fout → leeg resultaat.
+/// Pure static detection of companion files (vision projectors, draft/MTP heads)
+/// in the folder of the main model. Ported from the reference project (ModelCatalogService.Companions):
+/// only the same folder is probed, family version + parameter size must match
+/// (f16 projector gets priority). Any filesystem error → empty result.
 /// </summary>
 public static class ModelCompanionService
 {
@@ -25,8 +25,8 @@ public static class ModelCompanionService
     // --- Vision-projectors ---
 
     /// <summary>
-    /// Effectief projector-pad: configured-pad (profiel-override) wint; null/leeg = auto-detectie
-    /// in de map van het hoofdmiddel (eerste match, f16 eerst).
+    /// Effective projector path: configured path (profile override) wins; null/empty = auto-detection
+    /// in the folder of the main model (first match, f16 first).
     /// </summary>
     public static string? ResolveVisionProjectorPath(string modelPath, string? configuredProjectorPath)
     {
@@ -98,9 +98,9 @@ public static class ModelCompanionService
     }
 
     /// <summary>
-    /// Effectief draft-pad voor --spec-draft-model: alleen "draft-*"-typen;
-    /// configured-pad (profiel-override) wint altijd; "draft-mtp" + embedded
-    /// MTP-laag in het hoofdmiddel → null (llama.cpp gebruikt de eigen laag).
+    /// Effective draft path for --spec-draft-model: only "draft-*" types;
+    /// configured path (profile override) always wins; "draft-mtp" + embedded
+    /// MTP layer in the main model → null (llama.cpp uses its own layer).
     /// </summary>
     public static string? ResolveDraftModelPath(string modelPath, string? speculativeType, string? configuredDraftPath)
     {
@@ -115,7 +115,7 @@ public static class ModelCompanionService
         return FindDraftModels(modelPath, normalizedType).FirstOrDefault();
     }
 
-    /// <summary>True als het hoofdmiddel een eigen (embedded) MTP-head heeft: "*.nextn_predict_layers" > 0.</summary>
+    /// <summary>True if the main model has its own (embedded) MTP head: "*.nextn_predict_layers" > 0.</summary>
     public static bool HasEmbeddedDraftMtp(string modelPath)
     {
         if (string.IsNullOrWhiteSpace(modelPath) || !File.Exists(modelPath)) return false;
@@ -123,7 +123,7 @@ public static class ModelCompanionService
         return HasPositiveNextNPredictLayers(GgufMetadataReader.TryRead(modelPath));
     }
 
-    // --- Naam-markers ---
+    // --- Name markers ---
 
     public static bool LooksLikeVisionProjectorName(string name)
     {
@@ -159,8 +159,8 @@ public static class ModelCompanionService
     }
 
     /// <summary>
-    /// True als het bestand een standalone-speculatie-architectuur bevat
-    /// (eagle3/dflash of *-assistant) → geen standalone model, uitsluiten uit de modellijst.
+    /// True if the file contains a standalone speculative architecture
+    /// (eagle3/dflash or *-assistant) → not a standalone model, exclude from the model list.
     /// </summary>
     public static bool HasStandaloneSpeculativeArchitecture(string path)
     {
@@ -171,7 +171,7 @@ public static class ModelCompanionService
             || architecture.EndsWith("_assistant", StringComparison.OrdinalIgnoreCase);
     }
 
-    // --- Classificatie ---
+    // --- Classification ---
 
     public static SpeculativeCompanionKind ClassifySpeculativeCompanion(string path)
     {
@@ -221,8 +221,8 @@ public static class ModelCompanionService
         => (value ?? "").Trim().ToLowerInvariant();
 
     /// <summary>
-    /// Deterministisch model-id: relatief pad t.o.v. de models-root (extensie eraf),
-    /// veilig gestreept (`[^a-z0-9._-]` → `-`), max 86 tekens + `-{8-hex SHA256(lowercase full path)}`.
+    /// Deterministic model id: relative path w.r.t. the models root (extension stripped),
+    /// safely slugged (`[^a-z0-9._-]` → `-`), max 86 chars + `-{8-hex SHA256(lowercase full path)}`.
     /// </summary>
     public static string ModelIdForPath(string scopeRoot, string modelPath)
     {
@@ -235,14 +235,14 @@ public static class ModelCompanionService
         return $"{safePrefix}-{hash}";
     }
 
-    /// <summary>Vriendelijke weergavenaam: underscores weg, per deel PascalCase (bv. `my-model_q4_k_m` → `My Model Q4 K M`).</summary>
+    /// <summary>Friendly display name: underscores removed, each part PascalCase (e.g. `my-model_q4_k_m` → `My Model Q4 K M`).</summary>
     public static string FriendlyName(string value)
         => string.Join(" ", (value ?? "Local model").Replace('_', '-').Split('-', StringSplitOptions.RemoveEmptyEntries)
             .Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
 
     /// <summary>
-    /// Kwantificatie uit de bestandsnaam (bv. `Q4_K_M`, `IQ2_XXS`, `F16`, `BF16`, `f32`);
-    /// leeg als niet herkend (fallback `general.file_type` uit de GGUF-metadata).
+    /// Quantization from the file name (e.g. `Q4_K_M`, `IQ2_XXS`, `F16`, `BF16`, `f32`);
+    /// empty when not recognized (fallback `general.file_type` from the GGUF metadata).
     /// </summary>
     public static string InferQuant(string file)
     {
@@ -283,7 +283,7 @@ public static class ModelCompanionService
         _ => 5
     };
 
-    /// <summary>Family+versie moeten matchen (bv. "qwen3:0.6b"); parametergrootte ook, tenzij null.</summary>
+    /// <summary>Family+version must match (e.g. "qwen3:0.6b"); parameter size too, unless null.</summary>
     public static bool LooksCompatibleWithMainModel(
         string mainName,
         string companionName,
@@ -303,7 +303,7 @@ public static class ModelCompanionService
             || mainSize.Equals(companionSize, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>Bv. "qwen3:0.6" uit "Qwen3-0.6B-Q4_K_M.gguf" (geen match → null).</summary>
+    /// <summary>E.g. "qwen3:0.6" from "Qwen3-0.6B-Q4_K_M.gguf" (no match → null).</summary>
     public static string? FamilyVersion(string name)
     {
         var match = Regex.Match(
@@ -318,7 +318,7 @@ public static class ModelCompanionService
         return $"{match.Groups["family"].Value.ToLowerInvariant()}:{version}";
     }
 
-    /// <summary>Bv. "0.6" uit "Qwen3-0.6B-Q4_K_M.gguf" (geen match → null).</summary>
+    /// <summary>E.g. "0.6" from "Qwen3-0.6B-Q4_K_M.gguf" (no match → null).</summary>
     public static string? ParameterSize(string name)
     {
         var match = Regex.Match(name ?? "", @"(?i)(?:^|[^a-z0-9])(?<size>\d+(?:\.\d+)?)\s*b(?:[^a-z0-9]|$)");
@@ -349,8 +349,8 @@ public static class ModelCompanionService
 
     private static IEnumerable<string> CandidateCompanions(string folder)
     {
-        // Automatische koppeling blijft bewust beperkt tot de map van het geselecteerde model;
-        // parent/child-scans zouden bij de verkeerde model een sidecar kunnen koppelen.
+        // Automatic linking is deliberately limited to the folder of the selected model;
+        // parent/child scans could attach a sidecar to the wrong model.
         return Directory.EnumerateFiles(folder, "*.gguf", SearchOption.TopDirectoryOnly).Take(500);
     }
 }

@@ -4,9 +4,9 @@ using System.Globalization;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Hardware-kaartprobe: ALLEEN nvidia-smi (gebruikersbeslissing 2026-08-19; geen AMD/Intel/CPU-probes).
-/// Port van de nvidia-smi-onderdelen van het referentieproject
-/// (LocalLlmConsole.Services.GpuStatusProbeService); elke fout → "Unavailable".
+/// Hardware card probe: nvidia-smi ONLY (user decision 2026-08-19; no AMD/Intel/CPU probes).
+/// Port of the nvidia-smi parts of the reference project
+/// (LocalLlmConsole.Services.GpuStatusProbeService); any error → "Unavailable".
 /// </summary>
 public sealed class GpuStatusProbeService
 {
@@ -37,8 +37,8 @@ public sealed class GpuStatusProbeService
     }
 
     /// <summary>
-    /// GPU-rig van het opgegeven proces: --query-compute-apps=gpu_uuid,pid matchen op het PID,
-    /// daarna --query-gpu voor die uuid's. Geen match/fout → "Unavailable" (fallback bij de aanroeper).
+    /// GPU rig of the given process: match --query-compute-apps=gpu_uuid,pid on the PID,
+    /// then --query-gpu for those uuids. No match/error → "Unavailable" (fallback on the caller).
     /// </summary>
     public async Task<string> SummaryForProcessAsync(int processId, CancellationToken cancellationToken = default)
     {
@@ -117,7 +117,7 @@ public sealed class GpuStatusProbeService
             if (File.Exists(candidate)) return candidate;
         }
 
-        return "nvidia-smi.exe"; // afwezig → ProcessRunner-grep → "Unavailable"
+        return "nvidia-smi.exe"; // missing → ProcessRunner grep → "Unavailable"
     }
 
     private static IEnumerable<string> PathEntries()
@@ -132,7 +132,7 @@ public sealed class GpuStatusProbeService
         }
     }
 
-    /// <summary>Kleine interne process-runner: stdout capture + timeout → Kill(entireProcessTree).</summary>
+    /// <summary>Small internal process runner: stdout capture + timeout → Kill(entireProcessTree).</summary>
     private static class ProcessRunner
     {
         public static async Task<(int ExitCode, string Output)> RunAsync(
@@ -162,7 +162,7 @@ public sealed class GpuStatusProbeService
                 }
                 catch
                 {
-                    // proces al gestopt
+                    // process already stopped
                 }
                 throw;
             }

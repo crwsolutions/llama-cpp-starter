@@ -7,7 +7,7 @@ public interface IModelRepository
     Task<List<Model>> GetAllAsync();
     Task<Model?> GetByIdAsync(int id);
     Task UpsertManyAsync(IEnumerable<Model> models);
-    /// <summary>Alleen de capability-cache-blob (CapabilitiesJson) van het model updaten, via deterministische ModelId.</summary>
+    /// <summary>Updates only the model's capability cache blob (CapabilitiesJson), via the deterministic ModelId.</summary>
     Task UpdateCapabilityAsync(string modelId, string? capabilitiesJson);
     Task DeleteAsync(int id);
 }

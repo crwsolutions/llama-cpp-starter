@@ -19,14 +19,14 @@ public class ModelScannerService
         _appSettings = appSettings;
     }
 
-    /// <summary>Aantal companion-bestanden (projector/draft/MTP) dat uit de modellijst is gehouden tijdens de laatste scan.</summary>
+    /// <summary>Number of companion files (projector/draft/MTP) kept out of the model list during the last scan.</summary>
     public int SkippedCompanionCount { get; private set; }
 
     /// <summary>
-    /// Recursief scannen op *.gguf (reparse-points/systeembestanden worden overgeslagen).
-    /// Uitsluiting: projector-/draft-/MTP-namen + standalone-spec-architectuur (GGUF-lezen per bestand).
-    /// Upsert op Path (incl. ModelId/MetadataJson); verdwenen bestanden uit deze map worden verwijderd.
-    /// Modellen zonder Default-profiel worden geseed met de app-globale launch-defaults.
+    /// Recursively scan for *.gguf (reparse points/system files are skipped).
+    /// Exclusion: projector/draft/MTP names + standalone spec architectures (GGUF read per file).
+    /// Upsert on Path (incl. ModelId/MetadataJson); files that disappeared from this folder are deleted.
+    /// Models without a Default profile are seeded with the app-global launch defaults.
     /// </summary>
     public async Task<List<Model>> ScanAsync(string directory)
     {
@@ -60,7 +60,7 @@ public class ModelScannerService
 
         await _modelRepository.UpsertManyAsync(models);
 
-        // Verdwenen bestanden uit deze map verwijderen (alleen binnen de gescande map)
+        // Remove files that disappeared from this folder (only within the scanned folder)
         var dirPrefix = directory.Replace('\\', '/').TrimEnd('/').ToLowerInvariant() + "/";
         var existingPaths = models.Select(m => m.Path.Replace('\\', '/').ToLowerInvariant()).ToHashSet();
         var all = await _modelRepository.GetAllAsync();
@@ -73,8 +73,8 @@ public class ModelScannerService
             }
         }
 
-        // Default-profile-seeding: alleen de nog bestaande DB-rijen uit de gescande map
-        // (de lokale upsert-list heeft nog geen autoincrement Id's).
+        // Default profile seeding: only the still-existing DB rows from the scanned folder
+        // (the local upsert list has no autoincrement Ids yet).
         all = await _modelRepository.GetAllAsync();
         var scannedDbModels = all
             .Where(m => m.Path.Replace('\\', '/').ToLowerInvariant().StartsWith(dirPrefix, StringComparison.Ordinal))
@@ -108,8 +108,8 @@ public class ModelScannerService
     }
 
     /// <summary>
-    /// Metadata-JSON-blob met exact de 9 gespecificeerde velden (bron: GGUF-kop + bestandsnaam).
-    /// Corrupte/leesbare-niet GGUF → ggufMetadataAvailable=false + "unknown"-velden (crashen mag niet).
+    /// Metadata JSON blob with exactly the 9 specified fields (source: GGUF header + file name).
+    /// Corrupt/unreadable non-GGUF → ggufMetadataAvailable=false + "unknown" fields (must not crash).
     /// </summary>
     public static string BuildMetadataJson(string file, string quant, long scannedAt, IReadOnlyDictionary<string, object?> metadata)
     {
@@ -142,8 +142,8 @@ public class ModelScannerService
     }
 
     /// <summary>
-    /// Een .gguf-bestand is een model tenzij de naam een projector/draft/MTP-head is
-    /// of de GGUF-kop een standalone-spec-architectuur bevat (eagle3/dflash/*-assistant).
+    /// A .gguf file is a model unless its name is a projector/draft/MTP head
+    /// or its GGUF header contains a standalone spec architecture (eagle3/dflash/*-assistant).
     /// </summary>
     public static bool IsModelGguf(string file)
     {
@@ -155,12 +155,12 @@ public class ModelScannerService
     }
 
     /// <summary>
-    /// Default-profiel-seeding voor alle gescande modellen zonder Default: ParamsJson =
-    /// GlobalLaunchDefaults uit AppSettings (fallback: app-globale defaults).
+    /// Default profile seeding for all scanned models without a Default: ParamsJson =
+    /// GlobalLaunchDefaults from AppSettings (fallback: app-global defaults).
     /// </summary>
     private async Task SeedDefaultProfilesAsync(List<Model> models)
     {
-        // Ontbrekende/leeg/corrupte AppSettings-rij (bv. "{}") → fallback op de app-globale defaults.
+        // Missing/empty/corrupt AppSettings row (e.g. "{}") → fall back to the app-global defaults.
         var defaultsJson = await _appSettings.GetValueAsync(GlobalLaunchDefaultsSetting);
         var parameters = !string.IsNullOrWhiteSpace(defaultsJson)
             && ProfileParameters.TryParse(defaultsJson, out var parsed, out _)

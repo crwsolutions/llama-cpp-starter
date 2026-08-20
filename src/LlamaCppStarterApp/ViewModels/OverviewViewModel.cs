@@ -8,13 +8,13 @@ public partial class OverviewViewModel : BaseViewModel
 {
     private const int MaxLogLines = 2000;
 
-    // AppSettings-keys voor de geselecteerde Model/Startprofiel/Runtime-dropdowns,
-    // zodat de laatste selectie behouden blijft over een app-herstart.
+    // AppSettings keys for the selected Model/Startprofiel/Runtime dropdowns,
+    // so the last selection survives an app restart.
     public const string SelectedModelIdSetting = "OverviewSelectedModelId";
     public const string SelectedProfileIdSetting = "OverviewSelectedProfileId";
     public const string SelectedRuntimeIdSetting = "OverviewSelectedRuntimeId";
 
-    // Spec-defaults (idle-inhoud van de 6 status-kaarten; kaart-inhoud Engels per spec)
+    // Spec defaults (idle content of the 6 status cards; card content is English per spec)
     private const string IdleHardwareText = "No loaded model";
     private const string IdleStatsText = "Active 0/1 | Queued 0\nBusy/decode: 0, 0";
     private const string IdleTokensText = "No runtime";
@@ -82,15 +82,15 @@ public partial class OverviewViewModel : BaseViewModel
     [ObservableProperty]
     public partial string StatusText { get; set; } = "No runtime is loaded for the selected model.";
 
-    // Live runtime-logboek: per-regel ObservableCollection (CollectionView virtualiseert;
-    // oude regels trimmed zodra MaxLogLines overschreden)
+    // Live runtime log: per-line ObservableCollection (the CollectionView virtualizes;
+    // old lines are trimmed once MaxLogLines is exceeded)
     [ObservableProperty]
     public partial ObservableCollection<string> LogLines { get; set; } = new();
 
     [ObservableProperty]
     public partial bool IsRunning { get; set; }
 
-    // --- Status-kaarten (middenraster 3×2) ---
+    // --- Status cards (middle grid 3×2) ---
 
     [ObservableProperty]
     public partial string ModelStatusText { get; set; } = "Stopped";
@@ -122,8 +122,8 @@ public partial class OverviewViewModel : BaseViewModel
                 Models = new ObservableCollection<Model>(await _modelRepository.GetAllAsync());
                 Runtimes = new ObservableCollection<Runtime>(await _runtimeRepository.GetAllAsync());
 
-                // Herstel de laatste dropdown-keuze (overleefdt app-herstart).
-                // Stale/ontbrekende ID's vallen terug op de bestaande default-selectie ([0] / Default-profiel).
+                // Restore the last dropdown choice (survives an app restart).
+                // Stale/missing IDs fall back to the existing default selection ([0] / Default profile).
                 var savedModelId = TryParseId(await _appSettings.GetValueAsync(SelectedModelIdSetting));
                 var savedRuntimeId = TryParseId(await _appSettings.GetValueAsync(SelectedRuntimeIdSetting));
                 var savedProfileId = TryParseId(await _appSettings.GetValueAsync(SelectedProfileIdSetting));
@@ -131,8 +131,8 @@ public partial class OverviewViewModel : BaseViewModel
                 if (Models.Count > 0)
                 {
                     var restored = savedModelId is int mid ? Models.FirstOrDefault(m => m.Id == mid) : null;
-                    // Profiel-herstel alleen wanneer het model daadwerkelijk uit de bewaarde ID komt
-                    // (profiel-IDs zijn globaal uniek maar horen bij één model → bij model-fallback geen profiel-match).
+                    // Profile restore only when the model actually comes from the saved ID
+                    // (profile IDs are globally unique but belong to one model → no profile match on model fallback).
                     _savedProfileId = restored is not null ? savedProfileId : null;
                     SelectedModel = restored ?? Models[0];
                 }
@@ -250,8 +250,8 @@ public partial class OverviewViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Kaarten-update: Modelstatus via de tracker (Loading/Loaded/Fallback);
-    /// de overige kaarten uit de laatste metrics-snapshot, óf de spec-defaults bij geen sessie.
+    /// Card update: Modelstatus via the tracker (Loading/Loaded/Fallback);
+    /// the remaining cards from the last metrics snapshot, or the spec defaults when there is no session.
     /// </summary>
     private void UpdateStatusCards()
     {
@@ -271,7 +271,7 @@ public partial class OverviewViewModel : BaseViewModel
         var metrics = _lastMetrics;
         if (metrics is null)
         {
-            return; // nog geen poller-tick (Starting) → defaults behouden tot de eerste tick
+            return; // no poller tick yet (Starting) → keep defaults until the first tick
         }
 
         HardwareText = metrics.HardwareText;
@@ -281,7 +281,7 @@ public partial class OverviewViewModel : BaseViewModel
         KvCacheText = metrics.KvCacheText;
     }
 
-    /// <summary>Modelstatus-kaart: Loading/Loaded (tracker) óf "Stopped {model}" (fallback).</summary>
+    /// <summary>Modelstatus card: Loading/Loaded (tracker) or "Stopped {model}" (fallback).</summary>
     private void UpdateModelStatusText()
     {
         var session = _processService.Session;
@@ -291,8 +291,8 @@ public partial class OverviewViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// MTP-tokens-kaart: "Inactive" tenzij het geladen profiel SpecType op draft-*/mtp begint
-    /// (per technische notitie 5); anders de live poller-tekst.
+    /// MTP tokens card: "Inactive" unless the loaded profile's SpecType starts with draft-*/mtp
+    /// (per technical note 5); otherwise the live poller text.
     /// </summary>
     private string MtpGatedText(string pollerMtpText)
     {
@@ -305,7 +305,7 @@ public partial class OverviewViewModel : BaseViewModel
 
     private void OnServerLog(object? sender, ServerLogEventArgs e)
     {
-        // Marshal process-events naar de main UI-thread (AppendOutput-patroon)
+        // Marshal process events to the main UI thread (AppendOutput pattern)
         MainThread.BeginInvokeOnMainThread(() => AppendOutput(e.Line));
     }
 
@@ -313,8 +313,8 @@ public partial class OverviewViewModel : BaseViewModel
     {
         LogLines.Add(line);
 
-        // Log beperken tot MaxLogLines regels (oudste regels weggooien;
-        // in de praktijk precies 1 verwijdering per toevoeging)
+        // Limit the log to MaxLogLines lines (drop the oldest lines;
+        // in practice exactly 1 removal per addition)
         while (LogLines.Count > MaxLogLines)
         {
             LogLines.RemoveAt(0);
@@ -345,7 +345,7 @@ public partial class OverviewViewModel : BaseViewModel
 
     private void OnMetricsUpdated(object? sender, MetricCardsUpdatedEventArgs e)
     {
-        // Poller-events naar de main UI-thread (bestaand marshal-patroon)
+        // Poller events to the main UI thread (existing marshal pattern)
         MainThread.BeginInvokeOnMainThread(() =>
         {
             _lastMetrics = e.Snapshot;
@@ -380,7 +380,7 @@ public partial class OverviewViewModel : BaseViewModel
         });
     }
 
-    /// <summary>Laden: geselecteerd model + profiel + runtime starten.</summary>
+    /// <summary>Load: start the selected model + profile + runtime.</summary>
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -419,7 +419,7 @@ public partial class OverviewViewModel : BaseViewModel
         }
     }
 
-    /// <summary>Unload: POST /exit, max 30 s wachten, daarna kill.</summary>
+    /// <summary>Unload: POST /exit, wait max 30 s, then kill.</summary>
     [RelayCommand]
     private async Task UnloadAsync()
     {

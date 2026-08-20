@@ -32,9 +32,9 @@ internal static class Database
 
         var userVersion = GetInt(connection, "PRAGMA user_version");
 
-        // 0 → 2: nieuwe tabellen voor modellen/profielen/runtimes/settings.
-        // CreateCoreTables/SeedSettings maken direct het volledige v2-schema
-        // (incl. ModelId/MetadataJson/CapabilitiesJson + GlobalLaunchDefaults) → één stap.
+        // 0 → 2: new tables for models/profiles/runtimes/settings.
+        // CreateCoreTables/SeedSettings create the full v2 schema directly
+        // (incl. ModelId/MetadataJson/CapabilitiesJson + GlobalLaunchDefaults) → one step.
         if (userVersion < 1)
         {
             CreateCoreTables(connection);
@@ -43,8 +43,8 @@ internal static class Database
             return;
         }
 
-        // 1 → 2: modelmetadata + capabilities (ModelId/MetadataJson/CapabilitiesJson)
-        //         + app-globale launch-defaults als AppSettings-rij
+        // 1 → 2: model metadata + capabilities (ModelId/MetadataJson/CapabilitiesJson)
+        //         + app-global launch defaults as an AppSettings row
         if (userVersion < 2)
         {
             MigrateToVersion2(connection);
@@ -63,9 +63,9 @@ internal static class Database
     }
 
     /// <summary>
-    /// Migratie 1 → 2: drie nieuwe kolommen op Models + backfill van ModelId (deterministisch
-    /// uit Path) + uniek index; seedt AppSettings-rij GlobalLaunchDefaults (INSERT OR IGNORE).
-    /// Niet-destructief en idempotent; bestaande data blijft onaangetast.
+    /// Migration 1 → 2: three new columns on Models + ModelId backfill (deterministic
+    /// from Path) + unique index; seeds the AppSettings row GlobalLaunchDefaults (INSERT OR IGNORE).
+    /// Non-destructive and idempotent; existing data is left untouched.
     /// </summary>
     private static void MigrateToVersion2(SqliteConnection connection)
     {
@@ -80,8 +80,8 @@ internal static class Database
             command.ExecuteNonQuery();
         }
 
-        // Backfill: deterministisch ModelId per rij (zelfde formule als de scanner),
-        // met de geconfigureerde ModelsDirectory als scope-root.
+        // Backfill: deterministic ModelId per row (same formula as the scanner),
+        // using the configured ModelsDirectory as scope root.
         var modelsRoot = GetSettingValue(connection, "ModelsDirectory");
         using (var select = new SqliteCommand("SELECT Id, Path FROM Models WHERE ModelId = ''", connection))
         using (var update = new SqliteCommand("UPDATE Models SET ModelId = @ModelId WHERE Id = @Id"))
@@ -100,7 +100,7 @@ internal static class Database
 
             foreach (var (id, modelId) in rows)
             {
-                // Unieke index: nooit dubbel schrijven (kan niet voorbestaan, maar dan liever overslaan).
+                // Unique index: never write a duplicate (cannot pre-exist, but skip if so).
                 exists.Parameters.AddWithValue("@ModelId", modelId);
                 exists.Parameters.AddWithValue("@Id", id);
                 if ((int)exists.ExecuteScalar()! > 0) continue;
@@ -173,8 +173,8 @@ internal static class Database
 
     private static void SeedSettings(SqliteConnection connection)
     {
-        // GlobalLaunchDefaults = app-globale defaults (exacte referentie-opdracht) als JSON-blob;
-        // INSERT OR IGNORE → bestaande waarde blijft onaangetast (niet-destructief).
+        // GlobalLaunchDefaults = app-global defaults (exact reference command) as a JSON blob;
+        // INSERT OR IGNORE → an existing value is left untouched (non-destructive).
         using var command = new SqliteCommand(
             $"""
             INSERT OR IGNORE INTO AppSettings (Key, Value) VALUES ('ModelsDirectory', 'E:\\llama.cpp\\models');

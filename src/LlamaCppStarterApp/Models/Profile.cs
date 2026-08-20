@@ -1,9 +1,9 @@
 namespace LlamaCppStarterApp.Models;
 
 /// <summary>
-/// Repo-model voor een opstartprofiel (gekoppeld aan exact één model).
-/// Name en Port zijn observable zodat het Startinstellingen-paneel er direct (two-way)
-/// aan kan binden; ParamsJson is de JSON-blob van <see cref="ProfileParameters"/>.
+/// Repository model for a launch profile (bound to exactly one model).
+/// Name and Port are observable so the Startinstellingen panel can bind directly (two-way);
+/// ParamsJson is the JSON blob of <see cref="ProfileParameters"/>.
 /// </summary>
 public partial class Profile : ObservableObject
 {
@@ -21,6 +21,6 @@ public partial class Profile : ObservableObject
 
     public string ParamsJson { get; set; } = string.Empty;
 
-    /// <summary>Weergavenaam van het basismodel (niet in DB; door de VM gevuld).</summary>
+    /// <summary>Display name of the base model (not stored in DB; populated by the VM).</summary>
     public string ModelName { get; set; } = string.Empty;
 }

@@ -1,6 +1,6 @@
 namespace LlamaCppStarterApp.Converters;
 
-/// <summary>int? ↔ Entry-tekst (null = leeg = vlag niet doorgeven).</summary>
+/// <summary>int? ↔ Entry text (null = empty = flag not passed).</summary>
 public class IntNullableConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -17,7 +17,7 @@ public class IntNullableConverter : IValueConverter
     }
 }
 
-/// <summary>double? ↔ Entry-tekst (null = leeg = vlag niet doorgeven).</summary>
+/// <summary>double? ↔ Entry text (null = empty = flag not passed).</summary>
 public class DoubleNullableConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>

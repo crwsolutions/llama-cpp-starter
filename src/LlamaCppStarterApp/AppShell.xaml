@@ -12,7 +12,7 @@
     FlyoutWidth="260"
     FlyoutBackgroundColor="Black">
 
-    <!-- Flyout-items met FontAwesome6 Free Solid glyphs (huis, map, code, tandenwiel) -->
+    <!-- Flyout items with FontAwesome6 Free Solid glyphs (home, folder, code, gear) -->
     <Shell.ItemTemplate>
         <DataTemplate x:DataType="ShellContent">
             <Grid HeightRequest="44" ColumnDefinitions="Auto,*">

@@ -431,7 +431,7 @@
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
     </Style>
 
-    <!-- ===== App-specifieke stijlen (prototype: sectie-look + tabellen) ===== -->
+    <!-- ===== App-specific styles (prototype: section look + tables) ===== -->
 
     <Style x:Key="SectionTitle" TargetType="Label">
         <Setter Property="FontSize" Value="18" />
@@ -474,7 +474,7 @@
         <Setter Property="BackgroundColor" Value="Transparent" />
     </Style>
 
-    <!-- Klein rij-knopje (Open Folder / Delete / Add) -->
+    <!-- Small row button (Open Folder / Delete / Add) -->
     <Style x:Key="RowButton" TargetType="Button">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="10,4" />
@@ -492,7 +492,7 @@
         <Setter Property="BorderColor" Value="{AppThemeBinding Light=#B00020, Dark=#FF6B6B}" />
     </Style>
 
-    <!-- Fieldeveld in het Startinstellingen-paneel -->
+    <!-- Field in the Startinstellingen panel -->
     <Style x:Key="FieldLabel" TargetType="Label">
         <Setter Property="FontSize" Value="13" />
         <Setter Property="VerticalOptions" Value="Center" />
@@ -515,7 +515,7 @@
         <Setter Property="TitleColor" Value="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}" />
     </Style>
 
-    <!-- Live runtime-logboek (donker, monospace) -->
+    <!-- Live runtime log (dark, monospace) -->
     <Style x:Key="LogLabel" TargetType="Label">
         <Setter Property="FontFamily" Value="Consolas" />
         <Setter Property="FontSize" Value="12" />

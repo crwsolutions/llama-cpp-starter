@@ -1,6 +1,6 @@
 namespace LlamaCppStarterApp.Converters;
 
-/// <summary>null → false, anders → true (voedt IsVisible; dat is een bool).</summary>
+/// <summary>null → false, otherwise → true (feeds IsVisible; that is a bool).</summary>
 public class NullToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -12,7 +12,7 @@ public class NullToVisibilityConverter : IValueConverter
     }
 }
 
-/// <summary>true → true, false/null → false (voedt IsVisible; dat is een bool).</summary>
+/// <summary>true → true, false/null → false (feeds IsVisible; that is a bool).</summary>
 public class BoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -24,7 +24,7 @@ public class BoolToVisibilityConverter : IValueConverter
     }
 }
 
-/// <summary>true → false, false/null → true (voedt IsVisible; dat is een bool).</summary>
+/// <summary>true → false, false/null → true (feeds IsVisible; that is a bool).</summary>
 public class InverseBoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -36,7 +36,7 @@ public class InverseBoolToVisibilityConverter : IValueConverter
     }
 }
 
-/// <summary>bool? ↔ bool voor CheckBox-binding (null = ongevinkt).</summary>
+/// <summary>bool? ↔ bool for CheckBox binding (null = unchecked).</summary>
 public class BoolNullableConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -46,7 +46,7 @@ public class BoolNullableConverter : IValueConverter
         value is true;
 }
 
-/// <summary>Niet-lege string → true, null/leeg → false (voedt IsVisible; dat is een bool).</summary>
+/// <summary>Non-empty string → true, null/empty → false (feeds IsVisible; that is a bool).</summary>
 public class StringToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>

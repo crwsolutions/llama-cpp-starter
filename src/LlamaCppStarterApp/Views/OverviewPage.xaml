@@ -8,7 +8,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="20,16">
 
-        <!-- Topbar: model / profiel / runtime dropdowns + Laden/Unload -->
+        <!-- Topbar: model / profile / runtime dropdowns + Load/Unload -->
         <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
             <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
                 <Grid Grid.Row="0" ColumnDefinitions="2*,2*,3*,Auto" ColumnSpacing="8">
@@ -63,7 +63,7 @@
             </Grid>
         </Border>
 
-        <!-- Midden: 6 status-kaarten (3×2 raster; MAUI heeft geen UniformGrid → Grid *) -->
+        <!-- Middle: 6 status cards (3×2 grid; MAUI has no UniformGrid → Grid *) -->
         <Grid Grid.Row="1"
               RowDefinitions="*,*"
               ColumnDefinitions="*,*,*"
@@ -71,7 +71,7 @@
               RowSpacing="12"
               Margin="0,12,0,0">
 
-            <!-- Kaart 1: Modelstatus (lokaal status-state) -->
+            <!-- Card 1: Modelstatus (local status state) -->
             <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -95,7 +95,7 @@
                 </Grid>
             </Border>
 
-            <!-- Kaart 2: Hardware (nvidia-smi) -->
+            <!-- Card 2: Hardware (nvidia-smi) -->
             <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -119,7 +119,7 @@
                 </Grid>
             </Border>
 
-            <!-- Kaart 3: Stats (/slots) -->
+            <!-- Card 3: Stats (/slots) -->
             <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -144,7 +144,7 @@
                 </Grid>
             </Border>
 
-            <!-- Kaart 4: Tokens (/metrics) -->
+            <!-- Card 4: Tokens (/metrics) -->
             <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -169,7 +169,7 @@
                 </Grid>
             </Border>
 
-            <!-- Kaart 5: MTP-tokens (/metrics) -->
+            <!-- Card 5: MTP tokens (/metrics) -->
             <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -194,7 +194,7 @@
                 </Grid>
             </Border>
 
-            <!-- Kaart 6: KV-cache (/metrics + /slots-fallback) -->
+            <!-- Card 6: KV cache (/metrics + /slots fallback) -->
             <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -220,7 +220,7 @@
             </Border>
         </Grid>
 
-        <!-- Live runtime-logboek -->
+        <!-- Live runtime log -->
         <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
             <Grid RowDefinitions="Auto,*,Auto" >
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*">

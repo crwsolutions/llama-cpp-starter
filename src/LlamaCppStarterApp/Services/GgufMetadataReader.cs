@@ -3,11 +3,11 @@ using System.Text;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Aangebouwde, read-only lezer voor de metadata-kop van een GGUF-bestand.
-/// Port uit het referentieproject (LocalLlmConsole): magic "GGUF", versie 1-3,
-/// type-tags 0-12, arrays als samenvatting, limieten 1 MiB string / 100.000
-/// array-elementen / 64 MiB blok / 512 keys, case-insensitief dictionary.
-/// Elke fout (corrupt, te groot, buffer te kort) → leeg dictionary, geen exception.
+/// Built-in, read-only reader for the metadata header of a GGUF file.
+/// Ported from the reference project (LocalLlmConsole): magic "GGUF", version 1-3,
+/// type tags 0-12, arrays as summary, limits 1 MiB string / 100.000
+/// array elements / 64 MiB block / 512 keys, case-insensitive dictionary.
+/// Any error (corrupt, too large, buffer too short) → empty dictionary, no exception.
 /// </summary>
 public static class GgufMetadataReader
 {

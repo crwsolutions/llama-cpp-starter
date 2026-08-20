@@ -3,10 +3,10 @@ using LlamaCppStarterApp.Models;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// GPU-samenvatting voor de Hardware-kaart (nvidia-smi-alleen).
-/// Geen sessie → "No loaded model"; met sessie → per-PID-probe (uuid-match op het
-/// llama-server-PID) met fallback op de volledige --query-gpu-lijst; 10 s-caché per sessie-key.
-/// (Referentie-naam RuntimeGpuSummaryApplicationService is te breed voor deze nvidia-smi-only scope.)
+/// GPU summary for the Hardware card (nvidia-smi only).
+/// No session → "No loaded model"; with session → per-PID probe (uuid match on the
+/// llama-server PID) with fallback to the full --query-gpu listing; 10 s cache per session key.
+/// (The reference name RuntimeGpuSummaryApplicationService is too broad for this nvidia-smi-only scope.)
 /// </summary>
 public sealed class GpuSummaryService
 {

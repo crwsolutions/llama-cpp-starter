@@ -9,7 +9,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="20,16">
 
-        <!-- Topbar: Map kiezen + pad -->
+        <!-- Topbar: pick folder + path -->
         <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <Button Grid.Column="0"
@@ -31,7 +31,7 @@
             </Grid>
         </Border>
 
-        <!-- Sectie: Geïnstalleerde lokale builds -->
+        <!-- Section: Geïnstalleerde lokale builds (installed local builds) -->
         <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
             <Grid RowDefinitions="Auto,Auto,*">
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -47,7 +47,7 @@
                            Style="{StaticResource SectionTitle}" />
                 </Grid>
 
-                <!-- Tabelkop -->
+                <!-- Table header -->
                 <Grid Grid.Row="1"
                       ColumnDefinitions="2*,Auto,Auto,3*,Auto"
                       Margin="0,12,0,4">
@@ -94,7 +94,7 @@
             </Grid>
         </Border>
 
-        <!-- Statusregel -->
+        <!-- Status line -->
         <Label Grid.Row="3"
                Text="{Binding StatusText}"
                Style="{StaticResource SectionSubtitle}"

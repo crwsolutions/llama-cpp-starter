@@ -4,7 +4,7 @@ public class Model
 {
     public int Id { get; set; }
 
-    /// <summary>Deterministisch model-id (safe-prefix uit relatief pad + 8-hex SHA256 van het lowercase full path).</summary>
+    /// <summary>Deterministic model id (safe prefix of the relative path + 8-hex SHA256 of the lowercase full path).</summary>
     public string ModelId { get; set; } = string.Empty;
 
     public string Path { get; set; } = string.Empty;
@@ -14,9 +14,9 @@ public class Model
     public string? MmprojPath { get; set; }
     public long ScannedAt { get; set; }
 
-    /// <summary>GGUF-metadata-blob (JSON; exact de gescande velden), gevuld bij (re-)scan.</summary>
+    /// <summary>GGUF metadata blob (JSON; exactly the scanned fields), populated during (re-)scan.</summary>
     public string MetadataJson { get; set; } = string.Empty;
 
-    /// <summary>Capability-cache (JSON: fingerprint + summary + summaryText); null = nog nooit geïnspecteerd.</summary>
+    /// <summary>Capability cache (JSON: fingerprint + summary + summaryText); null = never inspected.</summary>
     public string? CapabilitiesJson { get; set; }
 }

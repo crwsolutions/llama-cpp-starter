@@ -1,6 +1,6 @@
 namespace LlamaCppStarterApp.Converters;
 
-/// <summary>long bytes → "18,7 GB" (Nederlandse cultuur).</summary>
+/// <summary>long bytes → "18,7 GB" (Dutch culture).</summary>
 public class SizeToGbConverter : IValueConverter
 {
     private static readonly CultureInfo NlCulture = new("nl-NL");

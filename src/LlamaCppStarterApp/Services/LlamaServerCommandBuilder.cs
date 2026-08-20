@@ -3,14 +3,14 @@ using LlamaCppStarterApp.Models;
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Pure static builder voor de llama-server.exe opstartargumenten.
-/// Volgorde volgt de referentie-opdracht (zie plan). Null/leeg = vlag weglaten (llama.cpp-default).
+/// Pure static builder for the llama-server.exe launch arguments.
+/// Order follows the reference command (see plan). Null/empty = flag omitted (llama.cpp default).
 /// </summary>
 public static class LlamaServerCommandBuilder
 {
     /// <summary>
-    /// <paramref name="draftModelPath"/> = opgelost --spec-draft-model-pad
-    /// (via ModelCompanionService.ResolveDraftModelPath; null = geen flag, bv. embedded MTP).
+    /// <paramref name="draftModelPath"/> = resolved --spec-draft-model path
+    /// (via ModelCompanionService.ResolveDraftModelPath; null = no flag, e.g. embedded MTP).
     /// </summary>
     public static string[] BuildArgs(Runtime? runtime, Model model, ProfileParameters p, int port, string? draftModelPath)
     {
@@ -20,7 +20,7 @@ public static class LlamaServerCommandBuilder
         args.Add("--model");
         args.Add(Quote(model.Path));
 
-        // -mm <mmproj> (alleen indien profiel-override of model-koppeling)
+        // -mm <mmproj> (only if profile override or model-linked projector)
         var mmproj = p.GetEffectiveMmproj(model);
         if (!string.IsNullOrWhiteSpace(mmproj))
         {
@@ -123,7 +123,7 @@ public static class LlamaServerCommandBuilder
             args.Add(p.CacheTypeV);
         }
 
-        // --rope-* (na de cache-types)
+        // --rope-* (after the cache types)
         if (!string.IsNullOrWhiteSpace(p.RopeScaling))
         {
             args.Add("--rope-scaling");
@@ -166,7 +166,7 @@ public static class LlamaServerCommandBuilder
             args.Add(FormatDouble(p.RepeatPenalty.Value, "0.0"));
         }
 
-        // --jinja (true = --jinja, false = --no-jinja, null = niet meegeven)
+        // --jinja (true = --jinja, false = --no-jinja, null = not passed)
         if (p.Jinja is not null)
         {
             args.Add(p.Jinja.Value ? "--jinja" : "--no-jinja");
@@ -184,7 +184,7 @@ public static class LlamaServerCommandBuilder
             args.Add(p.CtxCheckpoints.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
-        // --cache-prompt (true = aan, false = --no-cache-prompt, null = niet meegeven)
+        // --cache-prompt (true = on, false = --no-cache-prompt, null = not passed)
         if (p.CachePrompt is not null)
         {
             args.Add(p.CachePrompt.Value ? "--cache-prompt" : "--no-cache-prompt");
@@ -202,7 +202,7 @@ public static class LlamaServerCommandBuilder
             args.Add(p.SpecDraftNMax.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
-        // --spec-draft-model (alleen indien opgelost pad niet-witruimte; null = bv. embedded MTP)
+        // --spec-draft-model (only if the resolved path is non-whitespace; null = e.g. embedded MTP)
         if (!string.IsNullOrWhiteSpace(draftModelPath))
         {
             args.Add("--spec-draft-model");
@@ -215,7 +215,7 @@ public static class LlamaServerCommandBuilder
             args.Add(p.ImageMinTokens.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
-        // --metrics (standaard uit bij llama-server; EnableMetrics is not false = aan, default true)
+        // --metrics (off by default in llama-server; EnableMetrics is not false = on, default true)
         if (p.EnableMetrics is not false)
         {
             args.Add("--metrics");
@@ -229,13 +229,13 @@ public static class LlamaServerCommandBuilder
         "llama-server.exe " + string.Join(' ', args);
 
     /// <summary>
-    /// Double formatteren met de precisie van de referentie-opdracht
-    /// (bv. --temp 1.0, --top-p 0.95, --min-p 0.00, --presence-penalty 0.0, --repeat-penalty 1.0).
+    /// Double formatting with the precision of the reference command
+    /// (e.g. --temp 1.0, --top-p 0.95, --min-p 0.00, --presence-penalty 0.0, --repeat-penalty 1.0).
     /// </summary>
     private static string FormatDouble(double value, string format) =>
         value.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
 
-    /// <summary>Waarde quoten als die spaties bevat (bv. "C:\path with space\file.gguf").</summary>
+    /// <summary>Quote a value when it contains spaces (e.g. "C:\path with space\file.gguf").</summary>
     private static string Quote(string value) =>
         value.Contains(' ') ? $"\"{value}\"" : value;
 }

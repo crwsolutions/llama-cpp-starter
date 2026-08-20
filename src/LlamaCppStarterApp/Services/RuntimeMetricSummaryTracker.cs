@@ -1,12 +1,12 @@
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
-/// Mini-context in plaats van het referentie-AppSettings: alleen wat de kaarten nodig hebben.
-/// KvUnified = altijd "auto" (geen --cache-type-* unified-splitting in deze app).
+/// Mini context instead of the reference AppSettings: only what the cards need.
+/// KvUnified = always "auto" (no --cache-type-* unified splitting in this app).
 /// </summary>
 public sealed record RuntimeMetricContext(int ParallelSlots, int? ContextSize);
 
-/// <summary>Resultaat van één Apply: de teksten voor de Tokens/MTP-tokens/Stats/KV-cache-kaarten.</summary>
+/// <summary>Result of a single Apply: the texts for the Tokens/MTP tokens/Stats/KV cache cards.</summary>
 public sealed record RuntimeMetricSummaryResult(
     string Tokens,
     string MtpTokens,
@@ -16,9 +16,9 @@ public sealed record RuntimeMetricSummaryResult(
     DateTimeOffset? LastKnownCapturedAt);
 
 /// <summary>
-/// Port van LocalLlmConsole.Services.RuntimeMetricSummaryTracker (Apply + state): wall-clock én
-/// seconds-based rates (anti-dilutie), last-known-retentie, per-runtime-key state.
-/// Grafieken/gateway-onderdelen uit het referentieproject zijn niet meegenomen.
+/// Port of LocalLlmConsole.Services.RuntimeMetricSummaryTracker (Apply + state): wall-clock and
+/// seconds-based rates (anti-dilution), last-known retention, per-runtime-key state.
+/// Charts/gateway parts from the reference project are not included.
 /// </summary>
 public sealed class RuntimeMetricSummaryTracker
 {

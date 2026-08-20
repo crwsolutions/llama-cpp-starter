@@ -4,13 +4,13 @@ using System.Text.Json.Serialization;
 namespace LlamaCppStarterApp.Models;
 
 /// <summary>
-/// Alle startparameters van een profiel in één strongly-typed class.
-/// Dubbel gebruik: editor-model voor het Startinstellingen-paneel én opslagmodel
-/// (JSON-blob in de Profiles.Params-kolom). Null = vlag niet doorgeven (llama.cpp-default).
+/// All launch parameters of a profile in one strongly-typed class.
+/// Dual use: editor model for the Startinstellingen panel and storage model
+/// (JSON blob in the Profiles.Params column). Null = flag not passed (llama.cpp default).
 /// </summary>
 public partial class ProfileParameters : ObservableObject
 {
-    // Dropdown-opties (bron: docs/llama-server-help.txt)
+    // Dropdown options (source: docs/llama-server-help.txt)
     public const string DefaultPlaceholder = "(default)";
 
     public static readonly IReadOnlyList<string> SplitModes = new[] { "none", "layer", "row", "tensor" };
@@ -24,28 +24,28 @@ public partial class ProfileParameters : ObservableObject
 
     public static readonly IReadOnlyList<string> RopeScalingValues = new[] { "none", "linear", "yarn" };
 
-    // Optielijsten voor de pickers, inclusief "(default)" = vlag niet doorgeven
+    // Option lists for the pickers, including "(default)" = flag not passed
     public static readonly IReadOnlyList<string> SplitModeOptions = new[] { DefaultPlaceholder }.Concat(SplitModes).ToArray();
     public static readonly IReadOnlyList<string> FlashAttnOptions = new[] { DefaultPlaceholder }.Concat(FlashAttnValues).ToArray();
     public static readonly IReadOnlyList<string> CacheTypeOptions = new[] { DefaultPlaceholder }.Concat(CacheTypes).ToArray();
     public static readonly IReadOnlyList<string> SpecTypeOptions = new[] { DefaultPlaceholder }.Concat(SpecTypes).ToArray();
     public static readonly IReadOnlyList<string> RopeScalingOptions = new[] { DefaultPlaceholder }.Concat(RopeScalingValues).ToArray();
 
-    // --- Basisstart ---
+    // --- Basic launch ---
 
     /// <summary>--ctx-size</summary>
     [ObservableProperty]
     public partial int? CtxSize { get; set; }
 
-    /// <summary>--split-mode (UI-label "GPU mode"). Null = default "layer" wordt gebruikt.</summary>
+    /// <summary>--split-mode (UI label "GPU mode"). Null = default "layer" is used.</summary>
     [ObservableProperty]
     public partial string? SplitMode { get; set; }
 
-    /// <summary>-ngl (bv. "999", "auto", "all").</summary>
+    /// <summary>-ngl (e.g. "999", "auto", "all").</summary>
     [ObservableProperty]
     public partial string? Ngl { get; set; }
 
-    /// <summary>--tensor-split (bv. "24,8").</summary>
+    /// <summary>--tensor-split (e.g. "24,8").</summary>
     [ObservableProperty]
     public partial string? TensorSplit { get; set; }
 
@@ -53,7 +53,7 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial int? Threads { get; set; }
 
-    /// <summary>--host bind-adres. Null = "0.0.0.0".</summary>
+    /// <summary>--host bind address. Null = "0.0.0.0".</summary>
     [ObservableProperty]
     public partial string? HostBind { get; set; }
 
@@ -61,7 +61,7 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial bool? NoHost { get; set; }
 
-    /// <summary>-np (aantal server slots)</summary>
+    /// <summary>-np (number of server slots)</summary>
     [ObservableProperty]
     public partial int? Parallel { get; set; }
 
@@ -73,7 +73,7 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial int? CtxCheckpoints { get; set; }
 
-    // --- Prestaties & Geheugen ---
+    // --- Performance & Memory ---
 
     /// <summary>--batch-size</summary>
     [ObservableProperty]
@@ -111,7 +111,7 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial int? RopeFreqScale { get; set; }
 
-    // --- Speculatie / MTP ---
+    // --- Speculation / MTP ---
 
     /// <summary>--spec-type</summary>
     [ObservableProperty]
@@ -122,21 +122,21 @@ public partial class ProfileParameters : ObservableObject
     public partial int? SpecDraftNMax { get; set; }
 
     /// <summary>
-    /// Draft-model override voor --spec-draft-model. Null = auto-resolutie op het moment van laden
-    /// (companion-bestand in de modelmap; embedded MTP → geen flag); leeg/expliciet pad wint.
+    /// Draft model override for --spec-draft-model. Null = auto-resolution at load time
+    /// (companion file in the model folder; embedded MTP → no flag); empty/explicit path wins.
     /// </summary>
     [ObservableProperty]
     public partial string? SpecDraftPath { get; set; }
 
     // --- Prompt cache ---
 
-    /// <summary>--cache-prompt (true = aan, false = --no-cache-prompt, null = niet meegeven)</summary>
+    /// <summary>--cache-prompt (true = on, false = --no-cache-prompt, null = not passed)</summary>
     [ObservableProperty]
     public partial bool? CachePrompt { get; set; }
 
     // --- Vision ---
 
-    /// <summary>-mm override. Null = auto-gekoppelde mmproj van het model; leeg = uit.</summary>
+    /// <summary>-mm override. Null = auto-linked mmproj of the model; empty = off.</summary>
     [ObservableProperty]
     public partial string? MmprojPath { get; set; }
 
@@ -144,7 +144,7 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial int? ImageMinTokens { get; set; }
 
-    // --- Standaardwaarden generatie ---
+    // --- Generation defaults ---
 
     /// <summary>--temp</summary>
     [ObservableProperty]
@@ -170,19 +170,19 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial double? RepeatPenalty { get; set; }
 
-    /// <summary>--jinja (true = --jinja, false = --no-jinja, null = niet meegeven). Default true.</summary>
+    /// <summary>--jinja (true = --jinja, false = --no-jinja, null = not passed). Default true.</summary>
     [ObservableProperty]
     public partial bool? Jinja { get; set; } = true;
 
     /// <summary>
-    /// Metrics endpoint: true = --flags meegeven (standaard; nodig voor de Overzicht-metricskaarten),
-    /// false = /metrics uit (llama-server-default), null = niet meegeven (≡ uit).
-    /// Oude Params-blobs zonder key → true via de initializer.
+    /// Metrics endpoint: true = pass the flag (default; needed for the Overview metrics cards),
+    /// false = /metrics off (llama-server default), null = not passed (≡ off).
+    /// Old Params blobs without the key → true via the initializer.
     /// </summary>
     [ObservableProperty]
     public partial bool? EnableMetrics { get; set; } = true;
 
-    // --- JSON (de)serialisatie voor de Params-blob ---
+    // --- JSON (de)serialization for the Params blob ---
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -191,9 +191,9 @@ public partial class ProfileParameters : ObservableObject
     };
 
     /// <summary>
-    /// App-globale defaults (exacte waarden = referentie-opdracht uit het core-plan,
-    /// incl. spec-type + vision-waarden). Seed voor elk nieuw Default-profiel;
-    /// opgeslagen als AppSettings-rij `GlobalLaunchDefaults` (JSON-blob).
+    /// App-global defaults (exact values = reference command from the core plan,
+    /// incl. spec-type + vision values). Seed for each new Default profile;
+    /// stored as the AppSettings row `GlobalLaunchDefaults` (JSON blob).
     /// </summary>
     public static ProfileParameters GlobalLaunchDefaults
     {
@@ -235,12 +235,12 @@ public partial class ProfileParameters : ObservableObject
 
     private static ProfileParameters? _globalLaunchDefaults;
 
-    /// <summary>JSON van <see cref="GlobalLaunchDefaults"/> (seed voor AppSettings-rij GlobalLaunchDefaults).</summary>
+    /// <summary>JSON of <see cref="GlobalLaunchDefaults"/> (seed for the AppSettings row GlobalLaunchDefaults).</summary>
     public static string GlobalLaunchDefaultsJson() => GlobalLaunchDefaults.ToJson();
 
-    // Let op: het concrete type expliciet megeven. `this`/de generic-variant lost een
-    // partial class op op het gedeclareerde type, waardoor de source-generated properties
-    // (de [ObservableProperty]-velden) NIET (de)serialiseerd werden → lege profielen.
+    // Note: pass the concrete type explicitly. `this`/the generic variant resolves a
+    // partial class to the declared type, so the source-generated properties
+    // (the [ObservableProperty] fields) would NOT (de)serialize → empty profiles.
     public string ToJson() => JsonSerializer.Serialize(this, typeof(ProfileParameters), JsonOptions);
 
     public static ProfileParameters FromJson(string? json)
@@ -256,7 +256,7 @@ public partial class ProfileParameters : ObservableObject
         }
         catch (JsonException)
         {
-            // Corrupte/oude blob → fallback naar leeg profiel (crashen mag niet).
+            // Corrupt/old blob → fall back to an empty profile (must not crash).
             return new ProfileParameters();
         }
     }
@@ -285,8 +285,8 @@ public partial class ProfileParameters : ObservableObject
     }
 
     /// <summary>
-    /// True als er geen enkele parameter expliciet is ingevuld (alle velden null; Jinja staat
-    /// op zijn class-default true). Gebruikt om leeg-geseede Default-profielen te herkennen.
+    /// True when no parameter has been explicitly filled in (all fields null; Jinja is at its
+    /// class default true). Used to recognize empty-seeded Default profiles.
     /// </summary>
     public bool IsEmpty() =>
         CtxSize is null && SplitMode is null && Ngl is null && TensorSplit is null
@@ -304,8 +304,8 @@ public partial class ProfileParameters : ObservableObject
         && EnableMetrics is not false;
 
     /// <summary>
-    /// Effectieve mmproj-pad: profiel-override (null = auto-gekoppelde mmproj van het model;
-    /// expliciet leeg = mmproj uit).
+    /// Effective mmproj path: profile override (null = auto-linked mmproj of the model;
+    /// explicitly empty = mmproj off).
     /// </summary>
     public string? GetEffectiveMmproj(Model model)
     {
