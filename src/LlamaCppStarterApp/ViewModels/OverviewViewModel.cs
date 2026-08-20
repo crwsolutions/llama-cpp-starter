@@ -67,12 +67,31 @@ public partial class OverviewViewModel : BaseViewModel
     [ObservableProperty]
     public partial ObservableCollection<Runtime> Runtimes { get; set; } = new();
 
-    [ObservableProperty]
-    public partial string ModelsFolder { get; set; } = string.Empty;
+    // Read-only preview of the exact command that "Laden" would start (same pure static
+    // resolution as the real load). Computed on demand; the NotifyPropertyChangedFor
+    // attributes on the selection properties keep the bound Label current.
+    public string CommandPreview
+    {
+        get
+        {
+            if (SelectedModel is null || SelectedProfile is null)
+            {
+                return string.Empty;
+            }
 
+            var parameters = ProfileParameters.FromJson(SelectedProfile.ParamsJson);
+            var draftModelPath = ModelCompanionService.ResolveDraftModelPath(
+                SelectedModel.Path, parameters.SpecType, parameters.SpecDraftPath);
+            return LlamaServerCommandBuilder.BuildCommandLine(
+                LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, parameters, SelectedProfile.Port, draftModelPath));
+        }
+    }
+
+    [NotifyPropertyChangedFor(nameof(CommandPreview))]
     [ObservableProperty]
     public partial Model? SelectedModel { get; set; }
 
+    [NotifyPropertyChangedFor(nameof(CommandPreview))]
     [ObservableProperty]
     public partial Profile? SelectedProfile { get; set; }
 
@@ -118,7 +137,6 @@ public partial class OverviewViewModel : BaseViewModel
             IsBusy = true;
             try
             {
-                ModelsFolder = await _appSettings.GetValueAsync(ModelsViewModel.ModelsDirectorySetting) ?? string.Empty;
                 Models = new ObservableCollection<Model>(await _modelRepository.GetAllAsync());
                 Runtimes = new ObservableCollection<Runtime>(await _runtimeRepository.GetAllAsync());
 

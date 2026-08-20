@@ -46,10 +46,10 @@
 
                 <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
                     <Label Grid.Column="0"
-                           Text="Modelmap:"
+                           Text="Command:"
                            Style="{StaticResource FieldLabel}" />
                     <Label Grid.Column="1"
-                           Text="{Binding ModelsFolder}"
+                           Text="{Binding CommandPreview, Mode=OneWay}"
                            FontFamily="Consolas"
                            FontSize="12"
                            VerticalOptions="Center"
