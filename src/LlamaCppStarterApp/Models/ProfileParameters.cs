@@ -55,7 +55,7 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial int? Threads { get; set; }
 
-    /// <summary>--host bind address. Null = "0.0.0.0".</summary>
+    /// <summary>--host bind address. Null = flag not passed (llama.cpp default 127.0.0.1).</summary>
     [ObservableProperty]
     public partial string? HostBind { get; set; }
 

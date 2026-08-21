@@ -28,9 +28,12 @@ public static class LlamaServerCommandBuilder
             args.Add(Quote(mmproj));
         }
 
-        // --host {bind of 0.0.0.0}
-        args.Add("--host");
-        args.Add(string.IsNullOrWhiteSpace(p.HostBind) ? "0.0.0.0" : p.HostBind);
+        // --host {bind} (only when set; llama.cpp default = 127.0.0.1)
+        if (!string.IsNullOrWhiteSpace(p.HostBind))
+        {
+            args.Add("--host");
+            args.Add(p.HostBind);
+        }
 
         // --port {port}
         args.Add("--port");
