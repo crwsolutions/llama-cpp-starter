@@ -211,7 +211,7 @@
 
                     <!-- Middle (scrolls): Name/Port + parameter sections + Runtime Command -->
                     <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Default">
-                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
 
                             <!-- Header: Name + Port -->
@@ -412,8 +412,28 @@
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
                             </Grid>
 
-                            <!-- Generation defaults -->
+                            <!-- Thinking (chat-template-kwargs) -->
                             <Grid Grid.Row="5" Margin="0,14,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Thinking" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+
+                                <Label Grid.Row="1" Grid.Column="0" Text="Thinking" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="1" Grid.Column="1"
+                                    ItemsSource="{x:Static models:ProfileParameters.ThinkingOptions}"
+                                    SelectedItem="{Binding CurrentParameters.ThinkingLevel, Converter={StaticResource PickerDefaultConverter}}"
+                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
+                            </Grid>
+
+                            <!-- Generation defaults -->
+                            <Grid Grid.Row="6" Margin="0,14,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
@@ -468,7 +488,7 @@
                             </Grid>
 
                             <!-- Runtime Command (read-only preview) -->
-                            <Grid Grid.Row="6" Margin="0,14,0,0">
+                            <Grid Grid.Row="7" Margin="0,14,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />

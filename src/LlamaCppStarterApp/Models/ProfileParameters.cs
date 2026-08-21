@@ -30,6 +30,8 @@ public partial class ProfileParameters : ObservableObject
     public static readonly IReadOnlyList<string> CacheTypeOptions = new[] { DefaultPlaceholder }.Concat(CacheTypes).ToArray();
     public static readonly IReadOnlyList<string> SpecTypeOptions = new[] { DefaultPlaceholder }.Concat(SpecTypes).ToArray();
     public static readonly IReadOnlyList<string> RopeScalingOptions = new[] { DefaultPlaceholder }.Concat(RopeScalingValues).ToArray();
+    public static readonly IReadOnlyList<string> ThinkingValues = new[] { "off", "low", "medium", "xhigh" };
+    public static readonly IReadOnlyList<string> ThinkingOptions = new[] { DefaultPlaceholder }.Concat(ThinkingValues).ToArray();
 
     // --- Basic launch ---
 
@@ -143,6 +145,15 @@ public partial class ProfileParameters : ObservableObject
     /// <summary>--image-min-tokens</summary>
     [ObservableProperty]
     public partial int? ImageMinTokens { get; set; }
+
+    // --- Thinking ---
+
+    /// <summary>
+    /// --chat-template-kwargs thinking level (off = enable_thinking false; low/medium/xhigh =
+    /// reasoning_effort). Null = flag not passed (llama.cpp default).
+    /// </summary>
+    [ObservableProperty]
+    public partial string? ThinkingLevel { get; set; }
 
     // --- Generation defaults ---
 
@@ -266,6 +277,7 @@ public partial class ProfileParameters : ObservableObject
         CachePrompt = CachePrompt,
         MmprojPath = MmprojPath,
         ImageMinTokens = ImageMinTokens,
+        ThinkingLevel = ThinkingLevel,
         Temperature = Temperature,
         TopP = TopP,
         TopK = TopK,
@@ -348,6 +360,7 @@ public partial class ProfileParameters : ObservableObject
         && SpecType is null && SpecDraftNMax is null && SpecDraftPath is null
         && CachePrompt is null
         && MmprojPath is null && ImageMinTokens is null
+        && ThinkingLevel is null
         && Temperature is null && TopP is null && TopK is null && MinP is null
         && PresencePenalty is null && RepeatPenalty is null
         && Jinja is not false

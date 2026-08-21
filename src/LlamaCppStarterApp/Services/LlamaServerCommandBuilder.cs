@@ -221,6 +221,16 @@ public static class LlamaServerCommandBuilder
             args.Add("--metrics");
         }
 
+        // --chat-template-kwargs (Thinking picker; null = flag not passed).
+        // The JSON value is passed verbatim as one ArgumentList element (no extra quoting:
+        // the process argv must be exactly the JSON object string, e.g. {"enable_thinking": false}).
+        var chatTemplateKwargs = ChatTemplateKwargsFor(p.ThinkingLevel);
+        if (chatTemplateKwargs is not null)
+        {
+            args.Add("--chat-template-kwargs");
+            args.Add(chatTemplateKwargs);
+        }
+
         return args.ToArray();
     }
 
@@ -238,4 +248,15 @@ public static class LlamaServerCommandBuilder
     /// <summary>Quote a value when it contains spaces (e.g. "C:\path with space\file.gguf").</summary>
     private static string Quote(string value) =>
         value.Contains(' ') ? $"\"{value}\"" : value;
+
+    /// <summary>
+    /// --chat-template-kwargs JSON value for a Thinking picker level (null = flag not passed).
+    /// off → {"enable_thinking": false}; low/medium/xhigh → {"reasoning_effort": "&lt;level&gt;"}.
+    /// </summary>
+    private static string? ChatTemplateKwargsFor(string? thinkingLevel) => thinkingLevel switch
+    {
+        "off" => "{\"enable_thinking\": false}",
+        "low" or "medium" or "xhigh" => $"{{\"reasoning_effort\": \"{thinkingLevel}\"}}",
+        _ => null
+    };
 }
