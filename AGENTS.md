@@ -20,10 +20,12 @@ MVVM met Repository/Services-laag. ViewModels roepen services; repos doen puur S
 ```
 src/LlamaCppStarterApp/
   Models/        : Model (Id int PK + ModelId deterministisch string, MetadataJson, CapabilitiesJson),
-                   Profile, ProfileParameters, Runtime, LlamaServerState
+                   Profile (+ MmprojMode-enum), ProfileParameters, Runtime, LlamaServerState
                    ProfileParameters = ObservableObject met nullable velden;
                    dubbel gebruik: editor-model (paneel) én JSON-blob (Params-kolom).
                    Null/leeg = vlag niet doorgeven (llama.cpp-default).
+                   MmprojPath (string?): null = auto-gekoppelde mmproj van het model; leeg = uit (geen --mmproj);
+                     pad = override. Editor = 3-standen toggle in ModelsViewModel (MmprojMode).
                    EnableMetrics (bool? = true) = metrics endpoint (--metrics); oude blobs zonder key → true.
                    GlobalLaunchDefaults = app-globale defaults (referentie-opdracht) als statische property + JSON.
   Repositories/  : Database (user_version-migratie 0→2), IModelRepository,
@@ -66,7 +68,7 @@ src/LlamaCppStarterApp/
   Views/         : AppShell (4 ShellContents, FlyoutBehavior=Locked, glyph-itemtemplate),
                    OverviewPage, ModelsPage, RuntimesPage, SettingsPage
   Converters/    : converters in Converters.xaml (SizeToGb, nullable int/double/bool,
-                   PickerDefault, visibility, TitleToGlyph voor flyout-iconen)
+                   PickerDefault, MmprojMode-picker + Custom-visibility, visibility, TitleToGlyph voor flyout-iconen)
 ```
 
 Kernmechanismen:

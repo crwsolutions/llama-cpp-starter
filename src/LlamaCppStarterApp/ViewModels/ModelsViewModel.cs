@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using CommunityToolkit.Maui.Storage;
+using LlamaCppStarterApp.Converters;
 using LlamaCppStarterApp.Models;
 using LlamaCppStarterApp.Repositories;
 using LlamaCppStarterApp.Services;
@@ -17,6 +18,9 @@ public partial class ModelsViewModel : BaseViewModel
 
     private bool _loaded;
     private string? _selectedProfileOriginalName;
+
+    /// <summary>Suppressed while the mode change itself is being processed (no re-sync loop).</summary>
+    private bool _suppressMmprojSync;
 
     public ModelsViewModel(
         IModelRepository modelRepository,
@@ -65,6 +69,29 @@ public partial class ModelsViewModel : BaseViewModel
     [ObservableProperty]
     public partial bool SelectedModelHasVision { get; set; }
 
+    /// <summary>
+    /// Editor state of the MM-projector picker. Auto = null (auto-linked mmproj of the model),
+    /// Off = empty (no --mmproj), Custom = explicit path (override). Not persisted; derived from
+    /// MmprojPath + the model's linked mmproj so "just opening" a profile never writes.
+    /// </summary>
+    [ObservableProperty]
+    public partial MmprojMode MmprojMode { get; set; }
+
+    /// <summary>
+    /// Effective mmproj the launch command will load (GetEffectiveMmproj) — file name, "—" when none.
+    /// Keeps the label, the command preview and the real load in one source of truth (D6).
+    /// </summary>
+    [ObservableProperty]
+    public partial string MmprojEffectivePath { get; set; } = string.Empty;
+
+    /// <summary>Picker option list (labels double as option text; see MmprojModePickerConverter).</summary>
+    public static readonly IReadOnlyList<string> MmprojModeOptions =
+    [
+        MmprojModePickerConverter.Auto,
+        MmprojModePickerConverter.Off,
+        MmprojModePickerConverter.Custom
+    ];
+
     internal async Task EnsureLoadedAsync()
     {
         if (!_loaded)
@@ -109,6 +136,7 @@ public partial class ModelsViewModel : BaseViewModel
 
     partial void OnSelectedModelChanged(Model? value)
     {
+        SyncMmprojEditorState();
         _ = LoadProfilesAsync();
         _ = LoadCapabilityAsync();
     }
@@ -189,6 +217,7 @@ public partial class ModelsViewModel : BaseViewModel
             CurrentParameters = null;
             CommandPreview = string.Empty;
             _selectedProfileOriginalName = null;
+            SyncMmprojEditorState();
             return;
         }
 
@@ -213,9 +242,28 @@ public partial class ModelsViewModel : BaseViewModel
         value.PropertyChanged += OnProfileChanged;
 
         UpdateCommandPreview();
+        SyncMmprojEditorState();
     }
 
-    private void OnParametersChanged(object? sender, PropertyChangedEventArgs e) => UpdateCommandPreview();
+    /// <summary>
+    /// Picker writes to MmprojPath are applied through the _suppressMmprojSync guard, so a
+    /// MmprojPath change seen here without that guard = a manually typed path → mode becomes
+    /// Custom (the typed value is never overwritten — R3, no feedback loop).
+    /// </summary>
+    private void OnParametersChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        UpdateCommandPreview();
+
+        if (e.PropertyName == nameof(ProfileParameters.MmprojPath))
+        {
+            UpdateMmprojEffectivePath();
+
+            if (!_suppressMmprojSync)
+            {
+                SetMmprojMode(ComputeMmprojMode());
+            }
+        }
+    }
 
     private void OnProfileChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -237,6 +285,147 @@ public partial class ModelsViewModel : BaseViewModel
         var draftModelPath = ModelCompanionService.ResolveDraftModelPath(SelectedModel.Path, CurrentParameters.SpecType, CurrentParameters.SpecDraftPath);
         var args = LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, CurrentParameters, SelectedProfile.Port, draftModelPath);
         CommandPreview = LlamaServerCommandBuilder.BuildCommandLine(args);
+    }
+
+    /// <summary>
+    /// Effective mmproj file name shown next to the Vision controls; "—" when the launch
+    /// command will not load a projector. Updated on model/profile switch and on parameter changes.
+    /// </summary>
+    private void UpdateMmprojEffectivePath()
+    {
+        var effective = SelectedModel is null || CurrentParameters is null
+            ? null
+            : CurrentParameters.GetEffectiveMmproj(SelectedModel);
+        MmprojEffectivePath = string.IsNullOrWhiteSpace(effective) ? "—" : Path.GetFileName(effective);
+    }
+
+    /// <summary>
+    /// Derives the picker state from the profile value + the model's linked mmproj (D5):
+    /// Custom when an explicit path is set, Auto when MmprojPath is null and the model has a
+    /// linked mmproj, Off otherwise. Pure — reads only, never writes.
+    /// </summary>
+    private MmprojMode ComputeMmprojMode()
+    {
+        var path = CurrentParameters?.MmprojPath;
+        if (path is null)
+        {
+            return string.IsNullOrWhiteSpace(SelectedModel?.MmprojPath) ? MmprojMode.Off : MmprojMode.Auto;
+        }
+
+        return string.IsNullOrWhiteSpace(path) ? MmprojMode.Off : MmprojMode.Custom;
+    }
+
+    /// <summary>
+    /// Programmatic mode assignment (selection sync / revert after a cancelled pick):
+    /// applied without triggering the user-action side effects in OnMmprojModeChanged (R3).
+    /// </summary>
+    private void SetMmprojMode(MmprojMode mode)
+    {
+        _suppressMmprojSync = true;
+        try
+        {
+            MmprojMode = mode;
+        }
+        finally
+        {
+            _suppressMmprojSync = false;
+        }
+    }
+
+    /// <summary>
+    /// Re-derives the whole mmproj editor state; never writes to the profile (D5).
+    /// Called on model/profile switch and after a scan/refresh.
+    /// </summary>
+    private void SyncMmprojEditorState()
+    {
+        UpdateMmprojEffectivePath();
+
+        if (CurrentParameters is null)
+        {
+            return;
+        }
+
+        SetMmprojMode(ComputeMmprojMode());
+    }
+
+    partial void OnMmprojModeChanged(MmprojMode value)
+    {
+        // Only user picker selections reach here; programmatic sets (sync/revert) are suppressed.
+        if (CurrentParameters is null || _suppressMmprojSync)
+        {
+            return;
+        }
+
+        switch (value)
+        {
+            case MmprojMode.Auto:
+                CurrentParameters.MmprojPath = null;
+                break;
+            case MmprojMode.Off:
+                CurrentParameters.MmprojPath = string.Empty;
+                break;
+            case MmprojMode.Custom:
+                // MmprojPath is unchanged at this point → ComputeMmprojMode() is still the
+                // previous displayed mode, used for the cancel-revert (D4).
+                _ = PickMmprojFileAsync();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Pick an explicit mmproj GGUF (Essentials FilePicker; *.gguf filter; null = cancelled →
+    /// revert to the previous mode, D4). Reached from the picker (mode Custom) and the "Blader…"
+    /// button (only visible in Custom mode). A manually typed path is handled by OnParametersChanged.
+    /// </summary>
+    [RelayCommand]
+    private async Task PickMmprojFileAsync()
+    {
+        var parameters = CurrentParameters;
+        if (parameters is null)
+        {
+            return;
+        }
+
+        var previousMode = ComputeMmprojMode();
+        try
+        {
+            var fileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                [DevicePlatform.WinUI] = new[] { ".gguf" }
+            });
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Kies mmproj GGUF",
+                FileTypes = fileTypes
+            });
+
+            // Profile changed while the dialog was open → apply nothing.
+            if (!ReferenceEquals(CurrentParameters, parameters))
+            {
+                return;
+            }
+
+            if (result is null)
+            {
+                SetMmprojMode(previousMode); // cancelled
+                return;
+            }
+
+            if (!result.FileName.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase))
+            {
+                SetMmprojMode(previousMode);
+                StatusText = "Selecteer een GGUF-bestand (.gguf).";
+                return;
+            }
+
+            parameters.MmprojPath = result.FullPath;
+            StatusText = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            SetMmprojMode(previousMode);
+            StatusText = $"Fout bij bestand kiezen: {ex.Message}";
+        }
     }
 
     /// <summary>Scan the models folder (GGUF files; Default profiles are seeded by the scanner).</summary>

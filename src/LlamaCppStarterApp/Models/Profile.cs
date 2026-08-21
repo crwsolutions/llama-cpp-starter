@@ -1,6 +1,18 @@
 namespace LlamaCppStarterApp.Models;
 
 /// <summary>
+/// Editor state of the MM-projector picker (ModelsPage, Vision pane).
+/// Maps to ProfileParameters.MmprojPath: Auto = null (auto-linked mmproj of the model),
+/// Off = empty (no --mmproj), Custom = explicit path (override).
+/// </summary>
+public enum MmprojMode
+{
+    Auto,
+    Off,
+    Custom
+}
+
+/// <summary>
 /// Repository model for a launch profile (bound to exactly one model).
 /// Name and Port are observable so the Startinstellingen panel can bind directly (two-way);
 /// ParamsJson is the JSON blob of <see cref="ProfileParameters"/>.

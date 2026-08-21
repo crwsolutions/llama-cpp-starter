@@ -17,4 +17,6 @@
     <converters:DoubleNullableConverter x:Key="DoubleNullableConverter" />
     <converters:PickerDefaultConverter x:Key="PickerDefaultConverter" />
     <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+    <converters:MmprojModePickerConverter x:Key="MmprojModePickerConverter" />
+    <converters:MmprojModeCustomToVisibilityConverter x:Key="MmprojModeCustomToVisibilityConverter" />
 </ResourceDictionary>

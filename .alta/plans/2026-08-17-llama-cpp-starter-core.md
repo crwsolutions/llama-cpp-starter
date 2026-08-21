@@ -156,6 +156,7 @@ ViewModels/ + Views: OverviewViewModel/OverviewPage (vervangt Main*), ModelsView
 - [ ] Handmatig (Windows): Runtimes → map kiezen met een echte `llama-server.exe` → verschijnt in tabel met backend "Cuda" (of "CPU"); Delete werkt; na herstart-app is runtime nog in DB.
 - [ ] Handmatig: Modellen → scan → GGUF-bestanden verschijnen met juiste Naam/Quant/Grootte; mmproj auto-gekoppeld bij model met mmproj in dezelfde map.
 - [ ] Handmatig: profiel "Default" verschijnt per nieuw model; Default kan niet verwijderd worden; ander profiel wél; alle velden + poort overleven een app-herstart (JSON-blob round-trip).
+- [ ] Handmatig: Vision-paneel MM-projector toggle (2026-08-21, zie `.alta/plans/2026-08-21-mmproj-toggle-profiel.md`): Aan (auto)/Uit/Andere (bladeren) werkt; effectief-label + preview kloppen; oude profielen (MmprojPath afwezig) tonen default zonder crash.
 - [ ] Handmatig: corrupte/verwijderde blob (manueel in DB) → app crasht niet, fallback naar leeg profiel + melding.
 - [x] Command-preview toont exacte vlaggen van het voorbeeldprofiel, afgezet tegen de referentie-opdracht (verifieerd via tijdelijk console-project dat `LlamaServerCommandBuilder` + `ProfileParameters` linkt: `MATCH: generated args == expected reference args`, incl. `--temp 1.0`, `--min-p 0.00`, `--presence-penalty 0.0`, `--repeat-penalty 1.0`).
 - [ ] Handmatig: Overzicht → model + profiel + runtime selecteren → "Laden" → logboek streamt, status "Running (port 8080)"; browser naar `http://localhost:8080` toont webui (of `/health` 200).

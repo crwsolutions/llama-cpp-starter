@@ -393,6 +393,8 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -402,13 +404,38 @@
                                 <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Vision" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
                                 <Label Grid.Row="1" Grid.Column="0" Text="MM-projector" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="1" Grid.Column="1"
-                                  Text="{Binding CurrentParameters.MmprojPath}"
-                                  Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
-                                  Placeholder="auto (null) of leeg = uit" />
+                                <Picker Grid.Row="1" Grid.Column="1"
+                                  ItemsSource="{x:Static vm:ModelsViewModel.MmprojModeOptions}"
+                                  SelectedItem="{Binding MmprojMode, Converter={StaticResource MmprojModePickerConverter}}"
+                                  Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="2" Grid.Column="0" Text="Afbeelding-min" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="2" Grid.Column="1"
+                                <!-- Explicit path (Custom mode only): typeable entry + browse button -->
+                                <Label Grid.Row="2" Grid.Column="0" Text="Eigen pad" Style="{StaticResource FieldLabel}" Margin="0,0,10,4"
+                                  IsVisible="{Binding MmprojMode, Converter={StaticResource MmprojModeCustomToVisibilityConverter}}" />
+                                <Grid Grid.Row="2" Grid.Column="1" Margin="0,0,0,4"
+                                  IsVisible="{Binding MmprojMode, Converter={StaticResource MmprojModeCustomToVisibilityConverter}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Entry Grid.Column="0"
+                                      Text="{Binding CurrentParameters.MmprojPath}"
+                                      Style="{StaticResource FieldEntry}" Margin="0,0,8,0"
+                                      Placeholder="pad naar .gguf (mmproj)" />
+                                    <Button Grid.Column="1" Text="Blader…" Style="{StaticResource RowButton}"
+                                      SemanticProperties.Hint="Kies een mmproj GGUF-bestand"
+                                      Command="{Binding PickMmprojFileCommand}"
+                                      IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+                                </Grid>
+
+                                <Label Grid.Row="3" Grid.Column="0" Text="Effectief" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="3" Grid.Column="1"
+                                  Text="{Binding MmprojEffectivePath}"
+                                  FontFamily="Consolas" FontSize="13" VerticalOptions="Center"
+                                  Margin="0,0,0,4" />
+
+                                <Label Grid.Row="4" Grid.Column="0" Text="Afbeelding-min" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="4" Grid.Column="1"
                                   Text="{Binding CurrentParameters.ImageMinTokens, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
                             </Grid>
