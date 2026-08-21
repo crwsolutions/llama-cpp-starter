@@ -299,13 +299,14 @@ public partial class ModelsViewModel : BaseViewModel
         }
     }
 
-    /// <summary>Create an empty profile for the selected model.</summary>
+    /// <summary>Create a new profile for the selected model, seeded with the app-global launch defaults.</summary>
     [RelayCommand]
     private async Task AddProfileAsync() => await AddProfileCoreAsync();
 
     private async Task AddProfileCoreAsync()
     {
-        if (SelectedModel is null)
+        var model = SelectedModel;
+        if (model is null)
         {
             StatusText = "Selecteer eerst een model.";
             return;
@@ -318,19 +319,24 @@ public partial class ModelsViewModel : BaseViewModel
             name = $"Profiel {i++}";
         }
 
+        // Same seed as the scanner's Default-profile seeding: GlobalLaunchDefaults from
+        // AppSettings (fallback: app-global defaults); for models WITHOUT MTP (nextn)
+        // the speculative fields are cleared (no --spec-type/--spec-draft-n-max).
+        var seed = await _modelScanner.ResolveLaunchDefaultsAsync(model);
+
         var profile = new Profile
         {
             Name = name,
-            ModelId = SelectedModel.Id,
+            ModelId = model.Id,
             Port = 8080,
-            ParamsJson = new ProfileParameters().ToJson()
+            ParamsJson = seed.ToJson()
         };
-        profile.ModelName = SelectedModel.Name;
+        profile.ModelName = model.Name;
         await _profileRepository.UpsertAsync(profile);
 
         await LoadProfilesAsync();
         SelectedProfile = Profiles.FirstOrDefault(p => p.Id == profile.Id);
-        StatusText = $"Nieuw profiel '{name}' aangemaakt voor {SelectedModel.Name}.";
+        StatusText = $"Nieuw profiel '{name}' aangemaakt voor {model.Name}.";
     }
 
     /// <summary>Save: ProfileParameters → JSON blob → repo. Renaming the Default profile is blocked.</summary>

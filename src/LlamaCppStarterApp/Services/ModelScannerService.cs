@@ -155,11 +155,11 @@ public class ModelScannerService
     }
 
     /// <summary>
-    /// Default profile seeding for all scanned models without a Default: ParamsJson =
-    /// GlobalLaunchDefaults from AppSettings (fallback: app-global defaults); for models
-    /// WITHOUT MTP (nextn) the speculative fields are cleared (no --spec-type/--spec-draft-n-max).
+    /// Launch-default seed for a model: GlobalLaunchDefaults from AppSettings
+    /// (fallback: app-global defaults); for models WITHOUT MTP (nextn) the speculative
+    /// fields are cleared (no --spec-type/--spec-draft-n-max).
     /// </summary>
-    private async Task SeedDefaultProfilesAsync(List<Model> models)
+    public async Task<ProfileParameters> ResolveLaunchDefaultsAsync(Model model)
     {
         // Missing/empty/corrupt AppSettings row (e.g. "{}") → fall back to the app-global defaults.
         var defaultsJson = await _appSettings.GetValueAsync(GlobalLaunchDefaultsSetting);
@@ -169,6 +169,26 @@ public class ModelScannerService
             ? parsed
             : ProfileParameters.GlobalLaunchDefaults;
 
+        var hasMtp = await Task.Run(() => HasModelMtp(model));
+        return hasMtp
+            ? parameters.Clone()
+            : parameters.WithoutMtpSpec();
+    }
+
+    /// <summary>Same detection as the capability "MTP" chip (per selection, not stored in the metadata blob).</summary>
+    public static bool HasModelMtp(Model model)
+    {
+        var metadata = GgufMetadataReader.TryRead(model.Path);
+        var nameText = $"{model.Name} {Path.GetFileName(model.Path)} {model.MetadataJson ?? string.Empty}";
+        return ModelCapabilityService.HasMtp(metadata, nameText);
+    }
+
+    /// <summary>
+    /// Default profile seeding for all scanned models without a Default:
+    /// ParamsJson = the launch-default seed (see <see cref="ResolveLaunchDefaultsAsync"/>).
+    /// </summary>
+    private async Task SeedDefaultProfilesAsync(List<Model> models)
+    {
         foreach (var model in models)
         {
             var profiles = await _profileRepository.GetByModelAsync(model.Id);
@@ -177,22 +197,7 @@ public class ModelScannerService
                 continue;
             }
 
-            // Same detection as the capability "MTP" chip (per selection, not stored in the metadata blob).
-            var hasMtp = await Task.Run(() =>
-            {
-                var metadata = GgufMetadataReader.TryRead(model.Path);
-                var nameText = $"{model.Name} {Path.GetFileName(model.Path)} {model.MetadataJson ?? string.Empty}";
-                return ModelCapabilityService.HasMtp(metadata, nameText);
-            });
-
-            // Clone: parameters may be the shared app-global defaults instance.
-            var seed = parameters.Clone();
-            if (!hasMtp)
-            {
-                seed.SpecType = null;
-                seed.SpecDraftNMax = null;
-            }
-
+            var seed = await ResolveLaunchDefaultsAsync(model);
             await _profileRepository.UpsertAsync(new Profile
             {
                 Name = "Default",

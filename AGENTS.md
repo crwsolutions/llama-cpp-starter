@@ -36,7 +36,8 @@ src/LlamaCppStarterApp/
                    + HasMtp, MTP/nextn-detectie → "MTP"-chip) + SummaryText-chips,
                    Fingerprint + TryReadCached/BuildCacheJson voor de DB-cache-blob),
                    ModelScannerService (GGUF-scan reparse-skip, companion-uitsluiting,
-                   MetadataJson met 9 velden, Default-profiel-seeding vanuit GlobalLaunchDefaults),
+                   MetadataJson met 9 velden, Default-profiel-seeding vanuit GlobalLaunchDefaults;
+                   ResolveLaunchDefaultsAsync = seed voor nieuw profiel (ook ModelsViewModel.AddProfile)),
                    RuntimeScannerService (llama-server.exe-scan, backend-heuristiek),
                    LlamaServerCommandBuilder (pure static; volgorde = referentie-opdracht;
                    + --rope-*, --cache-prompt, --spec-draft-model (draftModelPath-argument),
