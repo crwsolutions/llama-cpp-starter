@@ -9,7 +9,7 @@
     xmlns:views="clr-namespace:LlamaCppStarterApp.Views"
     Title="Llama.cpp - Starter"
       Shell.FlyoutBehavior="Locked" NavBarIsVisible="False"
-    FlyoutWidth="260"
+    FlyoutWidth="152"
     FlyoutBackgroundColor="Black">
 
     <!-- Flyout items with FontAwesome6 Free Solid glyphs (home, folder, code, gear) -->

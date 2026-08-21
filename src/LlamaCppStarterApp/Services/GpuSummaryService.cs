@@ -5,10 +5,10 @@ namespace LlamaCppStarterApp.Services;
 /// <summary>
 /// GPU summary for the Hardware card (nvidia-smi only).
 /// With a session → per-PID probe (uuid match on the llama-server PID); without a session
-/// (or when the per-PID probe fails) → fallback to the full --query-gpu listing, so the
+/// (or when the per-PID probe comes back empty) → fallback to the full --query-gpu listing, so the
 /// hardware is always shown (it is not dependent on a loaded model).
-/// 10 s cache; the idle listing lives in the shared "machine" key so the per-session
-/// and per-machine paths never evict each other.
+/// 10 s single-slot cache: the idle listing lives in the "machine" key, per-session data in
+/// modelId|port|pid keys (only one key is fresh at a time in the slot).
 /// (The reference name RuntimeGpuSummaryApplicationService is too broad for this nvidia-smi-only scope.)
 /// </summary>
 public sealed class GpuSummaryService
@@ -28,7 +28,7 @@ public sealed class GpuSummaryService
         _cache = cache;
     }
 
-    public async Task<string> SummaryAsync(LoadedSession? session, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<GpuSummary>> SummaryAsync(LoadedSession? session, CancellationToken cancellationToken = default)
     {
         if (session is not null)
         {
@@ -39,13 +39,13 @@ public sealed class GpuSummaryService
             }
 
             sessionSummary = await _probe.SummaryForProcessAsync(session.ProcessId, cancellationToken);
-            if (!string.IsNullOrWhiteSpace(sessionSummary) && sessionSummary != "Unavailable")
+            if (sessionSummary.Count > 0)
             {
                 return _cache.Store(key, sessionSummary, DateTimeOffset.UtcNow);
             }
         }
 
-        // No session, or per-PID probe unavailable → full machine listing.
+        // No session, or per-PID probe empty → full machine listing.
         if (_cache.TryGet(MachineCacheKey, DateTimeOffset.UtcNow, out var machineSummary))
         {
             return machineSummary;

@@ -1,16 +1,17 @@
 using System.Diagnostics;
 using System.Globalization;
+using LlamaCppStarterApp.Models;
 
 namespace LlamaCppStarterApp.Services;
 
 /// <summary>
 /// Hardware card probe: nvidia-smi ONLY (user decision 2026-08-19; no AMD/Intel/CPU probes).
 /// Port of the nvidia-smi parts of the reference project
-/// (LocalLlmConsole.Services.GpuStatusProbeService); any error → "Unavailable".
+/// (LocalLlmConsole.Services.GpuStatusProbeService); any error → empty list.
 /// </summary>
 public sealed class GpuStatusProbeService
 {
-    public async Task<string> SummaryAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<GpuSummary>> SummaryAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -20,29 +21,29 @@ public sealed class GpuStatusProbeService
                     "--format=csv,noheader,nounits"),
                 TimeSpan.FromSeconds(2),
                 cancellationToken);
-            if (result.ExitCode != 0) return "Unavailable";
+            if (result.ExitCode != 0) return Array.Empty<GpuSummary>();
 
-            var lines = result.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-                .Select(GpuStatusService.FormatNvidiaSmiCsvLine)
-                .Where(line => !string.IsNullOrWhiteSpace(line))
+            return result.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Split(',').Select(part => part.Trim()).ToArray())
+                .Select(GpuSummary.TryParseParts)
+                .OfType<GpuSummary>()
                 .Take(4)
                 .ToArray();
-            return lines.Length == 0 ? "Unavailable" : string.Join(Environment.NewLine, lines);
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"NVIDIA GPU summary unavailable: {ex.Message}");
-            return "Unavailable";
+            return Array.Empty<GpuSummary>();
         }
     }
 
     /// <summary>
     /// GPU rig of the given process: match --query-compute-apps=gpu_uuid,pid on the PID,
-    /// then --query-gpu for those uuids. No match/error → "Unavailable" (fallback on the caller).
+    /// then --query-gpu for those uuids. No match/error → empty list (fallback on the caller).
     /// </summary>
-    public async Task<string> SummaryForProcessAsync(int processId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<GpuSummary>> SummaryForProcessAsync(int processId, CancellationToken cancellationToken = default)
     {
-        if (processId <= 0) return "Unavailable";
+        if (processId <= 0) return Array.Empty<GpuSummary>();
 
         try
         {
@@ -52,7 +53,7 @@ public sealed class GpuStatusProbeService
                     "--format=csv,noheader,nounits"),
                 TimeSpan.FromSeconds(2),
                 cancellationToken);
-            if (processResult.ExitCode != 0) return "Unavailable";
+            if (processResult.ExitCode != 0) return Array.Empty<GpuSummary>();
 
             var usedGpuUuids = processResult.Output
                 .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
@@ -63,7 +64,7 @@ public sealed class GpuStatusProbeService
                 .Select(parts => parts[0])
                 .Where(uuid => !string.IsNullOrWhiteSpace(uuid))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            if (usedGpuUuids.Count == 0) return "Unavailable";
+            if (usedGpuUuids.Count == 0) return Array.Empty<GpuSummary>();
 
             var gpuResult = await ProcessRunner.RunAsync(
                 NvidiaSmiStartInfo(
@@ -71,22 +72,21 @@ public sealed class GpuStatusProbeService
                     "--format=csv,noheader,nounits"),
                 TimeSpan.FromSeconds(2),
                 cancellationToken);
-            if (gpuResult.ExitCode != 0) return "Unavailable";
+            if (gpuResult.ExitCode != 0) return Array.Empty<GpuSummary>();
 
-            var lines = gpuResult.Output
+            return gpuResult.Output
                 .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
                 .Select(line => line.Split(',').Select(part => part.Trim()).ToArray())
                 .Where(parts => parts.Length >= 7 && usedGpuUuids.Contains(parts[0]))
-                .Select(parts => GpuStatusService.FormatNvidiaSmiCsvLine(string.Join(",", parts.Skip(1))))
-                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Select(parts => GpuSummary.TryParseParts(parts.Skip(1).ToArray()))
+                .OfType<GpuSummary>()
                 .Take(4)
                 .ToArray();
-            return lines.Length == 0 ? "Unavailable" : string.Join(Environment.NewLine, lines);
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"NVIDIA process GPU summary unavailable: {ex.Message}");
-            return "Unavailable";
+            return Array.Empty<GpuSummary>();
         }
     }
 

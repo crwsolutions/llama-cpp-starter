@@ -157,10 +157,14 @@ public partial class OverviewViewModel : BaseViewModel
     [ObservableProperty]
     public partial string ModelStatusText { get; set; } = "Stopped";
 
-    // "Unavailable" is only the pre-first-probe placeholder: the first poll replaces it
-    // with the nvidia-smi listing (or "Unavailable" when no NVIDIA GPU/driver is found).
+    // Hardware card rows: one GpuSummary per GPU (nvidia-smi), polled on the 10 s cadence.
     [ObservableProperty]
-    public partial string HardwareText { get; set; } = "Unavailable";
+    public partial IReadOnlyList<GpuSummary> HardwareGpus { get; set; } = Array.Empty<GpuSummary>();
+
+    // Pre-first-probe placeholder state ("Unavailable" label); cleared once the first
+    // poll returns a listing (empty listing = no NVIDIA GPU/driver found → placeholder stays).
+    [ObservableProperty]
+    public partial bool HardwareUnavailable { get; set; } = true;
 
     [ObservableProperty]
     public partial string StatsText { get; set; } = IdleStatsText;
@@ -259,7 +263,7 @@ public partial class OverviewViewModel : BaseViewModel
         try
         {
             var session = _processService.Session;
-            var text = await _gpuSummary.SummaryAsync(session);
+            var gpus = await _gpuSummary.SummaryAsync(session);
 
             if (_processService.IsShuttingDown)
             {
@@ -270,12 +274,13 @@ public partial class OverviewViewModel : BaseViewModel
             // a stale per-session result must not overwrite the current card state.
             if (ReferenceEquals(_processService.Session, session))
             {
-                HardwareText = text;
+                HardwareGpus = gpus;
+                HardwareUnavailable = gpus.Count == 0;
             }
         }
         catch (Exception)
         {
-            // probe failed/timed out → keep the previous text, next tick retries
+            // probe failed/timed out → keep the previous listing, next tick retries
         }
         finally
         {
