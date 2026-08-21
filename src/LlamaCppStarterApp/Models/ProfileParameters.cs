@@ -149,8 +149,8 @@ public partial class ProfileParameters : ObservableObject
     // --- Thinking ---
 
     /// <summary>
-    /// --chat-template-kwargs thinking level (off = enable_thinking false; low/medium/xhigh =
-    /// reasoning_effort). Null = flag not passed (llama.cpp default).
+    /// Thinking level (off = --reasoning off; low/medium/xhigh = --chat-template-kwargs
+    /// reasoning_effort). Null = flags not passed (llama.cpp default).
     /// </summary>
     [ObservableProperty]
     public partial string? ThinkingLevel { get; set; }
