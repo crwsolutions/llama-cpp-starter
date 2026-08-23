@@ -573,7 +573,6 @@ public partial class OverviewViewModel : BaseViewModel
         }
     }
 
-    /// <summary>Unload: POST /exit, wait max 30 s, then kill.</summary>
     [RelayCommand]
     private async Task UnloadAsync()
     {

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using LlamaCppStarterApp.Models;
 
 namespace LlamaCppStarterApp.Services;
@@ -24,19 +25,27 @@ public sealed record LoadedSession(Runtime Runtime, Model Model, int LoadedProfi
 
 /// <summary>
 /// Manages a single "current server" (llama-server.exe process).
-/// Unload: POST /exit (5 s timeout) → wait max 30 s → Kill(entireProcessTree).
-/// App exit: ShutdownServer() — synchronous, short (POST /exit 2 s → 5 s → kill)
+/// Unload: Ctrl+C (console CTRL_C_EVENT via AttachConsole) → wait max 30 s → Kill(entireProcessTree).
+/// App exit: ShutdownServer() — synchronous, short (Ctrl+C → 5 s → kill)
 /// and without UI events, so the kill still runs even if the window is already deactivated.
+/// The server (console-subsystem exe) starts with CreateNoWindow = true: no visible
+/// console window, but it still has its own (hidden) console, so a real Ctrl+C can be
+/// delivered and llama.cpp's console handler performs a graceful stop.
 /// </summary>
 public class LlamaServerProcessService
 {
     private const int UnloadWaitSeconds = 30;
-    private const int ExitPostTimeoutMs = 5000;
-    private const int ExitPostFastTimeoutMs = 2000;
     private const int ExitShutdownWaitSeconds = 5;
 
     private readonly SemaphoreSlim _operationLock = new(1, 1);
-    private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromMilliseconds(ExitPostTimeoutMs) };
+
+#if WINDOWS
+    // One console can be attached by a process at a time; this guards the
+    // process-wide attach/detach state so a second unload/shutdown cannot attach
+    // while the first one is still attached.
+    private static readonly object _consoleLock = new();
+    private bool _consoleAttached;
+#endif
 
     // true during app exit (Shutdown): StateChanged/LogReceived are then
     // suppressed, so the stop sequence never touches the UI dispatcher and the kill
@@ -47,7 +56,6 @@ public class LlamaServerProcessService
     private LlamaServerState _state = LlamaServerState.Idle;
     private int _port;
     private string? _modelName;
-    private string? _hostBind;
     private int _lastExitCode;
     private LoadedSession? _session;
 
@@ -154,6 +162,8 @@ public class LlamaServerProcessService
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                // No console window, but the (console-subsystem) server still gets its
+                // own hidden console — required so a real Ctrl+C can be delivered on unload.
                 CreateNoWindow = true,
                 WorkingDirectory = runtime.Location ?? Path.GetDirectoryName(runtime.ExecutablePath) ?? string.Empty
             };
@@ -191,7 +201,6 @@ public class LlamaServerProcessService
             _process = process;
             Port = port;
             ModelName = model.Name;
-            _hostBind = parameters.HostBind;
             Session = new LoadedSession(runtime, model, profileId, parameters, port, process.Id);
             State = LlamaServerState.Starting;
 
@@ -234,7 +243,7 @@ public class LlamaServerProcessService
     }
 
     /// <summary>
-    /// Unload the current server: POST /exit (5 s timeout), wait max 30 s,
+    /// Unload the current server: send Ctrl+C (console CTRL_C_EVENT), wait max 30 s,
     /// then Kill(entireProcessTree).
     /// </summary>
     public async Task UnloadAsync()
@@ -251,18 +260,15 @@ public class LlamaServerProcessService
             State = LlamaServerState.Stopping;
             RaiseLog("Unloading…");
 
-            // 1) Best-effort POST /exit (5 s timeout, ignore errors)
-            try
+            // 1) Best-effort Ctrl+C (llama.cpp's console handler performs the graceful
+            //    stop); if the console cannot be reached, fall back to waiting/kill below
+            if (TrySendCtrlC(process))
             {
-                var host = string.IsNullOrWhiteSpace(_hostBind) || _hostBind == "0.0.0.0"
-                    ? "127.0.0.1"
-                    : _hostBind;
-                using var postCts = new CancellationTokenSource(ExitPostTimeoutMs);
-                await _httpClient.PostAsync($"http://{host}:{_port}/exit", new StringContent(""), postCts.Token);
+                RaiseLog($"Ctrl+C gestuurd (PID {process.Id}).");
             }
-            catch
+            else
             {
-                // ignore; fall back to waiting on the process/kill
+                RaiseLog($"[stderr] Kon geen Ctrl+C sturen (PID {process.Id}); stop via kill na timeout.");
             }
 
             // 2) Wait max 30 s for the process to exit
@@ -297,13 +303,15 @@ public class LlamaServerProcessService
         }
         finally
         {
+            // Detach after the wait so a pending Ctrl+C cannot reach our own app.
+            DetachConsole();
             _operationLock.Release();
         }
     }
 
     /// <summary>
     /// App exit: stop the server synchronously so no orphan process is left behind.
-    /// Blocking (max ~7 s: POST /exit 2 s + 5 s wait + kill) on the calling
+    /// Blocking (max ~5 s: Ctrl-C signal + 5 s wait + kill) on the calling
     /// (UI) thread: MAUI's shutdown flow does not continue until this method returns,
     /// so the kill lands before the app exits. During this method
     /// StateChanged/LogReceived are suppressed (via _shuttingDown), so no
@@ -323,7 +331,12 @@ public class LlamaServerProcessService
             {
                 try
                 {
-                    running.Kill(entireProcessTree: true);
+                    // Best-effort Ctrl-C, short wait, then hard kill.
+                    TrySendCtrlC(running);
+                    if (!running.WaitForExit(2000))
+                    {
+                        running.Kill(entireProcessTree: true);
+                    }
                     running.WaitForExit();
                 }
                 catch
@@ -346,20 +359,10 @@ public class LlamaServerProcessService
 
             _state = LlamaServerState.Stopping;
 
-            // 1) Best-effort POST /exit (2 s timeout; .Result = blocking, no async
-            //    await → no continuation the shutdown flow could miss)
-            try
-            {
-                var host = string.IsNullOrWhiteSpace(_hostBind) || _hostBind == "0.0.0.0"
-                    ? "127.0.0.1"
-                    : _hostBind;
-                using var postCts = new CancellationTokenSource(ExitPostFastTimeoutMs);
-                _httpClient.PostAsync($"http://{host}:{_port}/exit", new StringContent(""), postCts.Token).GetAwaiter().GetResult();
-            }
-            catch
-            {
-                // ignore; fall back to waiting on the process/kill
-            }
+            // 1) Best-effort Ctrl+C (synchronous; llama.cpp's console handler performs
+            //    the graceful stop); if the console cannot be reached, fall back to
+            //    waiting/kill below
+            TrySendCtrlC(process);
 
             // 2) Wait max 5 s for the process to exit
             bool exited;
@@ -394,6 +397,8 @@ public class LlamaServerProcessService
         }
         finally
         {
+            // Detach after the wait so a pending Ctrl+C cannot reach our own app.
+            DetachConsole();
             _shuttingDown = false;
             _operationLock.Release();
         }
@@ -490,4 +495,88 @@ public class LlamaServerProcessService
 
         LogReceived?.Invoke(this, new ServerLogEventArgs(line));
     }
+
+    /// <summary>
+    /// Sends a real Ctrl+C (CTRL_C_EVENT) to the server's console (Windows: attach
+    /// to the server's console, ignore the event for ourselves and generate it for
+    /// console process group 0; llama.cpp's own console handler then performs the
+    /// graceful stop). Returns false when the console cannot be reached (server
+    /// already gone, non-Windows, …); callers fall back to the wait/kill path.
+    /// Must be paired with DetachConsole() AFTER the wait for exit — detaching
+    /// earlier can deliver the pending Ctrl+C to our own process.
+    /// </summary>
+    private bool TrySendCtrlC(Process process)
+    {
+#if WINDOWS
+        lock (_consoleLock)
+        {
+            try
+            {
+                if (!AttachConsole((uint)process.Id))
+                {
+                    return false;
+                }
+
+                _consoleAttached = true;
+                // Stop this process from handling the Ctrl+C that is about to be sent.
+                SetConsoleCtrlHandler(null, true);
+                // 0 = the console process group we are now attached to (the server).
+                return GenerateConsoleCtrlEvent(CtrlCEVENT, 0);
+            }
+            catch
+            {
+                // best-effort; fall back to the wait/kill path
+                return false;
+            }
+        }
+#else
+        return false;
+#endif
+    }
+
+    /// <summary>
+    /// Restores our own Ctrl+C handling and detaches from the server's console.
+    /// Must be called after the wait for the server to exit (see TrySendCtrlC).
+    /// </summary>
+    private void DetachConsole()
+    {
+#if WINDOWS
+        lock (_consoleLock)
+        {
+            if (!_consoleAttached)
+            {
+                return;
+            }
+
+            _consoleAttached = false;
+            try
+            {
+                SetConsoleCtrlHandler(null, false);
+                FreeConsole();
+            }
+            catch
+            {
+                // best-effort; nothing else to do
+            }
+        }
+#endif
+    }
+
+#if WINDOWS
+    private const uint CtrlCEVENT = 0;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool AttachConsole(uint dwProcessId);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool FreeConsole();
+
+    [DllImport("kernel32.dll")]
+    private static extern bool SetConsoleCtrlHandler(ConsoleCtrlDelegate? handlerRoutine, bool add);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProcessGroupId);
+
+    private delegate bool ConsoleCtrlDelegate(uint ctrlType);
+#endif
 }
