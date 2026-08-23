@@ -9,7 +9,7 @@ Richtlijnen voor AI-agents die in dit repo werken.
 - een **runtime** kiest (lokale `llama-server.exe` build, gevonden via map-scan),
 - een **modelfolder** scant op GGUF-bestanden,
 - **opstartprofielen per model** beheert (alle `llama-server`-startparameters; `Default` per model is niet te verwijderen),
-- een model **laadt/unloadt** via het Overzicht-scherm (server-start, live logboek, health-polling op `/health`), waar het midden **6 status-kaarten** toont (Modelstatus, Hardware, Stats, Tokens, MTP-tokens, KV-cache; data-bronnen: lokaal status-state, nvidia-smi, `/slots`, `/metrics`).
+- een model **laadt/unloadt** via het Overzicht-scherm (server-start, live logboek, health-polling op `/health`), waar het midden **6 status-kaarten** toont (Modelstatus, Hardware, Stats, Tokens, MTP-tokens, KV-cache; data-bronnen: lokaal status-state, nvidia-smi, `/slots`, `/metrics`; de KV-cache-kaart toont een usage-ProgressBar (0..1; 0 = idle/niet berekenbaar) onder de "{used}/{capacity} t | {allocation}"-tekst (eén regel), sinds 2026-08-23).
 
 Scope-grenzen (bewust niet in deze iteratie): live metrics (tokens/s, KV-cache) en GPU-probe zijn in scope op het **Overzicht-scherm** (sinds 2026-08-19; GPU-probe = nvidia-smi alleen, geen AMD/Intel/CPU); op Scherm 2/3 niet. Buiten scope: redeneren/vision-head velden, editabele runtime-command-editor, hardware-kolom, `--fit`-veld, Instellingen-content (placeholder). Zie `.alta/plans/2026-08-17-llama-cpp-starter-core.md` voor het volledige goedgekeurde plan en `.alta/plans/2026-08-19-overzicht-status-kaarten.md` voor de status-kaarten-iteratie.
 
@@ -64,9 +64,11 @@ src/LlamaCppStarterApp/
                    GpuSummaryService (nvidia-smi; met sessie = per-PID uuid-match,
                     anders/leeg = volledige --query-gpu-lijst; 10 s-cache, "machine"-key voor de lijst;
                     Task<IReadOnlyList<GpuSummary>>, empty-list fallback),
-                   RuntimeMetricSummaryTracker (rates/totals/last-known per sessie-key),
+                   RuntimeMetricSummaryTracker (rates/totals/last-known per sessie-key;
+                   result + display-snapshot incl. KvCacheUsagePercent (0..100, null = niet berekenbaar)),
                    RuntimeMetricPollerService (poll /slots + /metrics elke 2 s; /metrics 501
-                   = niet ingeschakeld → leeg-lijst, géén fout-log; event MetricsUpdated)
+                   = niet ingeschakeld → leeg-lijst, géén fout-log; event MetricsUpdated;
+                   MetricCardsSnapshot = 4 kaart-teksten + KvCacheBarValue (0..1, stop → 0))
   ViewModels/    : BaseViewModel, OverviewViewModel, ModelsViewModel,
                    RuntimesViewModel, SettingsViewModel
   Views/         : AppShell (4 ShellContents, FlyoutBehavior=Locked, glyph-itemtemplate),

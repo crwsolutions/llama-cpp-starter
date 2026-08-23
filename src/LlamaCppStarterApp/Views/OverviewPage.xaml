@@ -109,7 +109,7 @@
         <!-- Middle: 6 status cards (3×2 grid; MAUI has no UniformGrid → Grid *) -->
         <Grid Grid.Row="2"
               RowDefinitions="*,*"
-              ColumnDefinitions="*,*,*"
+              ColumnDefinitions="2*,2*,*"
               ColumnSpacing="12"
               RowSpacing="12">
 
@@ -299,13 +299,19 @@
                                Text="KV-cache"
                                Style="{StaticResource SectionTitle}" />
                     </Grid>
-                    <Label Grid.Row="1"
-                           Text="{Binding KvCacheText}"
-                           FontFamily="Consolas"
-                           FontSize="13"
-                           LineBreakMode="CharacterWrap"
-                           VerticalOptions="Center"
-                           Margin="0,10,0,0" />
+                    <VerticalStackLayout Grid.Row="1"
+                                         Spacing="10"
+                                         VerticalOptions="Center"
+                                         Margin="0,10,0,0">
+                        <Label Text="{Binding KvCacheText}"
+                               FontFamily="Consolas"
+                               FontSize="13"
+                               LineBreakMode="CharacterWrap" />
+                        <ProgressBar Progress="{Binding KvCacheBarValue}"
+                                     HeightRequest="8"
+                                     HorizontalOptions="Fill"
+                                     ProgressColor="{StaticResource StatusActive}" />
+                    </VerticalStackLayout>
                 </Grid>
             </Border>
         </Grid>

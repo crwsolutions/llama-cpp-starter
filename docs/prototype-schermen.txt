@@ -68,7 +68,7 @@ LAYOUT:
     - Inhoud (idle): "Used Unknown"
     -                "Capacity Unknown"
     - Inhoud (geladen): live uit /metrics (+ /slots-fallback)
-      (bv. "Used 2.146 t | 1,6% | Capacity 131.072 t | automatic")
+      (bv. "Used 2.146 t | 1,6% | Capacity 131.072 t (automatic)")
 
 - Onderaan (Live runtime-logboek):
   - Titel: "Live runtime-logboek"

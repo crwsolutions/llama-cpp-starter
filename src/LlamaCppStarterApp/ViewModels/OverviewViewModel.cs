@@ -20,7 +20,7 @@ public partial class OverviewViewModel : BaseViewModel
     private const string IdleStatsText = "Active 0/1 | Queued 0\nBusy/decode: 0, 0";
     private const string IdleTokensText = "No runtime";
     private const string IdleMtpTokensText = "Inactive";
-    private const string IdleKvCacheText = "Used Unknown\nCapacity Unknown";
+    private const string IdleKvCacheText = "Unknown/Unknown t (automatic)";
 
     // Hardware card refresh cadence: nvidia-smi is cheap and cached 10 s in GpuSummaryCache,
     // so a 10 s poll keeps the card live (utilization/temperature/memory) without spamming.
@@ -177,6 +177,11 @@ public partial class OverviewViewModel : BaseViewModel
 
     [ObservableProperty]
     public partial string KvCacheText { get; set; } = IdleKvCacheText;
+
+    // KV cache usage fraction (0..1) for the card's ProgressBar; 0 = idle/unknown
+    // (same convention as the Hardware card bars).
+    [ObservableProperty]
+    public partial double KvCacheBarValue { get; set; }
 
     internal async Task EnsureLoadedAsync()
     {
@@ -395,6 +400,7 @@ public partial class OverviewViewModel : BaseViewModel
             TokensText = IdleTokensText;
             MtpTokensText = IdleMtpTokensText;
             KvCacheText = IdleKvCacheText;
+            KvCacheBarValue = 0;
             return;
         }
 
@@ -486,6 +492,7 @@ public partial class OverviewViewModel : BaseViewModel
                 ? IdleMtpTokensText
                 : MtpGatedText(e.Snapshot.MtpTokensText);
             KvCacheText = string.IsNullOrEmpty(e.Snapshot.KvCacheText) ? IdleKvCacheText : e.Snapshot.KvCacheText;
+            KvCacheBarValue = e.Snapshot.KvCacheBarValue;
             UpdateModelStatusText();
         });
     }

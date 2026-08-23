@@ -184,19 +184,15 @@ public static class RuntimeDashboardService
         double? capacityTokens,
         string kvUnified = "auto")
     {
-        var usagePercent = KvCacheUsagePercent(reportedUsage, tokens, capacityTokens);
-        var usedParts = new List<string>();
-        if (tokens is not null) usedParts.Add($"{tokens.Value:N0} t");
-        if (usagePercent is not null) usedParts.Add($"{usagePercent.Value:0.#}%");
-        var used = usedParts.Count == 0 ? "Unknown" : string.Join(" | ", usedParts);
-        var capacity = capacityTokens is > 0 ? $"{capacityTokens.Value:N0} t" : "Unknown";
+        var used = tokens is not null ? $"{tokens.Value:N0}" : "Unknown";
+        var capacity = capacityTokens is > 0 ? $"{capacityTokens.Value:N0}" : "Unknown";
         var allocation = kvUnified.ToLowerInvariant() switch
         {
             "on" => "unified",
             "off" => "partitioned",
             _ => "automatic"
         };
-        return $"Used {used}\nCapacity {capacity} | {allocation}";
+        return $"{used}/{capacity} t ({allocation})";
     }
 
     public static double? KvCacheUsagePercent(double? reportedUsage, double? tokens, double? capacityTokens)

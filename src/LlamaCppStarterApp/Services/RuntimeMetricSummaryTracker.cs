@@ -12,6 +12,7 @@ public sealed record RuntimeMetricSummaryResult(
     string MtpTokens,
     string Slots,
     string KvCache,
+    double? KvCacheUsagePercent,
     bool UsedLastKnown,
     DateTimeOffset? LastKnownCapturedAt);
 
@@ -49,6 +50,7 @@ public sealed class RuntimeMetricSummaryTracker
                 snapshot.MtpTokens,
                 snapshot.Slots,
                 snapshot.KvCache,
+                snapshot.KvCacheUsagePercent,
                 UsedLastKnown: true,
                 LastKnownCapturedAt(snapshot));
         }
@@ -193,6 +195,7 @@ public sealed class RuntimeMetricSummaryTracker
             mtpTokensText,
             slotsText,
             kvCacheText,
+            kvUsagePercent,
             displayGeneratedTokens,
             displayPromptTokens,
             displayMtpGeneratedTokens,
@@ -215,6 +218,7 @@ public sealed class RuntimeMetricSummaryTracker
             mtpTokensText,
             slotsText,
             kvCacheText,
+            kvUsagePercent,
             usedLastKnown,
             usedLastKnown ? lastKnownCapturedAt : null);
     }
@@ -340,6 +344,7 @@ public sealed class RuntimeMetricSummaryTracker
         string mtpTokensText,
         string slotsText,
         string kvCacheText,
+        double? kvCacheUsagePercent,
         double? displayGeneratedTokens,
         double? displayPromptTokens,
         double? displayMtpGeneratedTokens,
@@ -382,6 +387,7 @@ public sealed class RuntimeMetricSummaryTracker
             mtpTokensText,
             slotsText,
             kvCacheText,
+            kvCacheUsagePercent,
             capturedAt,
             displayGeneratedTokens,
             displayPromptTokens,
@@ -548,6 +554,7 @@ public sealed class RuntimeMetricSummaryTracker
         string MtpTokens,
         string Slots,
         string KvCache,
+        double? KvCacheUsagePercent,
         DateTimeOffset CapturedAt,
         double? GeneratedTokens,
         double? PromptTokens,

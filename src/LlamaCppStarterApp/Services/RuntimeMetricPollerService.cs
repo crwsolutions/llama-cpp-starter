@@ -9,7 +9,8 @@ public sealed record MetricCardsSnapshot(
     string StatsText,
     string TokensText,
     string MtpTokensText,
-    string KvCacheText);
+    string KvCacheText,
+    double KvCacheBarValue);
 
 public sealed class MetricCardsUpdatedEventArgs : EventArgs
 {
@@ -99,7 +100,8 @@ public sealed class RuntimeMetricPollerService
                 StatsText: string.Empty,
                 TokensText: string.Empty,
                 MtpTokensText: string.Empty,
-                KvCacheText: string.Empty));
+                KvCacheText: string.Empty,
+                KvCacheBarValue: 0));
         }
         finally
         {
@@ -182,7 +184,9 @@ public sealed class RuntimeMetricPollerService
             StatsText: RuntimeDashboardService.RuntimeSlotsLabel(samples, slotSnapshot, context.ParallelSlots),
             TokensText: summary.Tokens,
             MtpTokensText: summary.MtpTokens,
-            KvCacheText: summary.KvCache));
+            KvCacheText: summary.KvCache,
+            // 0..1 fraction for the KV cache ProgressBar (0 = unknown/empty, same convention as the Hardware bars).
+            KvCacheBarValue: summary.KvCacheUsagePercent is double percent ? Math.Clamp(percent / 100.0, 0, 1) : 0));
     }
 
     private void RaiseUpdated(MetricCardsSnapshot snapshot) =>
