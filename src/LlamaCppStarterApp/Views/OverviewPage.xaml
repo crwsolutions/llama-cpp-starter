@@ -165,7 +165,7 @@
                                         IsVisible="{Binding HardwareUnavailable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="models:GpuSummary">
-                                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,*"
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,*,auto"
                                           ColumnSpacing="10"
                                           Margin="0,5">
                                         <Label Grid.Column="0"
@@ -173,34 +173,34 @@
                                                FontSize="12" WidthRequest="190"
                                                LineBreakMode="CharacterWrap"
                                                VerticalOptions="Center" />
-                                        <Label Grid.Column="1"
+                                        <ProgressBar Grid.Column="1"
+                                                     Progress="{Binding GpuUsageBarValue}"
+                                                     HeightRequest="8"
+                                                     HorizontalOptions="Fill"
+                                                     ProgressColor="{StaticResource StatusActive}" />
+                                        <Label Grid.Column="2"
                                                Text="{Binding UsageText}"
                                                FontFamily="Consolas"
                                                FontSize="12"
                                                LineBreakMode="CharacterWrap"
                                                VerticalOptions="Center" />
-                                        <Label Grid.Column="2"
+                                        <Label Grid.Column="3"
                                                Text="{Binding TemperatureText}"
                                                FontFamily="Consolas"
                                                FontSize="12"
                                                LineBreakMode="CharacterWrap"
                                                VerticalOptions="Center" />
-                                        <Label Grid.Column="3"
+                                        <ProgressBar Grid.Column="4"
+                                                     Progress="{Binding MemoryUsedBarValue}"
+                                                     HeightRequest="8"
+                                                     HorizontalOptions="Fill"
+                                                     ProgressColor="{StaticResource Primary}" />
+                                        <Label Grid.Column="5"
                                                Text="{Binding MemoryText}"
                                                FontFamily="Consolas"
                                                FontSize="12"
                                                LineBreakMode="CharacterWrap"
                                                VerticalOptions="Center" />
-                                        <ProgressBar Grid.Column="4"
-                                                     Progress="{Binding GpuUsageBarValue}"
-                                                     HeightRequest="8"
-                                                     HorizontalOptions="Fill"
-                                                     ProgressColor="{StaticResource StatusActive}" />
-                                        <ProgressBar Grid.Column="5"
-                                                     Progress="{Binding MemoryUsedBarValue}"
-                                                     HeightRequest="8"
-                                                     HorizontalOptions="Fill"
-                                                     ProgressColor="{StaticResource Primary}" />
                                     </Grid>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
