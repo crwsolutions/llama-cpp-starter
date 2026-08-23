@@ -88,6 +88,12 @@ public sealed class RuntimeMetricSummaryTracker
         liveGenerationRate = secondsBasedGenerationRate ?? liveGenerationRate;
         livePromptRate = secondsBasedPromptRate ?? livePromptRate;
 
+        // MTP rates: use active MTP generation seconds to avoid dilution during idle gaps.
+        var secondsBasedMtpGeneratedRate = SecondsBasedCounterRate(observedMtpGeneratedTokens, mtpGeneratedSeconds, ref state.LastMtpGeneratedTokenCounterForSeconds, ref state.LastMtpGeneratedSecondsCounter);
+        var secondsBasedMtpAcceptedRate = SecondsBasedCounterRate(observedMtpAcceptedTokens, mtpAcceptedSeconds, ref state.LastMtpAcceptedTokenCounterForSeconds, ref state.LastMtpAcceptedSecondsCounter);
+        liveMtpGeneratedRate = secondsBasedMtpGeneratedRate ?? liveMtpGeneratedRate;
+        liveMtpAcceptedRate = secondsBasedMtpAcceptedRate ?? liveMtpAcceptedRate;
+
         if (predictedTokens is null) liveGenerationRate = slotObservation.GenerationRate ?? liveGenerationRate;
         if (promptTokensProcessed is null) livePromptRate = slotObservation.PromptRate ?? livePromptRate;
 
@@ -521,6 +527,10 @@ public sealed class RuntimeMetricSummaryTracker
         public DateTimeOffset? LastMtpGeneratedTokenPollAt;
         public double? LastMtpAcceptedTokenCounter;
         public DateTimeOffset? LastMtpAcceptedTokenPollAt;
+        public double? LastMtpGeneratedTokenCounterForSeconds;
+        public double? LastMtpGeneratedSecondsCounter;
+        public double? LastMtpAcceptedTokenCounterForSeconds;
+        public double? LastMtpAcceptedSecondsCounter;
         public DateTimeOffset? LastSlotPollAt;
         public bool SlotCountersInitialized;
         public double CumulativeSlotPromptTokens;

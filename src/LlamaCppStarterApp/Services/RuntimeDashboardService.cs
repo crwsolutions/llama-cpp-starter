@@ -245,22 +245,22 @@ public static class RuntimeDashboardService
             ?? RuntimeMetrics.Sum(samples, ["prompt", "tokens", "cache", "total"], ["seconds", "duration"]);
 
     public static double? MtpGeneratedTokenCounter(IReadOnlyList<PrometheusSample> samples)
-        => RuntimeMetrics.Sum(samples, ["mtp", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected"])
-            ?? RuntimeMetrics.Sum(samples, ["draft", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected"])
-            ?? RuntimeMetrics.Sum(samples, ["speculative", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected"])
-            ?? RuntimeMetrics.Sum(samples, ["spec", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected"])
-            ?? RuntimeMetrics.Sum(samples, ["mtp", "tokens", "total"], ["seconds", "duration", "accepted", "acc", "rejected"])
-            ?? RuntimeMetrics.Sum(samples, ["draft", "tokens", "total"], ["seconds", "duration", "accepted", "acc", "rejected"])
-            ?? RuntimeMetrics.Sum(samples, ["speculative", "tokens", "total"], ["seconds", "duration", "accepted", "acc", "rejected"]);
+        => RuntimeMetrics.Sum(samples, ["mtp", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected", "per_pos", "drafts", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["draft", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected", "per_pos", "drafts", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["speculative", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected", "per_pos", "drafts", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["spec", "tokens", "generated", "total"], ["seconds", "duration", "accepted", "acc", "rejected", "per_pos", "drafts", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["mtp", "tokens", "total"], ["seconds", "duration", "accepted", "acc", "rejected", "per_pos", "drafts", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["draft", "tokens", "total"], ["seconds", "duration", "accepted", "acc", "rejected", "per_pos", "drafts", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["speculative", "tokens", "total"], ["seconds", "duration", "accepted", "acc", "rejected", "per_pos", "drafts", "position"]);
 
     public static double? MtpAcceptedTokenCounter(IReadOnlyList<PrometheusSample> samples)
-        => RuntimeMetrics.Sum(samples, ["mtp", "tokens", "accepted", "total"], ["seconds", "duration"])
-            ?? RuntimeMetrics.Sum(samples, ["draft", "tokens", "accepted", "total"], ["seconds", "duration"])
-            ?? RuntimeMetrics.Sum(samples, ["speculative", "tokens", "accepted", "total"], ["seconds", "duration"])
-            ?? RuntimeMetrics.Sum(samples, ["spec", "tokens", "accepted", "total"], ["seconds", "duration"])
-            ?? RuntimeMetrics.Sum(samples, ["mtp", "acc", "tokens", "total"], ["seconds", "duration"])
-            ?? RuntimeMetrics.Sum(samples, ["draft", "acc", "tokens", "total"], ["seconds", "duration"])
-            ?? RuntimeMetrics.Sum(samples, ["speculative", "acc", "tokens", "total"], ["seconds", "duration"]);
+        => RuntimeMetrics.Sum(samples, ["mtp", "tokens", "accepted", "total"], ["seconds", "duration", "per_pos", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["draft", "tokens", "accepted", "total"], ["seconds", "duration", "per_pos", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["speculative", "tokens", "accepted", "total"], ["seconds", "duration", "per_pos", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["spec", "tokens", "accepted", "total"], ["seconds", "duration", "per_pos", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["mtp", "acc", "tokens", "total"], ["seconds", "duration", "per_pos", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["draft", "acc", "tokens", "total"], ["seconds", "duration", "per_pos", "position"])
+            ?? RuntimeMetrics.Sum(samples, ["speculative", "acc", "tokens", "total"], ["seconds", "duration", "per_pos", "position"]);
 
     public static double? MtpGeneratedSecondsCounter(IReadOnlyList<PrometheusSample> samples)
         => RuntimeMetrics.Sum(samples, ["mtp", "tokens", "generated", "seconds", "total"], ["accepted", "acc", "rejected"])
