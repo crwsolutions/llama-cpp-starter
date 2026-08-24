@@ -107,14 +107,40 @@ public partial class OverviewViewModel : BaseViewModel
     [ObservableProperty]
     public partial Model? SelectedModel { get; set; }
 
+    [NotifyPropertyChangedFor(nameof(LoadButtonText))]
+    [ObservableProperty]
+    public partial Runtime? SelectedRuntime { get; set; }
+
+    // llama.cpp panel: server link "http://{host}:{port}" (shown right-aligned next to the
+    // section title). Host = the profile's --host bind (when set), otherwise 127.0.0.1;
+    // 0.0.0.0 (bind to all interfaces, network-reachable) is shown/opened as 127.0.0.1
+    // because browsers cannot reliably open that address; port = the profile's port
+    // (default 8080 when unset).
+    public string ServerUrl
+    {
+        get
+        {
+            if (SelectedProfile is null)
+            {
+                return string.Empty;
+            }
+
+            var parameters = ProfileParameters.FromJson(SelectedProfile.ParamsJson);
+            var host = parameters.HostBind?.Trim();
+            if (string.IsNullOrWhiteSpace(host) || host == "0.0.0.0")
+            {
+                host = "127.0.0.1";
+            }
+            var port = SelectedProfile.Port > 0 ? SelectedProfile.Port : 8080;
+            return string.Format(CultureInfo.InvariantCulture, "http://{0}:{1}", host, port);
+        }
+    }
+
+    [NotifyPropertyChangedFor(nameof(ServerUrl))]
     [NotifyPropertyChangedFor(nameof(CommandPreview))]
     [NotifyPropertyChangedFor(nameof(LoadButtonText))]
     [ObservableProperty]
     public partial Profile? SelectedProfile { get; set; }
-
-    [NotifyPropertyChangedFor(nameof(LoadButtonText))]
-    [ObservableProperty]
-    public partial Runtime? SelectedRuntime { get; set; }
 
     // "Laden" while the same model + profile + runtime is already running = reload;
     // "Laad om" when the selection differs from the loaded session (auto unload + load).
@@ -578,5 +604,25 @@ public partial class OverviewViewModel : BaseViewModel
     {
         await _processService.UnloadAsync();
         await RefreshStatusAsync();
+    }
+
+    // llama.cpp panel: open the server link (http://{host}:{port}) in the default browser.
+    [RelayCommand]
+    private async Task OpenServerUrlAsync()
+    {
+        var url = ServerUrl;
+        if (string.IsNullOrEmpty(url))
+        {
+            return;
+        }
+
+        try
+        {
+            await Launcher.OpenAsync(new Uri(url));
+        }
+        catch (Exception)
+        {
+            // No browser/URI handler available → the link simply does not open.
+        }
     }
 }

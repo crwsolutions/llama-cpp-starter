@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
              xmlns:models="clr-namespace:LlamaCppStarterApp.Models"
+             xmlns:behaviors="clr-namespace:LlamaCppStarterApp.Behaviors"
              x:DataType="vm:OverviewViewModel"
              x:Class="LlamaCppStarterApp.Views.OverviewPage">
 
@@ -12,7 +13,8 @@
         <Grid ColumnDefinitions="*,auto" ColumnSpacing="12">
             <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,Auto, Auto" RowSpacing="8">
-                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                    <!-- Title row: "llama.cpp" + right-aligned server link (http://{host}:{port}) -->
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto">
                         <BoxView Grid.Column="0"
                              WidthRequest="4"
                              HeightRequest="20"
@@ -23,6 +25,33 @@
                         <Label Grid.Column="1"
                            Text="llama.cpp"
                            Style="{StaticResource SectionTitle}" />
+                        <HorizontalStackLayout Grid.Column="3" behaviors:CursorBehavior.Cursor="Hand">
+                            <!-- Server link: underline + hand cursor on hover; tap opens it in the default browser -->
+                            <Label
+                               Text="{Binding ServerUrl}"
+                               TextDecorations="Underline"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
+                               HorizontalOptions="End"
+                               VerticalOptions="Center"
+                               Margin="16,0,0,0"
+                               IsVisible="{Binding ServerUrl, Converter={StaticResource StringToVisibilityConverter}}"
+                               SemanticProperties.Description="Open the llama.cpp server in the browser"
+                               />
+                            <Label
+                               Text="&#xf35d;"
+                               FontFamily="FontAwesomeSolid"
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Margin="8,2,10,0" />
+
+                            <HorizontalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenServerUrlCommand}" />
+                            </HorizontalStackLayout.GestureRecognizers>
+                            
+                        </HorizontalStackLayout>
                     </Grid>
                     <Grid Grid.Row="1" ColumnDefinitions="Auto,2*,2*,3*,Auto" ColumnSpacing="8">
                         <!-- Running-indicator dot: green = server running/starting/stopping, gray = stopped -->
