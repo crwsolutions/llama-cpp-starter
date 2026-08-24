@@ -1,17 +1,28 @@
 # llama-cpp-starter
 
-.NET MAUI desktop-app (Windows) die `llama-server.exe` start met per-model opstartprofielen.
+![llama-cpp-starter overview](art/screenshot.png)
 
-## Wat de app doet
+A .NET MAUI desktop app (Windows) that launches `llama-server.exe` with per-model launch profiles.
 
-- **Runtimes** — kies een map met lokale llama.cpp-builds; de app scant recursief op `llama-server.exe`, detecteert de backend (Cuda/Vulkan/Rocm/Metal/CPU) en onthoudt de runtimes in een lokale SQLite-DB.
-- **Modellen** — scant een modelfolder op GGUF-bestanden (PascalCase-naam, kwantificatie uit de bestandsnaam of GGUF-metadata, grootte; `*mmproj*.gguf` wordt automatisch gekoppeld; projector/draft/MTP-companionbestanden worden uit de modellijst gehouden). Elk model krijgt GGUF-metadata (JSON-blob in de DB) en bij selectie een capability-samenvatting (architectuur, contextlengte, chat template, vision, MoE, …) — gecachet als JSON-blob bij het model en herlezen zodra het bestand wijzigt. Modellen zijn single-selectbaar; daaronder staan de **Laadprofielen** per model. Per model beheer je opstartprofielen: alle `llama-server`-startparameters in één editor-paneel met live command-preview (incl. auto-resolutie van `--spec-draft-model`, embedded MTP inbegrepen). Profielen worden als JSON-blob opgeslagen; elk nieuw model krijgt een `Default`-profiel met de app-globale defaults (niet te hernoemen/verwijderen).
-- **Overzicht** — kies model + startprofiel + runtime en klik **Laden** om de server te starten (live logboek + health-polling op `/health`). **Unload** stopt de server met Ctrl+C (console-signaal), wacht max 30 s en killt anders het procesboom. Bij het afsluiten van de app wordt een draaiende server gestopt. Het midden toont 6 status-kaarten (Modelstatus, Hardware, Stats, Tokens, MTP-tokens, KV-cache): Modelstatus uit lokale status-state, Hardware via **nvidia-smi** (machinewijd, onafhankelijk van een geladen model: per-PID zodra de server draait, anders de volledige GPU-lijst; 10 s-cache; afwezig → "Unavailable"), Stats live uit `/slots` en Tokens/MTP-tokens/KV-cache uit `/metrics` (poll elke 2 s). `/metrics` is standaard uit bij llama-server, daarom heeft elk profiel een **Metrics endpoint**-toggel (default aan) die `--metrics` toevoegt aan de opstartopdracht.
-- **Instellingen** — placeholder (nog te doen). Map-instellingen worden intern al gepersisteerd.
+## What the app does
 
-## Architectuur
+- **Runtimes** — pick a folder with local llama.cpp builds; the app scans it recursively for `llama-server.exe`, detects the backend (Cuda/Vulkan/Rocm/Metal/CPU) and stores the runtimes in a local SQLite database.
+- **Models** — scan a models folder for GGUF files (PascalCase name, quantization from the file name or GGUF metadata, size; `*mmproj*.gguf` is auto-linked; projector/draft/MTP companion files are kept out of the model list). Each model gets GGUF metadata (JSON blob in the DB) and, on selection, a capability summary (architecture, context length, chat template, vision, MoE, …) — cached as a JSON blob on the model and re-read as soon as the file changes. Models are single-selectable; below the selected model sit its **launch profiles**. Per model you manage launch profiles: all `llama-server` start parameters in one editor panel with a live command preview (incl. auto-resolution of `--spec-draft-model`, embedded MTP included). Profiles are stored as JSON blobs; each new model gets a `Default` profile seeded from the app-global defaults (cannot be renamed or removed).
+- **Overview** — pick model + launch profile + runtime and click **Load** to start the server (live log + health polling on `/health`). **Unload** stops the server with Ctrl+C (console signal), waits up to 30 s and then kills the process tree. When the app closes, a running server is stopped. The middle shows 6 status cards (Model status, Hardware, Stats, Tokens, MTP tokens, KV cache): Model status from local status state, Hardware via **nvidia-smi** (machine-wide, independent of a loaded model: per-PID as soon as the server is running, otherwise the full GPU list; 10 s cache; absent → "Unavailable"), Stats live from `/slots`, and Tokens/MTP tokens/KV cache from `/metrics` (poll every 2 s). `/metrics` is disabled by default in llama-server, so each profile has a **Metrics endpoint** toggle (default on) that adds `--metrics` to the launch command.
+- **Settings** — placeholder (still to do). Folder settings are already persisted internally.
 
-MVVM (CommunityToolkit.MVVM) met Repository/Services-laag:
+## Workflow
+
+1. **Select runtime** — on the Runtimes screen, pick a folder with local llama.cpp builds and scan; the app finds every `llama-server.exe`, detects its backend and stores it.
+2. **Scan models** — on the Models screen, pick a models folder and scan for GGUF files (companions such as projectors are auto-linked, not listed as models).
+3. **Select model** — pick a model; its GGUF metadata and capability summary are shown (cached in the DB, re-read when the file changes).
+4. **Maintain profile** — manage the model's launch profiles: all `llama-server` parameters in one editor panel with a live command preview; new models start from a `Default` profile based on the app-global defaults.
+5. **Overview** — on the Overview screen, pick the model, launch profile and runtime; the status cards show model status, hardware, stats, tokens, MTP tokens and KV cache.
+6. **Load** — click **Load** to start `llama-server` with the profile's parameters (live log + health polling); **Unload** stops it (Ctrl+C, kill after 30 s if needed).
+
+## Architecture
+
+MVVM (CommunityToolkit.MVVM) with a Repository/Services layer:
 
 ```
 Models/        : Model (ModelId + MetadataJson + CapabilitiesJson), Profile, ProfileParameters, Runtime, LlamaServerState
@@ -20,22 +31,10 @@ Services/      : GgufMetadataReader, ModelCompanionService, ModelCapabilityServi
                  ModelScannerService, RuntimeScannerService, LlamaServerCommandBuilder (pure static),
                  LlamaServerProcessService (singleton, LoadedSession), ServerHealthService,
                  RuntimeMetrics/RuntimeDashboardService (pure static), ModelRuntimeStatusTracker,
-                 GpuStatusProbeService/GpuStatusService/GpuSummaryCache (nvidia-smi-alleen),
-                 GpuSummaryService, RuntimeMetricSummaryTracker, RuntimeMetricPollerService
+                 GpuStatusProbeService/GpuSummaryCache/GpuSummaryService (nvidia-smi only),
+                 RuntimeMetricSummaryTracker, RuntimeMetricPollerService
 ViewModels/    : OverviewViewModel, ModelsViewModel, RuntimesViewModel, SettingsViewModel
-Views/         : OverviewPage, ModelsPage, RuntimesPage, SettingsPage (Shell-flyout)
+Views/         : OverviewPage, ModelsPage, RuntimesPage, SettingsPage (Shell flyout)
 ```
 
-Database: `llamacppstarter_data.db` in `FileSystem.AppDataDirectory`, gemigreerd via `PRAGMA user_version`.
-
-## Bouwen / draaien
-
-```powershell
-dotnet build src/LlamaCppStarterApp -f net10.0-windows10.0.19041.0
-dotnet run --project src/LlamaCppStarterApp -f net10.0-windows10.0.19041.0
-```
-
-Standaard mappen (wijzigbaar via "Kiezen" op de Runtimes/Modellen-schermen):
-
-- Modellen: `E:\llama.cpp\models`
-- Runtimes: `E:\llama.cpp\llama-local-build`
+Database: `llamacppstarter_data.db` in `FileSystem.AppDataDirectory`, migrated via `PRAGMA user_version`.
