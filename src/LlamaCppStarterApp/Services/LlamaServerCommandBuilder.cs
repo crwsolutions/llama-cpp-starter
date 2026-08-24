@@ -205,6 +205,12 @@ public static class LlamaServerCommandBuilder
             args.Add(p.SpecDraftNMax.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
+        if (!string.IsNullOrWhiteSpace(p.SpecDraftDevice))
+        {
+            args.Add("--spec-draft-device");
+            args.Add(p.SpecDraftDevice);
+        }
+
         // --spec-draft-model (only if the resolved path is non-whitespace; null = e.g. embedded MTP)
         if (!string.IsNullOrWhiteSpace(draftModelPath))
         {
@@ -216,6 +222,12 @@ public static class LlamaServerCommandBuilder
         {
             args.Add("--image-min-tokens");
             args.Add(p.ImageMinTokens.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        // --no-mmproj-offload (true = pass the flag; false/null = not passed, default = offload enabled)
+        if (p.NoMmprojOffload == true)
+        {
+            args.Add("--no-mmproj-offload");
         }
 
         // --metrics (off by default in llama-server; EnableMetrics is not false = on, default true)

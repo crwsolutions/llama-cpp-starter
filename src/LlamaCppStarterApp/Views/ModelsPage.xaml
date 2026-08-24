@@ -366,6 +366,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -384,12 +385,19 @@
                                 <Entry Grid.Row="2" Grid.Column="1"
                                   Text="{Binding CurrentParameters.SpecDraftNMax, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
+
+                                <Label Grid.Row="3" Grid.Column="0" Text="Spec draft device" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="3" Grid.Column="1"
+                                  Text="{Binding CurrentParameters.SpecDraftDevice}"
+                                  Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
+                                  Placeholder="cpu,0,1" />
                             </Grid>
 
                             <!-- Vision (only visible for LikelyVision of the selected model) -->
                             <Grid Grid.Row="4" Margin="0,14,0,0"
                               IsVisible="{Binding SelectedModelHasVision, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
@@ -438,6 +446,12 @@
                                 <Entry Grid.Row="4" Grid.Column="1"
                                   Text="{Binding CurrentParameters.ImageMinTokens, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
+
+                                <Label Grid.Row="5" Grid.Column="0" Text="No offload" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <CheckBox Grid.Row="5" Grid.Column="1"
+                                      IsChecked="{Binding CurrentParameters.NoMmprojOffload, Converter={StaticResource BoolNullableConverter}}"
+                                      VerticalOptions="Center" Margin="0,0,0,4"
+                                      SemanticProperties.Hint="--no-mmproj-offload: mmproj niet op GPU offloaden (standaard: offload aan)" />
                             </Grid>
 
                             <!-- Thinking (chat-template-kwargs) -->

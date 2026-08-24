@@ -123,6 +123,10 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial int? SpecDraftNMax { get; set; }
 
+    /// <summary>--spec-draft-device (comma-separated device list for draft offloading). Null/empty = flag not passed.</summary>
+    [ObservableProperty]
+    public partial string? SpecDraftDevice { get; set; }
+
     /// <summary>
     /// Draft model override for --spec-draft-model. Null = auto-resolution at load time
     /// (companion file in the model folder; embedded MTP → no flag); empty/explicit path wins.
@@ -145,6 +149,13 @@ public partial class ProfileParameters : ObservableObject
     /// <summary>--image-min-tokens</summary>
     [ObservableProperty]
     public partial int? ImageMinTokens { get; set; }
+
+    /// <summary>
+    /// --no-mmproj-offload (true = pass the flag, disables GPU offloading of the mmproj;
+    /// false/null = flag not passed, llama.cpp default = offload enabled).
+    /// </summary>
+    [ObservableProperty]
+    public partial bool? NoMmprojOffload { get; set; }
 
     // --- Thinking ---
 
@@ -273,10 +284,12 @@ public partial class ProfileParameters : ObservableObject
         RopeFreqScale = RopeFreqScale,
         SpecType = SpecType,
         SpecDraftNMax = SpecDraftNMax,
+        SpecDraftDevice = SpecDraftDevice,
         SpecDraftPath = SpecDraftPath,
         CachePrompt = CachePrompt,
         MmprojPath = MmprojPath,
         ImageMinTokens = ImageMinTokens,
+        NoMmprojOffload = NoMmprojOffload,
         ThinkingLevel = ThinkingLevel,
         Temperature = Temperature,
         TopP = TopP,
@@ -357,9 +370,9 @@ public partial class ProfileParameters : ObservableObject
         && BatchSize is null && UbatchSize is null && FlashAttn is null
         && CacheTypeK is null && CacheTypeV is null
         && RopeScaling is null && RopeScale is null && RopeFreqBase is null && RopeFreqScale is null
-        && SpecType is null && SpecDraftNMax is null && SpecDraftPath is null
+        && SpecType is null && SpecDraftNMax is null && SpecDraftDevice is null && SpecDraftPath is null
         && CachePrompt is null
-        && MmprojPath is null && ImageMinTokens is null
+        && MmprojPath is null && ImageMinTokens is null && NoMmprojOffload is null
         && ThinkingLevel is null
         && Temperature is null && TopP is null && TopK is null && MinP is null
         && PresencePenalty is null && RepeatPenalty is null
