@@ -428,6 +428,35 @@ public partial class ModelsViewModel : BaseViewModel
         }
     }
 
+    /// <summary>Step size for the +/- buttons next to Contextgrootte (± one 32768-token step).</summary>
+    private const int ContextSizeStep = 32768;
+
+    /// <summary>Increase the context size by one step (null = 0; result never below 0).</summary>
+    [RelayCommand]
+    private void IncreaseContextSize()
+    {
+        var parameters = CurrentParameters;
+        if (parameters is null)
+        {
+            return;
+        }
+
+        parameters.CtxSize = Math.Max(0, (parameters.CtxSize ?? 0) + ContextSizeStep);
+    }
+
+    /// <summary>Decrease the context size by one step (null = 0; result never below 0).</summary>
+    [RelayCommand]
+    private void DecreaseContextSize()
+    {
+        var parameters = CurrentParameters;
+        if (parameters is null)
+        {
+            return;
+        }
+
+        parameters.CtxSize = Math.Max(0, (parameters.CtxSize ?? 0) - ContextSizeStep);
+    }
+
     /// <summary>Scan the models folder (GGUF files; Default profiles are seeded by the scanner).</summary>
     [RelayCommand]
     private async Task ScanModelsAsync()
