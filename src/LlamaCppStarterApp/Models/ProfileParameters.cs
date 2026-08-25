@@ -225,7 +225,7 @@ public partial class ProfileParameters : ObservableObject
             {
                 var defaults = new ProfileParameters
                 {
-                    CtxSize = 192144,
+                    CtxSize = 196_608,
                     SplitMode = "layer",
                     Ngl = "999",
                     BatchSize = 256,
