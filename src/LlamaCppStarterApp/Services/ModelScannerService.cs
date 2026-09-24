@@ -42,9 +42,10 @@ public class ModelScannerService
                 IgnoreInaccessible = true,
                 AttributesToSkip = FileAttributes.System | FileAttributes.ReparsePoint
             };
+            var dirs = Directory.EnumerateFiles(directory, "*.gguf", options)
+                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
 
-            foreach (var file in Directory.EnumerateFiles(directory, "*.gguf", options)
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+            foreach (var file in dirs)
             {
                 if (!IsModelGguf(file))
                 {
@@ -148,10 +149,17 @@ public class ModelScannerService
     public static bool IsModelGguf(string file)
     {
         var name = Path.GetFileName(file);
-        return name.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase)
-            && !ModelCompanionService.LooksLikeVisionProjectorName(name)
-            && !ModelCompanionService.LooksLikeDraftOrMtpHeadName(name)
-            && !ModelCompanionService.HasStandaloneSpeculativeArchitecture(file);
+
+        var looksLikeVisionProjectorName = !ModelCompanionService.LooksLikeVisionProjectorName(name);
+        var looksLikeDraftOrMtpHeadName = !ModelCompanionService.LooksLikeDraftOrMtpHeadName(name);
+        var hasStandaloneSpeculativeArchitecture = !ModelCompanionService.HasStandaloneSpeculativeArchitecture(file);
+
+        var result = name.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase)
+            &&  looksLikeVisionProjectorName
+            //&& looksLikeDraftOrMtpHeadName
+            &&  hasStandaloneSpeculativeArchitecture;
+
+        return result;
     }
 
     /// <summary>
