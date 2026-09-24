@@ -557,6 +557,49 @@ public partial class ModelsViewModel : BaseViewModel
         StatusText = $"Nieuw profiel '{name}' aangemaakt voor {model.Name}.";
     }
 
+    /// <summary>
+    /// Copy a profile for its model (same model, settings, and port); the copy gets a
+    /// unique 'Copy of {original name}' name and becomes the selected profile.
+    /// </summary>
+    [RelayCommand]
+    private async Task CopyProfileAsync(Profile? profile)
+    {
+        if (profile is null)
+        {
+            return;
+        }
+
+        var model = SelectedModel;
+        if (model is null || profile.ModelId != model.Id)
+        {
+            StatusText = "Selecteer eerst het model van dit profiel.";
+            return;
+        }
+
+        var baseName = profile.Name;
+        var name = $"Copy of {baseName}";
+        var i = 2;
+        while (Profiles.Any(p => p.Name == name))
+        {
+            name = $"Copy of {baseName} ({i++})";
+        }
+
+        var copy = new Profile
+        {
+            Name = name,
+            ModelId = profile.ModelId,
+            IsDefault = false,
+            Port = profile.Port,
+            ParamsJson = profile.ParamsJson,
+            ModelName = model.Name
+        };
+        await _profileRepository.UpsertAsync(copy);
+
+        await LoadProfilesAsync();
+        SelectedProfile = Profiles.FirstOrDefault(p => p.Id == copy.Id);
+        StatusText = $"Profiel '{name}' aangemaakt (kopie van '{baseName}').";
+    }
+
     /// <summary>Save: ProfileParameters → JSON blob → repo. Renaming the Default profile is blocked.</summary>
     [RelayCommand]
     private async Task SaveProfileAsync()

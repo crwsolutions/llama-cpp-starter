@@ -474,7 +474,7 @@
         <Setter Property="BackgroundColor" Value="Transparent" />
     </Style>
 
-    <!-- Small row button (Open Folder / Delete / Add) -->
+    <!-- Small row button (Open Folder / Delete / Copy / Add) -->
     <Style x:Key="RowButton" TargetType="Button">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="10,4" />
@@ -490,6 +490,11 @@
     <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource RowButton}">
         <Setter Property="TextColor" Value="{AppThemeBinding Light=#B00020, Dark=#FF6B6B}" />
         <Setter Property="BorderColor" Value="{AppThemeBinding Light=#B00020, Dark=#FF6B6B}" />
+    </Style>
+
+    <Style x:Key="CopyButton" TargetType="Button" BasedOn="{StaticResource RowButton}">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#1565C0, Dark=#64B5F6}" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light=#1565C0, Dark=#64B5F6}" />
     </Style>
 
     <!-- Field in the Startinstellingen panel -->
