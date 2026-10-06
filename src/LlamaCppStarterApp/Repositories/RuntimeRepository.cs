@@ -35,7 +35,9 @@ public partial class RuntimeRepository : IRuntimeRepository
                     Backend = excluded.Backend,
                     Status = excluded.Status,
                     Location = excluded.Location;
-                SELECT COALESCE(last_insert_rowid(), (SELECT Id FROM Runtimes WHERE ExecutablePath = @ExecutablePath));
+                -- last_insert_rowid() is 0 (not NULL) when the DO UPDATE branch ran,
+                -- so NULLIF is needed before COALESCE can fall back to the lookup.
+                SELECT COALESCE(NULLIF(last_insert_rowid(), 0), (SELECT Id FROM Runtimes WHERE ExecutablePath = @ExecutablePath));
                 """;
             runtime.Id = await connection.ExecuteScalarAsync<int>(insertSql, new
             {
