@@ -1,27 +1,46 @@
-﻿
+using LlamaCppStarterApp.Repositories;
+
 namespace LlamaCppStarterApp;
 
 public partial class AppShell : Shell
 {
-    public AppShell()
-    {
-        InitializeComponent();
-    }
+    public const string FlyoutMinimizedSettingKey = "FlyoutMinimized";
+    public const double FlyoutMinimizedWidth = 60;
+    private const double FlyoutDefaultWidth = 152;
 
+    private readonly IAppSettingsRepository _settings;
     private double? _flyoutWidth;
 
-    private void TapGestureRecognizer_Tapped(object sender, TappedEventArgs e)
+    public AppShell(IAppSettingsRepository settings)
     {
-        const int Minimized = 60;
-        _flyoutWidth ??= FlyoutWidth;
+        _settings = settings;
+        InitializeComponent();
 
-        if (FlyoutWidth > Minimized)
+        var minimized = _settings.GetValueAsync(FlyoutMinimizedSettingKey).GetAwaiter().GetResult() == "true";
+        if (minimized)
         {
-            Animate(_flyoutWidth.Value, Minimized, "\uf152");
+            FlyoutWidth = FlyoutMinimizedWidth;
+            Expander.Text = "\uf152"; // angle-right glyph (collapsed)
         }
         else
         {
-            Animate(Minimized, _flyoutWidth.Value, "\uf191");
+            FlyoutWidth = FlyoutDefaultWidth;
+            Expander.Text = "\uf191"; // angle-left glyph (expanded)
+        }
+        _flyoutWidth = FlyoutDefaultWidth;
+    }
+
+    private void TapGestureRecognizer_Tapped(object sender, TappedEventArgs e)
+    {
+        _flyoutWidth ??= FlyoutWidth;
+
+        if (FlyoutWidth > FlyoutMinimizedWidth)
+        {
+            Animate(_flyoutWidth.Value, FlyoutMinimizedWidth, "\uf152");
+        }
+        else
+        {
+            Animate(FlyoutMinimizedWidth, _flyoutWidth.Value, "\uf191");
         }
     }
 
@@ -31,6 +50,8 @@ public partial class AppShell : Shell
         animation.Commit(this, "FlyoutWidthAnimation", easing: Easing.CubicInOut, finished: (_, _) =>
         {
             Expander.Text = c;
+
+            _ = _settings.SetAsync(FlyoutMinimizedSettingKey, b <= FlyoutMinimizedWidth ? "true" : "false"); //Save state
         });
     }
 }

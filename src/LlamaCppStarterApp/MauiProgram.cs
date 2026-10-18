@@ -1,8 +1,5 @@
-using CommunityToolkit.Maui;
 using LlamaCppStarterApp.Repositories;
 using LlamaCppStarterApp.Services;
-using LlamaCppStarterApp.Views;
-using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
 
@@ -35,6 +32,9 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
+
+        // Register Views
+        builder.Services.AddSingleton<AppShell>();
 
         // Register repositories
         builder.Services.AddSingleton<IModelRepository, ModelRepository>();
