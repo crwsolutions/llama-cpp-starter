@@ -34,6 +34,20 @@
         </DataTemplate>
     </Shell.ItemTemplate>
 
+    <Shell.FlyoutFooter>
+        <Grid  BackgroundColor="Black">
+            <Label x:Name="Expander" Text="&#xf191;" FontFamily="FontAwesomeSolid"
+                   FontSize="20" Margin="12"
+                   TextColor="White"
+                   HorizontalOptions="End"
+                   VerticalOptions="Center" >
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+    </Shell.FlyoutFooter>
+
     <ShellContent
         Title="Overzicht"
         ContentTemplate="{DataTemplate views:OverviewPage}"
