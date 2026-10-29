@@ -77,6 +77,9 @@ src/LlamaCppStarterApp/
                    RuntimesViewModel, SettingsViewModel
   Views/         : AppShell (4 ShellContents, FlyoutBehavior=Locked, glyph-itemtemplate),
                    OverviewPage, ModelsPage, RuntimesPage, SettingsPage
+  Controls/      : CopyIconButton (ContentView; kopieert Text naar clipboard, FA-copy f0c5 →
+                   groene check f00c ±4 s → copy; gebruikt rechts van de "Command"-header (Overzicht)
+                   en rechts van de "Runtime Command"-header (Modellen); sinds 2026-10-29)
   Converters/    : converters in Converters.xaml (SizeToGb, nullable int/double/bool,
                    PickerDefault, MmprojMode-picker + Custom-visibility, visibility, TitleToGlyph voor flyout-iconen)
 ```

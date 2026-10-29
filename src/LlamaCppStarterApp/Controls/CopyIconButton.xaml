@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:LlamaCppStarterApp.Controls"
+             x:Class="LlamaCppStarterApp.Controls.CopyIconButton"
+             x:Name="This"
+             x:DataType="controls:CopyIconButton">
+    <!-- FontAwesome glyphs: copy (f0c5) by default; while in the "copied" state
+         the copy button is hidden (IsCopied propertyChanged) and the green check
+         (f00c) is shown on top, painted with the page background so nothing shows
+         through. The grid is InputTransparent while copied so a repeat tap is not
+         dead over the check area. -->
+    <Grid InputTransparent="{Binding IsCopied, Source={x:Reference This}}">
+        <Button x:Name="CopyButton"
+                Grid.Column="0"
+                Text="&#xf0c5;"
+                FontFamily="FontAwesomeSolid"
+                FontSize="{Binding FontSize, Source={x:Reference This}}"
+                TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
+                BackgroundColor="Transparent"
+                Padding="8,4"
+                MinimumHeightRequest="0"
+                CornerRadius="4"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                SemanticProperties.Description="Copy to clipboard"
+                SemanticProperties.Hint="Copy the text to the clipboard"
+                IsVisible="{Binding IsCopied, Source={x:Reference This}, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+        <Label Grid.Column="0"
+               x:Name="CheckGlyph"
+               Text="&#xf00c;"
+               FontFamily="FontAwesomeSolid"
+               FontSize="{Binding FontSize, Source={x:Reference This}}"
+               TextColor="#2E7D32"
+               Padding="8,4,16,4"
+               HorizontalOptions="Center"
+               VerticalOptions="Center"
+               IsVisible="{Binding IsCopied, Source={x:Reference This}}" />
+    </Grid>
+</ContentView>

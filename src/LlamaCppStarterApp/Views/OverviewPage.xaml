@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
              xmlns:models="clr-namespace:LlamaCppStarterApp.Models"
              xmlns:behaviors="clr-namespace:LlamaCppStarterApp.Behaviors"
+             xmlns:controls="clr-namespace:LlamaCppStarterApp.Controls"
              x:DataType="vm:OverviewViewModel"
              x:Class="LlamaCppStarterApp.Views.OverviewPage">
 
@@ -106,7 +107,7 @@
         <!-- Sub top bar: Command -->
         <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
             <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
-                <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
                     <BoxView Grid.Column="0"
                      WidthRequest="4"
                      HeightRequest="20"
@@ -117,6 +118,12 @@
                     <Label Grid.Column="1"
                        Text="Command"
                        Style="{StaticResource SectionTitle}" />
+                    <!-- Copy button: copies the current command preview to the clipboard
+                         (green check for a few seconds after a successful copy). -->
+                    <controls:CopyIconButton Grid.Column="2"
+                                   Text="{Binding CommandPreview, Mode=OneWay}"
+                                   FontSize="14"
+                                   VerticalOptions="Center" />
                 </Grid>
 
                 <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">

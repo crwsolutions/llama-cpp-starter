@@ -1,4 +1,5 @@
 global using CommunityToolkit.Maui;
+global using Microsoft.Maui.ApplicationModel.DataTransfer;
 global using CommunityToolkit.Mvvm.ComponentModel;
 global using CommunityToolkit.Mvvm.Input;
 global using LlamaCppStarterApp.ViewModels;

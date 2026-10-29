@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
              xmlns:models="clr-namespace:LlamaCppStarterApp.Models"
+             xmlns:controls="clr-namespace:LlamaCppStarterApp.Controls"
              x:DataType="vm:ModelsViewModel"
              x:Class="LlamaCppStarterApp.Views.ModelsPage"
              Title="Modellen">
@@ -581,11 +582,18 @@
                     <!-- Bottom: Opslaan / Verwijderen — always visible -->
                     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="8" Margin="0,8,0,0" RowDefinitions="auto,auto,auto"
                           IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
-                                <Label Grid.Row="0"
-                                   Text="Runtime Command"
-                                   Style="{StaticResource SectionTitle}"
-                                   FontSize="15"
-                                   Margin="0,0,0,8" />
+                                    <Label Grid.Column="0"
+                                       Text="Runtime Command"
+                                       Style="{StaticResource SectionTitle}"
+                                       FontSize="15"
+                                       Margin="0,0,0,8" />
+                                    <!-- Copy button: copies the runtime command preview to the clipboard
+                                         (green check for a few seconds after a successful copy). -->
+                                    <controls:CopyIconButton Grid.Column="1" HorizontalOptions="End"
+                                           Text="{Binding CommandPreview, Mode=OneWay}"
+                                           FontSize="14"
+                                           VerticalOptions="Center"
+                                           Margin="8,0,0,8" />
                                 <Editor Grid.Row="1" Grid.ColumnSpan="2"
                                     Text="{Binding CommandPreview, Mode=OneWay}"
                                     IsReadOnly="True"
