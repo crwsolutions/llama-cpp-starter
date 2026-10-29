@@ -105,7 +105,7 @@
 
         <!-- Sub top bar: Command -->
         <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
-            <Grid RowDefinitions="Auto,Auto, Auto" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
                     <BoxView Grid.Column="0"
                      WidthRequest="4"

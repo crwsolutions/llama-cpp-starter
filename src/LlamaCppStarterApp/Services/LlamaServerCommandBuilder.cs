@@ -11,8 +11,10 @@ public static class LlamaServerCommandBuilder
     /// <summary>
     /// <paramref name="draftModelPath"/> = resolved --spec-draft-model path
     /// (via ModelCompanionService.ResolveDraftModelPath; null = no flag, e.g. embedded MTP).
+    /// <paramref name="profileName"/> = launch profile name; with an unspecified alias
+    /// (ModelAlias null/empty) it feeds the default -a value "{model name} [{profile name}]".
     /// </summary>
-    public static string[] BuildArgs(Runtime? runtime, Model model, ProfileParameters p, int port, string? draftModelPath)
+    public static string[] BuildArgs(Runtime? runtime, Model model, ProfileParameters p, int port, string? draftModelPath, string? profileName)
     {
         var args = new List<string>();
 
@@ -27,6 +29,20 @@ public static class LlamaServerCommandBuilder
             args.Add("--mmproj");
             args.Add(Quote(mmproj));
         }
+
+        // -a <alias> (always passed; the app default is "{model name} [{profile name}]"
+        // when the profile does not specify its own alias)
+        var alias = p.ModelAlias;
+        if (string.IsNullOrWhiteSpace(alias))
+        {
+            alias = $"[{profileName}]";
+            if (!string.IsNullOrWhiteSpace(model.Name))
+            {
+                alias = model.Name + " " + alias;
+            }
+        }
+        args.Add("-a");
+        args.Add(Quote(alias));
 
         // --host {bind} (only when set; llama.cpp default = 127.0.0.1)
         if (!string.IsNullOrWhiteSpace(p.HostBind))

@@ -98,7 +98,7 @@ public partial class OverviewViewModel : BaseViewModel
             var draftModelPath = ModelCompanionService.ResolveDraftModelPath(
                 SelectedModel.Path, parameters.SpecType, parameters.SpecDraftPath);
             return LlamaServerCommandBuilder.BuildCommandLine(
-                LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, parameters, SelectedProfile.Port, draftModelPath));
+                LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, parameters, SelectedProfile.Port, draftModelPath, SelectedProfile.Name));
         }
     }
 
@@ -583,7 +583,7 @@ public partial class OverviewViewModel : BaseViewModel
             await UnloadAsync();
         }
 
-        var started = await _processService.LoadAsync(runtime, model, profile.Id, parameters, port);
+        var started = await _processService.LoadAsync(runtime, model, profile.Id, parameters, port, profile.Name);
         if (!started)
         {
             StatusText = "Kon server niet starten (zie logboek).";

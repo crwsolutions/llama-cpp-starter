@@ -246,6 +246,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -254,12 +255,19 @@
 
                                 <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Basisstart" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                                <Label Grid.Row="1" Grid.Column="0" Text="Contextgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <HorizontalStackLayout Grid.Row="1" Grid.Column="1">
+                                <Label Grid.Row="1" Grid.Column="0" Text="Model alias" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="1" Grid.Column="1"
+                                  Text="{Binding CurrentParameters.ModelAlias}"
+                                  Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
+                                  Placeholder="{Binding ModelAliasDefaultPlaceholder}"
+                                  SemanticProperties.Hint="-a/--alias: modelnaam-alias(es), comma-gescheiden (voor de API). Niet ingevuld = default &quot;{modelnaam} [profielnaam]&quot;." />
+
+                                <Label Grid.Row="2" Grid.Column="0" Text="Contextgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <HorizontalStackLayout Grid.Row="2" Grid.Column="1">
                                     <Entry WidthRequest="200"
                                       Text="{Binding CurrentParameters.CtxSize, Converter={StaticResource IntNullableConverter}}"
                                       Style="{StaticResource FieldEntry}" Margin="0,0,4,4" />
-                                    <Button Grid.Row="1" Grid.Column="2"
+                                    <Button Grid.Row="2" Grid.Column="2"
                                       Text="&#xf067;"
                                       FontFamily="FontAwesomeSolid"
                                       FontSize="12"
@@ -269,7 +277,7 @@
                                       MinimumHeightRequest="32"
                                       VerticalOptions="Center"
                                       Command="{Binding IncreaseContextSizeCommand}" />
-                                    <Button Grid.Row="1" Grid.Column="3"
+                                    <Button Grid.Row="2" Grid.Column="3"
                                       Text="&#xf068;"
                                       FontFamily="FontAwesomeSolid"
                                       FontSize="12"
@@ -281,58 +289,58 @@
                                       Command="{Binding DecreaseContextSizeCommand}" />
                                 </HorizontalStackLayout>
 
-                                <Label Grid.Row="2" Grid.Column="0" Text="GPU mode" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Picker Grid.Row="2" Grid.Column="1"
+                                <Label Grid.Row="3" Grid.Column="0" Text="GPU mode" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="3" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.SplitModeOptions}"
                                    SelectedItem="{Binding CurrentParameters.SplitMode, Converter={StaticResource PickerDefaultConverter}}"
                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="3" Grid.Column="0" Text="GPU-lagen" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="3" Grid.Column="1"
+                                <Label Grid.Row="4" Grid.Column="0" Text="GPU-lagen" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="4" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Ngl}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="bv. 999, auto of all" />
 
-                                <Label Grid.Row="4" Grid.Column="0" Text="Tensor split" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="4" Grid.Column="1"
+                                <Label Grid.Row="5" Grid.Column="0" Text="Tensor split" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="5" Grid.Column="1"
                                   Text="{Binding CurrentParameters.TensorSplit}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="bv. 24,8" />
 
-                                <Label Grid.Row="5" Grid.Column="0" Text="Threads" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="5" Grid.Column="1"
+                                <Label Grid.Row="6" Grid.Column="0" Text="Threads" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="6" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Threads, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="6" Grid.Column="0" Text="Host bind" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="6" Grid.Column="1"
+                                <Label Grid.Row="7" Grid.Column="0" Text="Host bind" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="7" Grid.Column="1"
                                   Text="{Binding CurrentParameters.HostBind}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="127.0.0.1" />
 
-                                <Label Grid.Row="7" Grid.Column="0" Text="Poort" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="7" Grid.Column="1"
+                                <Label Grid.Row="8" Grid.Column="0" Text="Poort" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="8" Grid.Column="1"
                                   Text="{Binding SelectedProfile.Port, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="8080" />
 
-                                <Label Grid.Row="8" Grid.Column="0" Text="No host" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <CheckBox Grid.Row="8" Grid.Column="1"
+                                <Label Grid.Row="9" Grid.Column="0" Text="No host" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <CheckBox Grid.Row="9" Grid.Column="1"
                                       IsChecked="{Binding CurrentParameters.NoHost, Converter={StaticResource BoolNullableConverter}}"
                                       VerticalOptions="Center" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="9" Grid.Column="0" Text="Parallel (slots)" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="9" Grid.Column="1"
+                                <Label Grid.Row="10" Grid.Column="0" Text="Parallel (slots)" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="10" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Parallel, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="10" Grid.Column="0" Text="Keep" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="10" Grid.Column="1"
+                                <Label Grid.Row="11" Grid.Column="0" Text="Keep" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="11" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Keep, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="11" Grid.Column="0" Text="Ctx checkpoints" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
-                                <Entry Grid.Row="11" Grid.Column="1"
+                                <Label Grid.Row="12" Grid.Column="0" Text="Ctx checkpoints" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="12" Grid.Column="1"
                                   Text="{Binding CurrentParameters.CtxCheckpoints, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
                             </Grid>

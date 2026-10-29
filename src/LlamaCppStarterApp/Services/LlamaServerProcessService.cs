@@ -126,7 +126,7 @@ public class LlamaServerProcessService
     /// <summary>State change (Idle/Starting/Running/Stopping).</summary>
     public event EventHandler<ServerStateChangedEventArgs>? StateChanged;
 
-    public async Task<bool> LoadAsync(Runtime runtime, Model model, int profileId, ProfileParameters parameters, int port)
+    public async Task<bool> LoadAsync(Runtime runtime, Model model, int profileId, ProfileParameters parameters, int port, string? profileName)
     {
         if (!await _operationLock.WaitAsync(0))
         {
@@ -154,7 +154,7 @@ public class LlamaServerProcessService
 
             // --spec-draft-model resolution at load time (pure static; embedded MTP → null).
             var draftModelPath = ModelCompanionService.ResolveDraftModelPath(model.Path, parameters.SpecType, parameters.SpecDraftPath);
-            var args = LlamaServerCommandBuilder.BuildArgs(runtime, model, parameters, port, draftModelPath);
+            var args = LlamaServerCommandBuilder.BuildArgs(runtime, model, parameters, port, draftModelPath, profileName);
 
             var startInfo = new ProcessStartInfo
             {

@@ -47,15 +47,36 @@ public partial class ModelsViewModel : BaseViewModel
     [ObservableProperty]
     public partial string StatusText { get; set; } = string.Empty;
 
+    [NotifyPropertyChangedFor(nameof(ModelAliasDefaultPlaceholder))]
     [ObservableProperty]
     public partial Model? SelectedModel { get; set; }
 
+    [NotifyPropertyChangedFor(nameof(ModelAliasDefaultPlaceholder))]
     [ObservableProperty]
     public partial Profile? SelectedProfile { get; set; }
 
     /// <summary>One instance per selected profile; the bottom-right panel binds directly to it.</summary>
     [ObservableProperty]
     public partial ProfileParameters? CurrentParameters { get; set; }
+
+    /// <summary>
+    /// Model alias placeholder for the Basisstart "Model alias" entry: the app default that
+    /// the launch command gets when the field is left unspecified ("{model name} [{profile name}]").
+    /// </summary>
+    public string ModelAliasDefaultPlaceholder
+    {
+        get
+        {
+            var model = SelectedModel?.Name;
+            var profile = SelectedProfile?.Name;
+            if (string.IsNullOrWhiteSpace(model) || string.IsNullOrWhiteSpace(profile))
+            {
+                return string.Empty;
+            }
+
+            return $"{model} [{profile}]";
+        }
+    }
 
     /// <summary>Read-only runtime command preview (live on input).</summary>
     [ObservableProperty]
@@ -267,8 +288,10 @@ public partial class ModelsViewModel : BaseViewModel
 
     private void OnProfileChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Profile.Port))
+        if (e.PropertyName is nameof(Profile.Port) or nameof(Profile.Name))
         {
+            // Name feeds the command preview and the alias placeholder.
+            OnPropertyChanged(nameof(ModelAliasDefaultPlaceholder));
             UpdateCommandPreview();
         }
     }
@@ -283,7 +306,7 @@ public partial class ModelsViewModel : BaseViewModel
 
         // Same resolution as the real load (pure static) → the preview shows exactly what is started.
         var draftModelPath = ModelCompanionService.ResolveDraftModelPath(SelectedModel.Path, CurrentParameters.SpecType, CurrentParameters.SpecDraftPath);
-        var args = LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, CurrentParameters, SelectedProfile.Port, draftModelPath);
+        var args = LlamaServerCommandBuilder.BuildArgs(null, SelectedModel, CurrentParameters, SelectedProfile.Port, draftModelPath, SelectedProfile.Name);
         CommandPreview = LlamaServerCommandBuilder.BuildCommandLine(args);
     }
 

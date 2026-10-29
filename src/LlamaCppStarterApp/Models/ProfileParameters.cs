@@ -67,6 +67,14 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial int? Parallel { get; set; }
 
+    /// <summary>
+    /// -a/--alias model name aliases (comma-separated, used by the API).
+    /// Null/empty = not specified; at load time the app then passes the
+    /// default alias "{model name} [{profile name}]" (see LlamaServerCommandBuilder).
+    /// </summary>
+    [ObservableProperty]
+    public partial string? ModelAlias { get; set; }
+
     /// <summary>--keep</summary>
     [ObservableProperty]
     public partial int? Keep { get; set; }
@@ -273,6 +281,7 @@ public partial class ProfileParameters : ObservableObject
         Parallel = Parallel,
         Keep = Keep,
         CtxCheckpoints = CtxCheckpoints,
+        ModelAlias = ModelAlias,
         BatchSize = BatchSize,
         UbatchSize = UbatchSize,
         FlashAttn = FlashAttn,
@@ -366,7 +375,7 @@ public partial class ProfileParameters : ObservableObject
     public bool IsEmpty() =>
         CtxSize is null && SplitMode is null && Ngl is null && TensorSplit is null
         && Threads is null && HostBind is null && NoHost is null && Parallel is null
-        && Keep is null && CtxCheckpoints is null
+        && Keep is null && CtxCheckpoints is null && ModelAlias is null
         && BatchSize is null && UbatchSize is null && FlashAttn is null
         && CacheTypeK is null && CacheTypeV is null
         && RopeScaling is null && RopeScale is null && RopeFreqBase is null && RopeFreqScale is null
