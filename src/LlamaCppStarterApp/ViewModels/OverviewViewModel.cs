@@ -637,4 +637,11 @@ public partial class OverviewViewModel : BaseViewModel
             // No browser/URI handler available → the link simply does not open.
         }
     }
+
+    // Clear the runtime log (CollectionChanged raises LogText PropertyChanged).
+    [RelayCommand]
+    private void ClearLog()
+    {
+        LogLines.Clear();
+    }
 }

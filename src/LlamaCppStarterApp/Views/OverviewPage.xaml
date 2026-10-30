@@ -355,7 +355,7 @@
         <!-- Live runtime log -->
         <Border Grid.Row="3" Style="{StaticResource PanelBorder}">
             <Grid RowDefinitions="Auto,*,Auto" >
-                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto">
                     <BoxView Grid.Column="0"
                              WidthRequest="4"
                              HeightRequest="20"
@@ -366,9 +366,24 @@
                     <Label Grid.Column="1"
                            Text="Live runtime-logboek"
                            Style="{StaticResource SectionTitle}" />
+                    <!-- Clear button: clears the runtime log -->
+                    <Button Grid.Column="2"
+                            Text="&#xf2ed;"
+                            FontFamily="FontAwesomeSolid"
+                            FontSize="14"
+                            TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
+                            BackgroundColor="Transparent"
+                            Padding="8,4"
+                            MinimumHeightRequest="0"
+                            CornerRadius="4"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"
+                            SemanticProperties.Description="Clear log"
+                            SemanticProperties.Hint="Clear the runtime log"
+                            Command="{Binding ClearLogCommand}" />
                     <!-- Copy button: copies the entire runtime log to the clipboard
                          (green check for a few seconds after a successful copy). -->
-                    <controls:CopyIconButton Grid.Column="2"
+                    <controls:CopyIconButton Grid.Column="3"
                                    Text="{Binding LogText, Mode=OneWay}"
                                    FontSize="14"
                                    VerticalOptions="Center" />
