@@ -6,7 +6,7 @@
              xmlns:controls="clr-namespace:LlamaCppStarterApp.Controls"
              x:DataType="vm:ModelsViewModel"
              x:Class="LlamaCppStarterApp.Views.ModelsPage"
-             Title="Modellen">
+             Title="Models">
 
     <Grid RowDefinitions="Auto,*,Auto" Padding="20,16">
 
@@ -14,16 +14,16 @@
         <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
             <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                 <Button Grid.Column="0"
-                        Text="Modellenmap scannen"
-                        SemanticProperties.Hint="Scan de modellenmap op GGUF-bestanden"
+                        Text="Scan Models"
+                        SemanticProperties.Hint="Scan the models folder for GGUF files"
                         Command="{Binding ScanModelsCommand}"
                         IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
                 <Button Grid.Column="1"
-                        Text="Kiezen"
+                        Text="Browse"
                         Style="{StaticResource RowButton}"
                         Margin="8,0,0,0"
                         VerticalOptions="Center"
-                        SemanticProperties.Hint="Kies een andere modellenmap"
+                        SemanticProperties.Hint="Choose a different models folder"
                         Command="{Binding ChooseFolderCommand}"
                         IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
                 <Label Grid.Column="2"
@@ -40,13 +40,13 @@
             </Grid>
         </Border>
 
-        <!-- Middle: tables on the left, Startinstellingen on the right -->
+        <!-- Middle: tables on the left, launch settings on the right -->
         <Grid Grid.Row="1" ColumnDefinitions="*,440" Margin="0,12,0,0" ColumnSpacing="12">
 
-            <!-- Left column: Modelbestanden + Laadprofielen -->
+            <!-- Left column: model files + launch profiles -->
             <Grid Grid.Column="0" RowDefinitions="*,Auto" RowSpacing="12">
 
-                <!-- Modelbestanden (model files) -->
+                <!-- Model files -->
                 <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
                     <Grid RowDefinitions="Auto,Auto,Auto,*">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -58,22 +58,22 @@
                                      Margin="0,0,10,0"
                                      VerticalOptions="Center" />
                             <Label Grid.Column="1"
-                                   Text="Modelbestanden"
+                                   Text="Model Files"
                                    Style="{StaticResource SectionTitle}" />
                         </Grid>
                         <Label Grid.Row="1"
-                               Text="Fysieke GGUF-bestanden die zijn gevonden in de modelfolder of geïmporteerd van een andere map."
+                               Text="GGUF files found in the models folder or imported from elsewhere."
                                Style="{StaticResource SectionSubtitle}"
                                Margin="14,4,0,0" />
 
                         <Grid Grid.Row="2"
                               ColumnDefinitions="4*,Auto,Auto,Auto,Auto"
                               Margin="0,12,0,4">
-                            <Label Grid.Column="0" Text="Naam" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="1" Text="Kwantificatie" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="2" Text="Grootte" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="3" Text="Map openen" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="4" Text="Verwijderen" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="0" Text="Name" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="1" Text="Quant" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="2" Text="Size" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="3" Text="Open Folder" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="4" Text="Remove" Style="{StaticResource TableHeaderLabel}" />
                         </Grid>
 
                         <CollectionView Grid.Row="3"
@@ -116,7 +116,7 @@
                     </Grid>
                 </Border>
 
-                <!-- Laadprofielen (launch profiles per model) -->
+                <!-- Launch profiles (per model) -->
                 <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
                     <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
@@ -128,28 +128,28 @@
                                      Margin="0,0,10,0"
                                      VerticalOptions="Center" />
                             <Label Grid.Column="1"
-                                   Text="Laadprofielen"
+                                   Text="Launch Profiles"
                                    Style="{StaticResource SectionTitle}" />
                             <Button Grid.Column="2"
                                     Text="Add"
                                     Style="{StaticResource RowButton}"
                                     VerticalOptions="Center"
-                                    SemanticProperties.Hint="Nieuw profiel voor het geselecteerde model"
+                                    SemanticProperties.Hint="New profile for the selected model"
                                     Command="{Binding AddProfileCommand}" />
                         </Grid>
                         <Label Grid.Row="1"
-                               Text="Laadbare varianten van startinstellingen."
+                               Text="Loadable variants of launch settings."
                                Style="{StaticResource SectionSubtitle}"
                                Margin="14,4,0,8" />
 
                         <Grid Grid.Row="2"
                               ColumnDefinitions="2*,3*,Auto,Auto,Auto"
                               Margin="0,0,0,4">
-                            <Label Grid.Column="0" Text="Naam" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="1" Text="Basismodel" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="2" Text="Poort" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="3" Text="Kopiëren" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="4" Text="Verwijderen" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="0" Text="Name" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="1" Text="Base Model" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="2" Text="Port" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="3" Text="Copy" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="4" Text="Remove" Style="{StaticResource TableHeaderLabel}" />
                         </Grid>
 
                         <CollectionView Grid.Row="3"
@@ -177,7 +177,7 @@
                                                     Text="Copy"
                                                     Style="{StaticResource CopyButton}"
                                                     Margin="8,0,0,0"
-                                                    SemanticProperties.Hint="Kopieer dit profiel (zelfde model, instellingen en poort)"
+                                                    SemanticProperties.Hint="Copy this profile (same model, settings, and port)"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CopyProfileCommand}"
                                                     CommandParameter="{Binding .}" />
                                             <Button Grid.Column="4" Margin="6,0,0,0"
@@ -195,8 +195,8 @@
                 </Border>
             </Grid>
 
-            <!-- Right column: Startinstellingen (editable, directly bound to the selected ProfileParameters).
-                 Metadata (top) and Opslaan/Verwijderen (bottom) stay fixed; the form in between scrolls. -->
+            <!-- Right column: launch settings (editable, directly bound to the selected ProfileParameters).
+                 Metadata (top) and Save/Delete (bottom) stay fixed; the form in between scrolls. -->
             <Border Grid.Column="1" Style="{StaticResource PanelBorder}">
                 <Grid RowDefinitions="Auto,*,Auto">
 
@@ -228,7 +228,7 @@
                                 <Entry Grid.Column="0"
                                        Text="{Binding SelectedProfile.Name, Mode=TwoWay}"
                                        Style="{StaticResource FieldEntry}"
-                                       Placeholder="Profielnaam"
+                                       Placeholder="Profile Name"
                                        IsVisible="{Binding SelectedProfile.IsDefault, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
                             </Grid>
 
@@ -254,16 +254,16 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Basisstart" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Basic Launch" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
                                 <Label Grid.Row="1" Grid.Column="0" Text="Model alias" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="1" Grid.Column="1"
                                   Text="{Binding CurrentParameters.ModelAlias}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="{Binding ModelAliasDefaultPlaceholder}"
-                                  SemanticProperties.Hint="-a/--alias: modelnaam-alias(es), comma-gescheiden (voor de API). Niet ingevuld = default &quot;{modelnaam} [profielnaam]&quot;." />
+                                  SemanticProperties.Hint="-a/--alias: model name alias(es), comma-separated (for the API). Left blank = default &quot;{model name} [profile name]&quot;." />
 
-                                <Label Grid.Row="2" Grid.Column="0" Text="Contextgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="Context Size" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <HorizontalStackLayout Grid.Row="2" Grid.Column="1">
                                     <Entry WidthRequest="200"
                                       Text="{Binding CurrentParameters.CtxSize, Converter={StaticResource IntNullableConverter}}"
@@ -296,17 +296,17 @@
                                    SelectedItem="{Binding CurrentParameters.SplitMode, Converter={StaticResource PickerDefaultConverter}}"
                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="4" Grid.Column="0" Text="GPU-lagen" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="4" Grid.Column="0" Text="GPU Layers" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="4" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Ngl}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
-                                  Placeholder="bv. 999, auto of all" />
+                                  Placeholder="e.g. 999, auto or all" />
 
                                 <Label Grid.Row="5" Grid.Column="0" Text="Tensor split" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="5" Grid.Column="1"
                                   Text="{Binding CurrentParameters.TensorSplit}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
-                                  Placeholder="bv. 24,8" />
+                                  Placeholder="e.g. 24,8" />
 
                                 <Label Grid.Row="6" Grid.Column="0" Text="Threads" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="6" Grid.Column="1"
@@ -319,7 +319,7 @@
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="127.0.0.1" />
 
-                                <Label Grid.Row="8" Grid.Column="0" Text="Poort" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="8" Grid.Column="0" Text="Port" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="8" Grid.Column="1"
                                   Text="{Binding SelectedProfile.Port, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
@@ -362,9 +362,9 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Prestaties &amp; Geheugen" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Performance &amp; Memory" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                                <Label Grid.Row="1" Grid.Column="0" Text="Batchgrootte" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="Batch Size" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="1" Grid.Column="1"
                                   Text="{Binding CurrentParameters.BatchSize, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
@@ -396,7 +396,7 @@
                                 <CheckBox Grid.Row="6" Grid.Column="1"
                                       IsChecked="{Binding CurrentParameters.EnableMetrics, Converter={StaticResource BoolNullableConverter}}"
                                       VerticalOptions="Center" Margin="0,0,0,4"
-                                      SemanticProperties.Hint="--metrics in de opstartopdracht (standaard uit bij llama-server; nodig voor de metrics-kaarten op het Overzicht)" />
+                                      SemanticProperties.Hint="--metrics in the startup command (default off in llama-server; required for the metrics cards on the Overview page)" />
                             </Grid>
 
                             <!-- Speculation / MTP -->
@@ -412,9 +412,9 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Speculatie / MTP" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Speculation / MTP" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                                <Label Grid.Row="1" Grid.Column="0" Text="Spec-type" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="Spec type" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Picker Grid.Row="1" Grid.Column="1"
                                    ItemsSource="{x:Static models:ProfileParameters.SpecTypeOptions}"
                                    SelectedItem="{Binding CurrentParameters.SpecType, Converter={StaticResource PickerDefaultConverter}}"
@@ -450,14 +450,14 @@
 
                                 <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Vision" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                                <Label Grid.Row="1" Grid.Column="0" Text="MM-projector" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="MM projector" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Picker Grid.Row="1" Grid.Column="1"
                                   ItemsSource="{x:Static vm:ModelsViewModel.MmprojModeOptions}"
                                   SelectedItem="{Binding MmprojMode, Converter={StaticResource MmprojModePickerConverter}}"
                                   Style="{StaticResource FieldPicker}" Margin="0,0,0,4" />
 
                                 <!-- Explicit path (Custom mode only): typeable entry + browse button -->
-                                <Label Grid.Row="2" Grid.Column="0" Text="Eigen pad" Style="{StaticResource FieldLabel}" Margin="0,0,10,4"
+                                <Label Grid.Row="2" Grid.Column="0" Text="Custom path" Style="{StaticResource FieldLabel}" Margin="0,0,10,4"
                                   IsVisible="{Binding MmprojMode, Converter={StaticResource MmprojModeCustomToVisibilityConverter}}" />
                                 <Grid Grid.Row="2" Grid.Column="1" Margin="0,0,0,4"
                                   IsVisible="{Binding MmprojMode, Converter={StaticResource MmprojModeCustomToVisibilityConverter}}">
@@ -468,20 +468,20 @@
                                     <Entry Grid.Column="0"
                                       Text="{Binding CurrentParameters.MmprojPath}"
                                       Style="{StaticResource FieldEntry}" Margin="0,0,8,0"
-                                      Placeholder="pad naar .gguf (mmproj)" />
-                                    <Button Grid.Column="1" Text="Blader…" Style="{StaticResource RowButton}"
-                                      SemanticProperties.Hint="Kies een mmproj GGUF-bestand"
+                                      Placeholder="path to .gguf (mmproj)" />
+                                    <Button Grid.Column="1" Text="Browse…" Style="{StaticResource RowButton}"
+                                      SemanticProperties.Hint="Choose an mmproj GGUF file"
                                       Command="{Binding PickMmprojFileCommand}"
                                       IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
                                 </Grid>
 
-                                <Label Grid.Row="3" Grid.Column="0" Text="Effectief" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="3" Grid.Column="0" Text="Effective" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Label Grid.Row="3" Grid.Column="1"
                                   Text="{Binding MmprojEffectivePath}"
                                   FontFamily="Consolas" FontSize="13" VerticalOptions="Center"
                                   Margin="0,0,0,4" />
 
-                                <Label Grid.Row="4" Grid.Column="0" Text="Afbeelding-min" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="4" Grid.Column="0" Text="Image min" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="4" Grid.Column="1"
                                   Text="{Binding CurrentParameters.ImageMinTokens, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
@@ -490,7 +490,7 @@
                                 <CheckBox Grid.Row="5" Grid.Column="1"
                                       IsChecked="{Binding CurrentParameters.NoMmprojOffload, Converter={StaticResource BoolNullableConverter}}"
                                       VerticalOptions="Center" Margin="0,0,0,4"
-                                      SemanticProperties.Hint="--no-mmproj-offload: mmproj niet op GPU offloaden (standaard: offload aan)" />
+                                      SemanticProperties.Hint="--no-mmproj-offload: don't offload mmproj to GPU (default: offload on)" />
                             </Grid>
 
                             <!-- Thinking (chat-template-kwargs) -->
@@ -530,9 +530,9 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Standaardwaarden generatie" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
+                                <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Generation Defaults" Style="{StaticResource SectionTitle}" FontSize="15" Margin="0,0,0,8" />
 
-                                <Label Grid.Row="1" Grid.Column="0" Text="Temperatuur" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="Temperature" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <Entry Grid.Row="1" Grid.Column="1"
                                   Text="{Binding CurrentParameters.Temperature, Converter={StaticResource DoubleNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
@@ -562,7 +562,7 @@
                                   Text="{Binding CurrentParameters.RepeatPenalty, Converter={StaticResource DoubleNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="7" Grid.Column="0" Text="Jinja-chat" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Label Grid.Row="7" Grid.Column="0" Text="Jinja chat" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
                                 <CheckBox Grid.Row="7" Grid.Column="1"
                                       IsChecked="{Binding CurrentParameters.Jinja, Converter={StaticResource BoolNullableConverter}}"
                                       VerticalOptions="Center" Margin="0,0,0,4" />
@@ -579,7 +579,7 @@
                         </Grid>
                     </ScrollView>
 
-                    <!-- Bottom: Opslaan / Verwijderen — always visible -->
+                    <!-- Bottom: Save / Delete — always visible -->
                     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="8" Margin="0,8,0,0" RowDefinitions="auto,auto,auto"
                           IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
                                     <Label Grid.Column="0"
@@ -603,15 +603,15 @@
                                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}"
                                     TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
                         <Button Grid.Column="0" Grid.Row="2"
-                                Text="Opslaan"
-                                SemanticProperties.Hint="Sla de startinstellingen op als JSON-blob"
+                                Text="Save"
+                                SemanticProperties.Hint="Save the launch settings as a JSON blob"
                                 Command="{Binding SaveProfileCommand}" />
                         <Button Grid.Column="1" Grid.Row="2"
-                                Text="Verwijderen"
+                                Text="Delete"
                                 Style="{StaticResource DangerButton}"
                                 MinimumHeightRequest="44"
                                 IsEnabled="{Binding SelectedProfile.IsDefault, Converter={StaticResource InvertedBoolConverter}}"
-                                SemanticProperties.Hint="Verwijder het geselecteerde profiel (Default kan niet)"
+                                SemanticProperties.Hint="Delete the selected profile (Default cannot be deleted)"
                                 Command="{Binding DeleteProfileCommand}" />
                     </Grid>
                 </Grid>

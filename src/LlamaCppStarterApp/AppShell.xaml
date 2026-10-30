@@ -49,12 +49,12 @@
     </Shell.FlyoutFooter>
 
     <ShellContent
-        Title="Overzicht"
+        Title="Overview"
         ContentTemplate="{DataTemplate views:OverviewPage}"
         Route="OverviewPage" />
 
     <ShellContent
-        Title="Modellen"
+        Title="Models"
         ContentTemplate="{DataTemplate views:ModelsPage}"
         Route="ModelsPage" />
 
@@ -64,7 +64,7 @@
         Route="RuntimesPage" />
 
     <ShellContent
-        Title="Instellingen"
+        Title="Settings"
         ContentTemplate="{DataTemplate views:SettingsPage}"
         Route="SettingsPage" />
 

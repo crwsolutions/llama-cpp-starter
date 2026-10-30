@@ -42,12 +42,12 @@ public partial class RuntimesViewModel : BaseViewModel
             Runtimes = new ObservableCollection<Runtime>(await _runtimeRepository.GetAllAsync());
             if (Runtimes.Count == 0)
             {
-                StatusText = "Nog geen runtimes gevonden. Kies een map en scan op llama-server.exe.";
+                StatusText = "No runtimes found yet. Choose a folder and scan for llama-server.exe.";
             }
         }
         catch (Exception ex)
         {
-            StatusText = $"Fout bij laden: {ex.Message}";
+            StatusText = $"Failed to load: {ex.Message}";
         }
         finally
         {
@@ -73,7 +73,7 @@ public partial class RuntimesViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            StatusText = $"Fout bij map kiezen: {ex.Message}";
+            StatusText = $"Failed to choose folder: {ex.Message}";
         }
     }
 
@@ -97,7 +97,7 @@ public partial class RuntimesViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            StatusText = $"Fout bij scannen: {ex.Message}";
+            StatusText = $"Failed to scan: {ex.Message}";
         }
         finally
         {

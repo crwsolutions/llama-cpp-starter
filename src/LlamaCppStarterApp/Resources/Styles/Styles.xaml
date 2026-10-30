@@ -497,7 +497,7 @@
         <Setter Property="BorderColor" Value="{AppThemeBinding Light=#1565C0, Dark=#64B5F6}" />
     </Style>
 
-    <!-- Field in the Startinstellingen panel -->
+    <!-- Field in the launch settings panel -->
     <Style x:Key="FieldLabel" TargetType="Label">
         <Setter Property="FontSize" Value="13" />
         <Setter Property="VerticalOptions" Value="Center" />

@@ -4,19 +4,19 @@
              xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
              x:DataType="vm:SettingsViewModel"
              x:Class="LlamaCppStarterApp.Views.SettingsPage"
-             Title="Instellingen">
+             Title="Settings">
 
     <VerticalStackLayout
         Padding="30,0"
         Spacing="25"
         VerticalOptions="Center">
         <Label
-            Text="Instellingen"
+            Text="Settings"
             Style="{StaticResource Headline}"
             SemanticProperties.HeadingLevel="Level1" />
 
         <Label
-            Text="Instellingen — nog te doen"
+            Text="Settings — todo"
             Style="{StaticResource SubHeadline}"
             SemanticProperties.HeadingLevel="Level2" />
     </VerticalStackLayout>

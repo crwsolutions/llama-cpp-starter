@@ -32,7 +32,7 @@ public partial class ModelsViewModel : BaseViewModel
         _profileRepository = profileRepository;
         _modelScanner = modelScanner;
         _appSettings = appSettings;
-        Title = "Modellen";
+        Title = "Models";
     }
 
     [ObservableProperty]
@@ -131,7 +131,7 @@ public partial class ModelsViewModel : BaseViewModel
             }
             catch (Exception ex)
             {
-                StatusText = $"Fout bij laden: {ex.Message}";
+                StatusText = $"Failed to load: {ex.Message}";
             }
             finally
             {
@@ -447,7 +447,7 @@ public partial class ModelsViewModel : BaseViewModel
         catch (Exception ex)
         {
             SetMmprojMode(previousMode);
-            StatusText = $"Fout bij bestand kiezen: {ex.Message}";
+            StatusText = $"Failed to choose file: {ex.Message}";
         }
     }
 
@@ -486,7 +486,7 @@ public partial class ModelsViewModel : BaseViewModel
     {
         if (string.IsNullOrEmpty(FolderPath) || !System.IO.Directory.Exists(FolderPath))
         {
-            StatusText = "Modellenmap niet gevonden. Kies eerst een map.";
+            StatusText = "Models folder not found. Choose a folder first.";
             return;
         }
 
@@ -510,7 +510,7 @@ public partial class ModelsViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            StatusText = $"Fout bij scannen: {ex.Message}";
+            StatusText = $"Failed to scan: {ex.Message}";
         }
         finally
         {
@@ -536,7 +536,7 @@ public partial class ModelsViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            StatusText = $"Fout bij map kiezen: {ex.Message}";
+            StatusText = $"Failed to choose folder: {ex.Message}";
         }
     }
 
@@ -549,7 +549,7 @@ public partial class ModelsViewModel : BaseViewModel
         var model = SelectedModel;
         if (model is null)
         {
-            StatusText = "Selecteer eerst een model.";
+            StatusText = "Select a model first.";
             return;
         }
 
@@ -577,7 +577,7 @@ public partial class ModelsViewModel : BaseViewModel
 
         await LoadProfilesAsync();
         SelectedProfile = Profiles.FirstOrDefault(p => p.Id == profile.Id);
-        StatusText = $"Nieuw profiel '{name}' aangemaakt voor {model.Name}.";
+        StatusText = $"New profile '{name}' created for {model.Name}.";
     }
 
     /// <summary>
@@ -595,7 +595,7 @@ public partial class ModelsViewModel : BaseViewModel
         var model = SelectedModel;
         if (model is null || profile.ModelId != model.Id)
         {
-            StatusText = "Selecteer eerst het model van dit profiel.";
+            StatusText = "Select this profile's model first.";
             return;
         }
 
@@ -629,13 +629,13 @@ public partial class ModelsViewModel : BaseViewModel
     {
         if (SelectedProfile is null || CurrentParameters is null)
         {
-            StatusText = "Geen profiel geselecteerd.";
+            StatusText = "No profile selected.";
             return;
         }
 
         if (string.IsNullOrWhiteSpace(SelectedProfile.Name))
         {
-            StatusText = "Geef het profiel een naam.";
+            StatusText = "Give the profile a name.";
             return;
         }
 
@@ -645,14 +645,14 @@ public partial class ModelsViewModel : BaseViewModel
         {
             // Revert the name and do not save.
             SelectedProfile.Name = _selectedProfileOriginalName;
-            StatusText = "Het Default-profiel kan niet worden gehernoemd.";
+            StatusText = "The Default profile cannot be renamed.";
             return;
         }
 
         SelectedProfile.ParamsJson = CurrentParameters.ToJson();
         await _profileRepository.UpsertAsync(SelectedProfile);
         _selectedProfileOriginalName = SelectedProfile.Name;
-        StatusText = $"Profiel '{SelectedProfile.Name}' opgeslagen.";
+        StatusText = $"Profile '{SelectedProfile.Name}' saved.";
     }
 
     /// <summary>Delete; the Default profile is blocked.</summary>
@@ -666,14 +666,14 @@ public partial class ModelsViewModel : BaseViewModel
 
         if (SelectedProfile.IsDefault)
         {
-            StatusText = "Het Default-profiel kan niet worden verwijderd.";
+            StatusText = "The Default profile cannot be deleted.";
             return;
         }
 
         var name = SelectedProfile.Name;
         await _profileRepository.DeleteAsync(SelectedProfile.Id);
         await LoadProfilesAsync();
-        StatusText = $"Profiel '{name}' verwijderd.";
+        StatusText = $"Profile '{name}' deleted.";
     }
 
     /// <summary>Delete a model (profiles disappear via ON DELETE CASCADE).</summary>
@@ -694,7 +694,7 @@ public partial class ModelsViewModel : BaseViewModel
             SelectedModel = Models.FirstOrDefault();
         }
 
-        StatusText = $"Model '{name}' verwijderd (incl. profielen).";
+        StatusText = $"Model '{name}' deleted (including profiles).";
     }
 
     [RelayCommand]
@@ -714,7 +714,7 @@ public partial class ModelsViewModel : BaseViewModel
             }
             catch (Exception ex)
             {
-                StatusText = $"Kon map niet openen: {ex.Message}";
+                StatusText = $"Could not open folder: {ex.Message}";
             }
         }
     }

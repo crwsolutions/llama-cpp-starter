@@ -13,8 +13,8 @@
         <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <Button Grid.Column="0"
-                        Text="Map kiezen"
-                        SemanticProperties.Hint="Kies de map met lokale llama.cpp builds en scan direct"
+                        Text="Browse"
+                        SemanticProperties.Hint="Choose the folder with local llama.cpp builds and scan immediately"
                         Command="{Binding ChooseFolderCommand}"
                         IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
                 <Label Grid.Column="1"
@@ -31,7 +31,7 @@
             </Grid>
         </Border>
 
-        <!-- Section: Geïnstalleerde lokale builds (installed local builds) -->
+        <!-- Section: installed local builds -->
         <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
             <Grid RowDefinitions="Auto,Auto,*">
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
@@ -43,7 +43,7 @@
                              Margin="0,0,10,0"
                              VerticalOptions="Center" />
                     <Label Grid.Column="1"
-                           Text="Geïnstalleerde lokale builds"
+                           Text="Installed Local Builds"
                            Style="{StaticResource SectionTitle}" />
                 </Grid>
 
@@ -51,11 +51,11 @@
                 <Grid Grid.Row="1"
                       ColumnDefinitions="2*,Auto,Auto,3*,Auto"
                       Margin="0,12,0,4">
-                    <Label Grid.Column="0" Text="Naam" Style="{StaticResource TableHeaderLabel}" />
+                    <Label Grid.Column="0" Text="Name" Style="{StaticResource TableHeaderLabel}" />
                     <Label Grid.Column="1" Text="Backend" Style="{StaticResource TableHeaderLabel}" />
                     <Label Grid.Column="2" Text="Status" Style="{StaticResource TableHeaderLabel}" />
-                    <Label Grid.Column="3" Text="Locatie" Style="{StaticResource TableHeaderLabel}" />
-                    <Label Grid.Column="4" Text="Actie" Style="{StaticResource TableHeaderLabel}" HorizontalOptions="End" />
+                    <Label Grid.Column="3" Text="Location" Style="{StaticResource TableHeaderLabel}" />
+                    <Label Grid.Column="4" Text="Action" Style="{StaticResource TableHeaderLabel}" HorizontalOptions="End" />
                 </Grid>
 
                 <CollectionView Grid.Row="2"

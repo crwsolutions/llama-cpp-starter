@@ -72,7 +72,7 @@
                             Style="{StaticResource FieldPicker}"
                             IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
                         <Picker Grid.Column="2"
-                            Title="Startprofiel"
+                            Title="Profile"
                             ItemsSource="{Binding Profiles}"
                             ItemDisplayBinding="{Binding Name}"
                             SelectedItem="{Binding SelectedProfile}"
@@ -91,14 +91,14 @@
             <Border Grid.Column="1" Style="{StaticResource PanelBorder}">
                 <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center" Grid.RowSpan="3">
                     <Button Text="{Binding LoadButtonText}" WidthRequest="160"
-                            SemanticProperties.Hint="Laad de geselecteerde combinatie; een draaiende server wordt eerst gestopt"
+                            SemanticProperties.Hint="Load the selected combination; a running server is stopped first"
                             Command="{Binding LoadCommand}"
                             IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
                     <Button Text="Unload" WidthRequest="160"
                             Style="{StaticResource RowButton}"
                             MinimumHeightRequest="44"
                             IsEnabled="{Binding IsRunning}"
-                            SemanticProperties.Hint="Stop de draaiende llama-server"
+                            SemanticProperties.Hint="Stop the running llama-server"
                             Command="{Binding UnloadCommand}" />
                 </VerticalStackLayout>
             </Border>
@@ -162,7 +162,7 @@
                                  Margin="0,0,10,0"
                                  VerticalOptions="Center" />
                         <Label Grid.Column="1"
-                               Text="Modelstatus"
+                               Text="Model Status"
                                Style="{StaticResource SectionTitle}" />
                     </Grid>
                     <Label Grid.Row="1"
@@ -364,7 +364,7 @@
                              Margin="0,0,10,0"
                              VerticalOptions="Center" />
                     <Label Grid.Column="1"
-                           Text="Live runtime-logboek"
+                           Text="Live Runtime Log"
                            Style="{StaticResource SectionTitle}" />
                     <!-- Clear button: clears the runtime log -->
                     <Button Grid.Column="2"
@@ -415,7 +415,7 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <Label Text="Nog geen output..." TextColor="Gray"
+                            <Label Text="No output yet..." TextColor="Gray"
                                    HorizontalOptions="Center" VerticalOptions="Center" Margin="20" />
                         </CollectionView.EmptyView>
                     </CollectionView>

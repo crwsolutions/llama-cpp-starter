@@ -215,7 +215,7 @@ public class LlamaServerProcessService
                     _lastExitCode = process.ExitCode;
                     if (_state is LlamaServerState.Starting or LlamaServerState.Running)
                     {
-                        RaiseLog($"llama-server gestopt (exit code {_lastExitCode}).");
+                        RaiseLog($"llama-server stopped (exit code {_lastExitCode}).");
                         State = LlamaServerState.Idle;
                         _process = null;
                         Session = null;
@@ -290,12 +290,12 @@ public class LlamaServerProcessService
                 }
                 catch (Exception ex)
                 {
-                    RaiseLog($"[stderr] Kon proces niet beëindigen: {ex.Message}");
+                    RaiseLog($"[stderr] Could not terminate process: {ex.Message}");
                 }
             }
 
             _lastExitCode = SafeExitCode(process);
-            RaiseLog("Server gestopt.");
+            RaiseLog("Server stopped.");
             State = LlamaServerState.Idle;
             _process = null;
             Session = null;
@@ -446,7 +446,7 @@ public class LlamaServerProcessService
         if (exited && _state is LlamaServerState.Starting or LlamaServerState.Running)
         {
             _lastExitCode = SafeExitCode(process);
-            RaiseLog($"llama-server gestopt (exit code {_lastExitCode}).");
+            RaiseLog($"llama-server stopped (exit code {_lastExitCode}).");
             State = LlamaServerState.Idle;
             _process = null;
             Session = null;

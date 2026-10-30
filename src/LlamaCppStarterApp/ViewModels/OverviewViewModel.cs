@@ -61,7 +61,7 @@ public partial class OverviewViewModel : BaseViewModel
         _healthService = healthService;
         _metricsPoller = metricsPoller;
         _gpuSummary = gpuSummary;
-        Title = "Overzicht";
+        Title = "Overview";
 
         _processService.LogReceived += OnServerLog;
         _processService.StateChanged += OnServerStateChanged;
@@ -155,8 +155,8 @@ public partial class OverviewViewModel : BaseViewModel
         {
             var session = _processService.Session;
             return IsRunning && session is not null && SelectionDiffersFromSession(session)
-                ? "Laad om"
-                : "Laden";
+                ? "Reload"
+                : "Load";
         }
     }
 
@@ -256,7 +256,7 @@ public partial class OverviewViewModel : BaseViewModel
             }
             catch (Exception ex)
             {
-                StatusText = $"Fout bij laden: {ex.Message}";
+                StatusText = $"Failed to load: {ex.Message}";
             }
             finally
             {
@@ -561,19 +561,19 @@ public partial class OverviewViewModel : BaseViewModel
 
         if (SelectedModel is null)
         {
-            StatusText = "Selecteer eerst een model.";
+            StatusText = "Select a model first.";
             return;
         }
 
         if (SelectedProfile is null)
         {
-            StatusText = "Selecteer eerst een startprofiel.";
+            StatusText = "Select a profile first.";
             return;
         }
 
         if (SelectedRuntime is null)
         {
-            StatusText = "Selecteer eerst een runtime.";
+            StatusText = "Select a runtime first.";
             return;
         }
 
@@ -590,15 +590,15 @@ public partial class OverviewViewModel : BaseViewModel
         if (session is not null)
         {
             StatusText = SelectionDiffersFromSession(session)
-                ? "Verwisselen: draaiende server wordt gestopt…"
-                : "Herladen: draaiende server wordt gestopt…";
+                ? "Swapping: stopping running server…"
+                : "Reloading: stopping running server…";
             await UnloadAsync();
         }
 
         var started = await _processService.LoadAsync(runtime, model, profile.Id, parameters, port, profile.Name);
         if (!started)
         {
-            StatusText = "Kon server niet starten (zie logboek).";
+            StatusText = "Could not start server (see log).";
         }
         else
         {
