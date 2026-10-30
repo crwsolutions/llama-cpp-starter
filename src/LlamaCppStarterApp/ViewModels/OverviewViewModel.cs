@@ -68,6 +68,9 @@ public partial class OverviewViewModel : BaseViewModel
         _healthService.HealthChanged += OnHealthChanged;
         _metricsPoller.MetricsUpdated += OnMetricsUpdated;
 
+        // Keep LogText current when the log changes.
+        LogLines.CollectionChanged += (s, e) => OnPropertyChanged(nameof(LogText));
+
         // Hardware is machine-wide (nvidia-smi) and independent of a loaded model:
         // poll it continuously, per-PID when a server is running, full listing otherwise.
         _hardwareTimer = new Timer(_ => _ = RefreshHardwareAsync());
@@ -173,6 +176,15 @@ public partial class OverviewViewModel : BaseViewModel
     // old lines are trimmed once MaxLogLines is exceeded)
     [ObservableProperty]
     public partial ObservableCollection<string> LogLines { get; set; } = new();
+
+    // Joined log text for clipboard copy (computed on demand; raised when lines change).
+    public string LogText
+    {
+        get
+        {
+            return string.Join("\n", LogLines);
+        }
+    }
 
     [NotifyPropertyChangedFor(nameof(LoadButtonText))]
     [ObservableProperty]

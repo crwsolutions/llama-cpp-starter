@@ -355,7 +355,7 @@
         <!-- Live runtime log -->
         <Border Grid.Row="3" Style="{StaticResource PanelBorder}">
             <Grid RowDefinitions="Auto,*,Auto" >
-                <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
                     <BoxView Grid.Column="0"
                              WidthRequest="4"
                              HeightRequest="20"
@@ -366,6 +366,12 @@
                     <Label Grid.Column="1"
                            Text="Live runtime-logboek"
                            Style="{StaticResource SectionTitle}" />
+                    <!-- Copy button: copies the entire runtime log to the clipboard
+                         (green check for a few seconds after a successful copy). -->
+                    <controls:CopyIconButton Grid.Column="2"
+                                   Text="{Binding LogText, Mode=OneWay}"
+                                   FontSize="14"
+                                   VerticalOptions="Center" />
                 </Grid>
                 <Label Grid.Row="2"
                        Text="{Binding StatusText}"
