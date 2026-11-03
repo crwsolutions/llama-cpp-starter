@@ -107,6 +107,7 @@ public partial class OverviewViewModel : BaseViewModel
 
     [NotifyPropertyChangedFor(nameof(CommandPreview))]
     [NotifyPropertyChangedFor(nameof(LoadButtonText))]
+    [NotifyPropertyChangedFor(nameof(LogFocusTitle))]
     [ObservableProperty]
     public partial Model? SelectedModel { get; set; }
 
@@ -142,6 +143,7 @@ public partial class OverviewViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(ServerUrl))]
     [NotifyPropertyChangedFor(nameof(CommandPreview))]
     [NotifyPropertyChangedFor(nameof(LoadButtonText))]
+    [NotifyPropertyChangedFor(nameof(LogFocusTitle))]
     [ObservableProperty]
     public partial Profile? SelectedProfile { get; set; }
 
@@ -189,6 +191,16 @@ public partial class OverviewViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(LoadButtonText))]
     [ObservableProperty]
     public partial bool IsRunning { get; set; }
+
+    // Log focus mode: isolates the log for better readability by hiding all panels above it.
+    [ObservableProperty]
+    public partial bool IsLogFocused { get; set; }
+
+    [RelayCommand]
+    private void ToggleLogFocus() => IsLogFocused = !IsLogFocused;
+
+    // Title shown in the log header during focus mode: "{ModelName} [{ProfileName}]"
+    public string LogFocusTitle => SelectedModel is null ? string.Empty : $"{SelectedModel.Name} [{SelectedProfile?.Name}] - Log";
 
     // --- Status cards (middle grid 3×2) ---
 

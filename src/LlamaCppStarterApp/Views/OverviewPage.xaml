@@ -8,7 +8,12 @@
              x:DataType="vm:OverviewViewModel"
              x:Class="LlamaCppStarterApp.Views.OverviewPage">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="20,16" RowSpacing="12">
+    <Grid RowDefinitions="Auto,*" Padding="20,16" RowSpacing="12">
+        <!-- Panels above log (hidden in focus mode) -->
+        <Grid Grid.Row="0"
+              RowDefinitions="Auto,Auto,*"
+              RowSpacing="12"
+              IsVisible="{Binding IsLogFocused, Converter={StaticResource InvertedBoolConverter}}">
 
         <!-- Topbar: model / profile / runtime dropdowns + Load/Unload -->
         <Grid ColumnDefinitions="*,auto" ColumnSpacing="12">
@@ -351,11 +356,12 @@
                 </Grid>
             </Border>
         </Grid>
+        </Grid>
 
         <!-- Live runtime log -->
-        <Border Grid.Row="3" Style="{StaticResource PanelBorder}">
+        <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
             <Grid RowDefinitions="Auto,*,Auto" >
-                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                     <BoxView Grid.Column="0"
                              WidthRequest="4"
                              HeightRequest="20"
@@ -363,11 +369,55 @@
                              BackgroundColor="{StaticResource Primary}"
                              Margin="0,0,10,0"
                              VerticalOptions="Center" />
+                    <!-- Normal mode title -->
                     <Label Grid.Column="1"
                            Text="Live Runtime Log"
-                           Style="{StaticResource SectionTitle}" />
-                    <!-- Clear button: clears the runtime log -->
+                           Style="{StaticResource SectionTitle}"
+                           IsVisible="{Binding IsLogFocused, Converter={StaticResource InvertedBoolConverter}}" />
+                    <!-- Focus mode title: {ModelName} [{Profile}] -->
+                    <Label Grid.Column="1"
+                           Text="{Binding LogFocusTitle}"
+                           Style="{StaticResource SectionTitle}"
+                           IsVisible="{Binding IsLogFocused}" />
+                    <!-- Maximize button: enter focus mode -->
                     <Button Grid.Column="2"
+                            behaviors:CursorBehavior.Cursor="Hand"
+                            Text="&#xf31e;"
+                            FontFamily="FontAwesomeSolid"
+                            FontSize="14"
+                            TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
+                            BackgroundColor="Transparent"
+                            Padding="8,4"
+                            MinimumHeightRequest="0"
+                            CornerRadius="4"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"
+                            IsVisible="{Binding IsLogFocused, Converter={StaticResource InvertedBoolConverter}}"
+                            SemanticProperties.Description="Focus log"
+                            SemanticProperties.Hint="Focus the runtime log"
+                            ToolTipProperties.Text="Focus log"
+                            Command="{Binding ToggleLogFocusCommand}" />
+                    <!-- Minimize button: exit focus mode -->
+                    <Button Grid.Column="2"
+                            behaviors:CursorBehavior.Cursor="Hand"
+                            Text="&#xf78c;"
+                            FontFamily="FontAwesomeSolid"
+                            FontSize="14"
+                            TextColor="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}"
+                            BackgroundColor="Transparent"
+                            Padding="8,4"
+                            MinimumHeightRequest="0"
+                            CornerRadius="4"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"
+                            IsVisible="{Binding IsLogFocused}"
+                            SemanticProperties.Description="Unfocus log"
+                            SemanticProperties.Hint="Exit log focus mode"
+                            ToolTipProperties.Text="Unfocus log"
+                            Command="{Binding ToggleLogFocusCommand}" />
+                    <!-- Clear button: clears the runtime log -->
+                    <Button Grid.Column="3"
+                            behaviors:CursorBehavior.Cursor="Hand"
                             Text="&#xf2ed;"
                             FontFamily="FontAwesomeSolid"
                             FontSize="14"
@@ -380,10 +430,13 @@
                             HorizontalOptions="Center"
                             SemanticProperties.Description="Clear log"
                             SemanticProperties.Hint="Clear the runtime log"
+                            ToolTipProperties.Text="Clear log"
                             Command="{Binding ClearLogCommand}" />
                     <!-- Copy button: copies the entire runtime log to the clipboard
                          (green check for a few seconds after a successful copy). -->
-                    <controls:CopyIconButton Grid.Column="3"
+                    <controls:CopyIconButton Grid.Column="4"
+                                   behaviors:CursorBehavior.Cursor="Hand"
+                                   ToolTipProperties.Text="Copy log to clipboard"
                                    Text="{Binding LogText, Mode=OneWay}"
                                    FontSize="14"
                                    VerticalOptions="Center" />
