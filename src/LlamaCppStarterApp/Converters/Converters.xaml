@@ -7,10 +7,8 @@
     <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
     <converters:BoolToBoldConverter x:Key="BoolToBoldConverter" />
     <converters:SizeToGbConverter x:Key="SizeToGbConverter" />
-    <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-    <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-    <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
-    <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+    <converters:NullToBoolConverter x:Key="NullToBoolConverter" />
+    <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
     <converters:BoolNullableConverter x:Key="BoolNullableConverter" />
     <converters:TitleToGlyphConverter x:Key="TitleToGlyphConverter" />
     <converters:IntNullableConverter x:Key="IntNullableConverter" />

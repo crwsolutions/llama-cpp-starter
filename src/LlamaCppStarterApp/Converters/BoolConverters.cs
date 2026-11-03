@@ -1,34 +1,10 @@
 namespace LlamaCppStarterApp.Converters;
 
-/// <summary>null → false, otherwise → true (feeds IsVisible; that is a bool).</summary>
-public class NullToVisibilityConverter : IValueConverter
+/// <summary>null → false, otherwise → true (feeds IsVisible, which is a bool).</summary>
+public class NullToBoolConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         value is not null;
-
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-/// <summary>true → true, false/null → false (feeds IsVisible; that is a bool).</summary>
-public class BoolToVisibilityConverter : IValueConverter
-{
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is true;
-
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-/// <summary>true → false, false/null → true (feeds IsVisible; that is a bool).</summary>
-public class InverseBoolToVisibilityConverter : IValueConverter
-{
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is not true;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -46,8 +22,8 @@ public class BoolNullableConverter : IValueConverter
         value is true;
 }
 
-/// <summary>Non-empty string → true, null/empty → false (feeds IsVisible; that is a bool).</summary>
-public class StringToVisibilityConverter : IValueConverter
+/// <summary>Non-empty string → true, null/empty → false (feeds IsVisible, which is a bool).</summary>
+public class StringToBoolConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         !string.IsNullOrEmpty(value as string);

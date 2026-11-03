@@ -36,7 +36,7 @@
                                HorizontalOptions="End"
                                VerticalOptions="Center"
                                Margin="16,0,0,0"
-                               IsVisible="{Binding ServerUrl, Converter={StaticResource StringToVisibilityConverter}}"
+                               IsVisible="{Binding ServerUrl, Converter={StaticResource StringToBoolConverter}}"
                                SemanticProperties.Description="Open the llama.cpp server in the browser"
                                />
                             <Label
@@ -136,7 +136,7 @@
                    Margin="8,0" />
                     <ActivityIndicator Grid.Column="2"
                                IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"
+                               IsVisible="{Binding IsBusy}"
                                VerticalOptions="Center" />
                 </Grid>
             </Grid>
@@ -194,11 +194,11 @@
                         <Label Grid.Row="0"
                                Text="Unavailable"
                                FontSize="13"
-                               IsVisible="{Binding HardwareUnavailable, Converter={StaticResource BoolToVisibilityConverter}}" />
+                               IsVisible="{Binding HardwareUnavailable}" />
                         <!-- One row per GPU (max 4): id + name | usage | temp | memory + 2 bars -->
                         <CollectionView Grid.Row="1"
                                         ItemsSource="{Binding HardwareGpus}"
-                                        IsVisible="{Binding HardwareUnavailable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                        IsVisible="{Binding HardwareUnavailable, Converter={StaticResource InvertedBoolConverter}}">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="models:GpuSummary">
                                     <Grid ColumnDefinitions="Auto,*,Auto,Auto,*,auto"

@@ -26,7 +26,7 @@
                        Margin="12,0" />
                 <ActivityIndicator Grid.Column="2"
                                    IsRunning="{Binding IsBusy}"
-                                   IsVisible="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"
+                                   IsVisible="{Binding IsBusy}"
                                    VerticalOptions="Center" />
             </Grid>
         </Border>

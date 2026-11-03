@@ -35,7 +35,7 @@
                        Margin="12,0" />
                 <ActivityIndicator Grid.Column="3"
                                    IsRunning="{Binding IsBusy}"
-                                   IsVisible="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"
+                                   IsVisible="{Binding IsBusy}"
                                    VerticalOptions="Center" />
             </Grid>
         </Border>
@@ -183,7 +183,7 @@
                                             <Button Grid.Column="4" Margin="6,0,0,0"
                                                     Text="Delete"
                                                     Style="{StaticResource DangerButton}"
-                                                    IsVisible="{Binding IsDefault, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                                                    IsVisible="{Binding IsDefault, Converter={StaticResource InvertedBoolConverter}}"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteProfileCommand}"
                                                     CommandParameter="{Binding .}" />
                                         </Grid>
@@ -202,7 +202,7 @@
 
                     <!-- Top: Metadata (capability chips) — always visible -->
                     <Grid Grid.Row="0"
-                          IsVisible="{Binding SelectedModelCapabilitySummaryText, Converter={StaticResource StringToVisibilityConverter}}">
+                          IsVisible="{Binding SelectedModelCapabilitySummaryText, Converter={StaticResource StringToBoolConverter}}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -221,7 +221,7 @@
                     <!-- Middle (scrolls): Name + parameter sections + Runtime Command -->
                     <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Default">
                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                          IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
+                          IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToBoolConverter}}">
 
                             <!-- Header: Name -->
                             <Grid Grid.Row="0" ColumnDefinitions="*">
@@ -229,7 +229,7 @@
                                        Text="{Binding SelectedProfile.Name, Mode=TwoWay}"
                                        Style="{StaticResource FieldEntry}"
                                        Placeholder="Profile Name"
-                                       IsVisible="{Binding SelectedProfile.IsDefault, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                                       IsVisible="{Binding SelectedProfile.IsDefault, Converter={StaticResource InvertedBoolConverter}}" />
                             </Grid>
 
                             <!-- Basic launch -->
@@ -434,7 +434,7 @@
 
                             <!-- Vision (only visible for LikelyVision of the selected model) -->
                             <Grid Grid.Row="4" Margin="0,14,0,0"
-                              IsVisible="{Binding SelectedModelHasVision, Converter={StaticResource BoolToVisibilityConverter}}">
+                              IsVisible="{Binding SelectedModelHasVision}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
@@ -581,7 +581,7 @@
 
                     <!-- Bottom: Save / Delete — always visible -->
                     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="8" Margin="0,8,0,0" RowDefinitions="auto,auto,auto"
-                          IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToVisibilityConverter}}">
+                          IsVisible="{Binding SelectedProfile, Converter={StaticResource NullToBoolConverter}}">
                                     <Label Grid.Column="0"
                                        Text="Runtime Command"
                                        Style="{StaticResource SectionTitle}"

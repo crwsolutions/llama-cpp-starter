@@ -25,7 +25,7 @@
                 HorizontalOptions="Center"
                 SemanticProperties.Description="Copy to clipboard"
                 SemanticProperties.Hint="Copy the text to the clipboard"
-                IsVisible="{Binding IsCopied, Source={x:Reference This}, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                IsVisible="{Binding IsCopied, Source={x:Reference This}, Converter={StaticResource InvertedBoolConverter}}"/>
         <Label Grid.Column="0"
                x:Name="CheckGlyph"
                Text="&#xf00c;"
