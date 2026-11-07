@@ -248,6 +248,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -344,6 +345,13 @@
                                 <Entry Grid.Row="12" Grid.Column="1"
                                   Text="{Binding CurrentParameters.CtxCheckpoints, Converter={StaticResource IntNullableConverter}}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4" />
+
+                                <Label Grid.Row="13" Grid.Column="0" Text="Log kleuren" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Picker Grid.Row="13" Grid.Column="1"
+                                    ItemsSource="{x:Static models:ProfileParameters.LogColorsOptions}"
+                                    SelectedItem="{Binding CurrentParameters.LogColors, Converter={StaticResource PickerDefaultConverter}}"
+                                    Style="{StaticResource FieldPicker}" Margin="0,0,0,4"
+                                    SemanticProperties.Hint="--log-colors: force ANSI log colors (needed for colored log in the Overview panel)" />
                             </Grid>
 
                             <!-- Performance & Memory -->

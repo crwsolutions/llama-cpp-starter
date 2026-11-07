@@ -252,6 +252,14 @@ public static class LlamaServerCommandBuilder
             args.Add("--metrics");
         }
 
+        // --log-colors {on,off,auto} (profile parameter; null = not passed = llama.cpp auto-detect).
+        // For the app's redirected stderr, "on" forces ANSI colors (needed for log rendering).
+        if (p.LogColors is not null)
+        {
+            args.Add("--log-colors");
+            args.Add(p.LogColors);
+        }
+
         // --reasoning off (Thinking picker "off"; llama.cpp deprecated the
         // --chat-template-kwargs {"enable_thinking": false} equivalent).
         if (p.ThinkingLevel == "off")

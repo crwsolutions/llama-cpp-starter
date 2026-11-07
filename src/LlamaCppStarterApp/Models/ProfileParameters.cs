@@ -32,6 +32,8 @@ public partial class ProfileParameters : ObservableObject
     public static readonly IReadOnlyList<string> RopeScalingOptions = new[] { DefaultPlaceholder }.Concat(RopeScalingValues).ToArray();
     public static readonly IReadOnlyList<string> ThinkingValues = new[] { "off", "low", "medium", "xhigh" };
     public static readonly IReadOnlyList<string> ThinkingOptions = new[] { DefaultPlaceholder }.Concat(ThinkingValues).ToArray();
+    public static readonly IReadOnlyList<string> LogColorsValues = new[] { "on", "off", "auto" };
+    public static readonly IReadOnlyList<string> LogColorsOptions = new[] { DefaultPlaceholder }.Concat(LogColorsValues).ToArray();
 
     // --- Basic launch ---
 
@@ -165,6 +167,16 @@ public partial class ProfileParameters : ObservableObject
     [ObservableProperty]
     public partial bool? NoMmprojOffload { get; set; }
 
+    // --- Logging ---
+
+    /// <summary>
+    /// --log-colors {on,off,auto}. Null = flag not passed (llama.cpp default: auto-detects terminal).
+    /// For the app's redirected stderr pipe, "auto" means no colors; "on" forces them (needed
+    /// for the Overview log's color rendering).
+    /// </summary>
+    [ObservableProperty]
+    public partial string? LogColors { get; set; }
+
     // --- Thinking ---
 
     /// <summary>
@@ -255,7 +267,8 @@ public partial class ProfileParameters : ObservableObject
                     CtxCheckpoints = 128,
                     SpecType = "draft-mtp",
                     SpecDraftNMax = 4,
-                    ImageMinTokens = 1024
+                    ImageMinTokens = 1024,
+                    LogColors = "on"
                 };
                 _globalLaunchDefaults = defaults;
             }
@@ -296,6 +309,7 @@ public partial class ProfileParameters : ObservableObject
         SpecDraftDevice = SpecDraftDevice,
         SpecDraftPath = SpecDraftPath,
         CachePrompt = CachePrompt,
+        LogColors = LogColors,
         MmprojPath = MmprojPath,
         ImageMinTokens = ImageMinTokens,
         NoMmprojOffload = NoMmprojOffload,

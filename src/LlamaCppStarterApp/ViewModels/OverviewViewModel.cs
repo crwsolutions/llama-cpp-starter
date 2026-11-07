@@ -174,17 +174,20 @@ public partial class OverviewViewModel : BaseViewModel
     [ObservableProperty]
     public partial string StatusText { get; set; } = "No runtime is loaded for the selected model.";
 
-    // Live runtime log: per-line ObservableCollection (the CollectionView virtualizes;
-    // old lines are trimmed once MaxLogLines is exceeded)
+    // Live runtime log: one LogLine per line (the ANSI colors from --log-colors on
+    // are rendered as FormattedString spans by AnsiLogFormatter). The CollectionView
+    // virtualizes and keeps the newest line in view; old lines are trimmed once
+    // MaxLogLines is exceeded.
     [ObservableProperty]
-    public partial ObservableCollection<string> LogLines { get; set; } = new();
+    public partial ObservableCollection<LogLine> LogLines { get; set; } = new();
 
-    // Joined log text for clipboard copy (computed on demand; raised when lines change).
+    // Joined log text (ANSI escape sequences stripped) for clipboard copy
+    // (computed on demand; raised when lines change).
     public string LogText
     {
         get
         {
-            return string.Join("\n", LogLines);
+            return string.Join("\n", LogLines.Select(l => l.Raw));
         }
     }
 
@@ -496,7 +499,7 @@ public partial class OverviewViewModel : BaseViewModel
 
     private void AppendOutput(string line)
     {
-        LogLines.Add(line);
+        LogLines.Add(new LogLine(line));
 
         // Limit the log to MaxLogLines lines (drop the oldest lines;
         // in practice exactly 1 removal per addition)

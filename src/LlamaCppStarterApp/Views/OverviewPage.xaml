@@ -459,8 +459,11 @@
                                     VerticalScrollBarVisibility="Always"
                                     BackgroundColor="Transparent">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Label Text="{Binding ., Mode=OneTime}"
+                            <!-- One span per ANSI color segment (llama-server colors from
+                                 the log-colors flag); uncolored text uses the log's
+                                 default text color. -->
+                            <DataTemplate x:DataType="models:LogLine">
+                                <Label FormattedText="{Binding Text, Mode=OneTime}"
                                        FontFamily="Consolas"
                                        FontSize="12"
                                        TextColor="#D4D4D4"
