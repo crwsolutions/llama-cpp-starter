@@ -30,7 +30,7 @@ public partial class AppShell : Shell
         _flyoutWidth = FlyoutDefaultWidth;
     }
 
-    private void TapGestureRecognizer_Tapped(object sender, TappedEventArgs e)
+    private void TapGestureRecognizer_Tapped(object? sender, TappedEventArgs e)
     {
         _flyoutWidth ??= FlyoutWidth;
 
