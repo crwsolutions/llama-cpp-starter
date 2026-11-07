@@ -8,10 +8,10 @@ public class TitleToGlyphConverter : IValueConverter
 {
     private static readonly Dictionary<string, string> Glyphs = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Overzicht"] = "\uf015",   // house
-        ["Modellen"] = "\uf07b",    // folder
-        ["Runtimes"] = "\uf2db",    // processor
-        ["Instellingen"] = "\uf013" // gear
+        ["Overview"] = "\uf015",   // house
+        ["Models"] = "\uf07b",     // folder
+        ["Runtimes"] = "\uf2db",   // processor
+        ["Settings"] = "\uf013"    // gear
     };
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
