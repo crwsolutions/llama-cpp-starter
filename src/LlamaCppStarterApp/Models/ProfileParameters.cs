@@ -15,7 +15,7 @@ public partial class ProfileParameters : ObservableObject
 
     public static readonly IReadOnlyList<string> SplitModes = new[] { "none", "layer", "row", "tensor" };
     public static readonly IReadOnlyList<string> FlashAttnValues = new[] { "auto", "on", "off" };
-    public static readonly IReadOnlyList<string> CacheTypes = new[] { "f32", "f16", "bf16", "q8_0", "q4_0", "q4_1", "iq4_nl", "q5_0", "q5_1" };
+    public static readonly IReadOnlyList<string> CacheTypes = new[] { "f32", "f16", "bf16", "f8_e4m3", "q8_0", "q4_0", "q4_1", "iq4_nl", "q5_0", "q5_1" };
     public static readonly IReadOnlyList<string> SpecTypes = new[]
     {
         "none", "draft-simple", "draft-eagle3", "draft-mtp", "draft-dflash", "draft-dspark",
