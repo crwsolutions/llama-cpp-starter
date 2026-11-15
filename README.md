@@ -2,7 +2,7 @@
 
 ![llama-cpp-starter overview](art/screenshot.png)
 
-A .NET MAUI desktop app (Windows) that launches `llama-server.exe` with per-model launch profiles.
+A .NET MAUI desktop app (Windows) that launches `llama-server.exe` with per-model launch profiles. The user interface is in English.
 
 ## What the app does
 

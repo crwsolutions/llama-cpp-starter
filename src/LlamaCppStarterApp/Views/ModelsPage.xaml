@@ -414,6 +414,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -438,6 +439,12 @@
                                   Text="{Binding CurrentParameters.SpecDraftDevice}"
                                   Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
                                   Placeholder="cpu,0,1" />
+
+                                <Label Grid.Row="4" Grid.Column="0" Text="Spec draft model" Style="{StaticResource FieldLabel}" Margin="0,0,10,4" />
+                                <Entry Grid.Row="4" Grid.Column="1"
+                                  Text="{Binding CurrentParameters.SpecDraftPath}"
+                                  Style="{StaticResource FieldEntry}" Margin="0,0,0,4"
+                                  Placeholder="Path to draft model (.gguf)" />
                             </Grid>
 
                             <!-- Vision (only visible for LikelyVision of the selected model) -->
