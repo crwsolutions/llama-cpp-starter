@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CommunityToolkit.Maui.Storage;
 using LlamaCppStarterApp.Services;
 using Microsoft.Data.Sqlite;
@@ -8,7 +9,7 @@ internal static class Database
 {
     internal static string DbPath { get; private set; } = default!;
 
-    internal const int CurrentUserVersion = 2;
+    internal const int CurrentUserVersion = 4;
 
     internal static void Initialize()
     {
@@ -32,15 +33,13 @@ internal static class Database
 
         var userVersion = GetInt(connection, "PRAGMA user_version");
 
-        // 0 → 2: new tables for models/profiles/runtimes/settings.
-        // CreateCoreTables/SeedSettings create the full v2 schema directly
-        // (incl. ModelId/MetadataJson/CapabilitiesJson + GlobalLaunchDefaults) → one step.
+        // 0 → 2: create or upgrade the core schema, then continue with later migrations.
         if (userVersion < 1)
         {
             CreateCoreTables(connection);
             SeedSettings(connection);
-            SetUserVersion(connection, CurrentUserVersion);
-            return;
+            SetUserVersion(connection, 2);
+            userVersion = 2;
         }
 
         // 1 → 2: model metadata + capabilities (ModelId/MetadataJson/CapabilitiesJson)
@@ -49,6 +48,22 @@ internal static class Database
         {
             MigrateToVersion2(connection);
             SetUserVersion(connection, 2);
+            userVersion = 2;
+        }
+
+        // 2 → 3: benchmark configurations, run snapshots and raw measurements.
+        if (userVersion < 3)
+        {
+            CreateBenchmarkTables(connection);
+            SetUserVersion(connection, 3);
+            userVersion = 3;
+        }
+
+        // 3 → 4: store benchmark repetition counts, comments, and runtime version per run.
+        if (userVersion < 4)
+        {
+            MigrateToVersion4(connection);
+            SetUserVersion(connection, 4);
         }
     }
 
@@ -59,6 +74,8 @@ internal static class Database
 
         CreateCoreTables(connection);
         SeedSettings(connection);
+        CreateBenchmarkTables(connection);
+        MigrateToVersion4(connection);
         SetUserVersion(connection, CurrentUserVersion);
     }
 
@@ -167,6 +184,137 @@ internal static class Database
             Key TEXT PRIMARY KEY,
             Value TEXT
             );
+            """, connection);
+        command.ExecuteNonQuery();
+    }
+
+    private static void MigrateToVersion4(SqliteConnection connection)
+    {
+        using var command = new SqliteCommand(
+            """
+            ALTER TABLE BenchmarkRuns ADD COLUMN LlamaCppVersion TEXT NOT NULL DEFAULT '';
+            ALTER TABLE BenchmarkRuns ADD COLUMN Repetitions INTEGER NOT NULL DEFAULT 3;
+            ALTER TABLE BenchmarkRuns ADD COLUMN Warmups INTEGER NOT NULL DEFAULT 1;
+            ALTER TABLE BenchmarkRuns ADD COLUMN Comment TEXT NOT NULL DEFAULT '';
+            """, connection);
+        command.ExecuteNonQuery();
+        BackfillBenchmarkRunSettings(connection);
+    }
+
+    private static void BackfillBenchmarkRunSettings(SqliteConnection connection)
+    {
+        var snapshots = new List<(long Id, string Json)>();
+        using (var select = new SqliteCommand("SELECT Id, ConfigurationSnapshotJson FROM BenchmarkRuns", connection))
+        using (var reader = select.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                snapshots.Add((reader.GetInt64(0), reader.GetString(1)));
+            }
+        }
+
+        using var update = new SqliteCommand(
+            "UPDATE BenchmarkRuns SET Repetitions = @Repetitions, Warmups = @Warmups WHERE Id = @Id", connection);
+        var repetitionsParameter = update.Parameters.Add("@Repetitions", Microsoft.Data.Sqlite.SqliteType.Integer);
+        var warmupsParameter = update.Parameters.Add("@Warmups", Microsoft.Data.Sqlite.SqliteType.Integer);
+        var idParameter = update.Parameters.Add("@Id", Microsoft.Data.Sqlite.SqliteType.Integer);
+        foreach (var (id, json) in snapshots)
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(json);
+                if (document.RootElement.ValueKind != JsonValueKind.Object
+                    || !TryReadSetting(document.RootElement, "Repetitions", out var repetitions)
+                    || !TryReadSetting(document.RootElement, "Warmups", out var warmups))
+                {
+                    continue;
+                }
+
+                repetitionsParameter.Value = repetitions;
+                warmupsParameter.Value = warmups;
+                idParameter.Value = id;
+                update.ExecuteNonQuery();
+            }
+            catch (JsonException ex)
+            {
+                Debug.WriteLine($"Could not migrate benchmark run {id} settings: {ex.Message}");
+            }
+        }
+    }
+
+    private static bool TryReadSetting(JsonElement element, string name, out int value)
+    {
+        value = 0;
+        foreach (var property in element.EnumerateObject())
+        {
+            if (string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                return property.Value.TryGetInt32(out value);
+            }
+        }
+        return false;
+    }
+
+    private static void CreateBenchmarkTables(SqliteConnection connection)
+    {
+        using var command = new SqliteCommand(
+            """
+            CREATE TABLE IF NOT EXISTS BenchmarkConfigurations (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                SettingsJson TEXT NOT NULL,
+                CreatedAtUtc INTEGER NOT NULL,
+                UpdatedAtUtc INTEGER NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS BenchmarkRuns (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ConfigurationId INTEGER NULL,
+                ConfigurationName TEXT NOT NULL,
+                ConfigurationSnapshotJson TEXT NOT NULL,
+                StartedAtUtc INTEGER NOT NULL,
+                EndedAtUtc INTEGER NULL,
+                Status TEXT NOT NULL,
+                ModelName TEXT NOT NULL,
+                ModelPath TEXT NOT NULL,
+                ModelQuant TEXT NOT NULL,
+                ProfileName TEXT NOT NULL,
+                ProfileId INTEGER NOT NULL,
+                RuntimeName TEXT NOT NULL,
+                RuntimePath TEXT NOT NULL,
+                BuildIdentity TEXT NOT NULL,
+                ServerPid INTEGER NOT NULL,
+                LaunchParametersJson TEXT NOT NULL,
+                DatasetVersion TEXT NOT NULL,
+                ErrorMessage TEXT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS IX_BenchmarkRuns_StartedAtUtc ON BenchmarkRuns(StartedAtUtc DESC);
+
+            CREATE TABLE IF NOT EXISTS BenchmarkMeasurements (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                RunId INTEGER NOT NULL REFERENCES BenchmarkRuns(Id) ON DELETE CASCADE,
+                IsWarmup INTEGER NOT NULL,
+                ScenarioId TEXT NOT NULL,
+                ScenarioVersion TEXT NOT NULL,
+                Category TEXT NOT NULL,
+                Repetition INTEGER NOT NULL,
+                PromptTokens INTEGER NULL,
+                GeneratedTokens INTEGER NULL,
+                CachedPromptTokens INTEGER NULL,
+                CacheState TEXT NOT NULL,
+                PromptMilliseconds REAL NULL,
+                GenerationMilliseconds REAL NULL,
+                TotalMilliseconds REAL NULL,
+                ClientWallMilliseconds REAL NULL,
+                PromptTokensPerSecond REAL NULL,
+                GenerationTokensPerSecond REAL NULL,
+                ToolCalls INTEGER NOT NULL,
+                FailedToolCalls INTEGER NOT NULL,
+                ErrorMessage TEXT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS IX_BenchmarkMeasurements_RunId ON BenchmarkMeasurements(RunId, Id);
             """, connection);
         command.ExecuteNonQuery();
     }

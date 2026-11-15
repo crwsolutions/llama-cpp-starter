@@ -64,6 +64,11 @@
         Route="RuntimesPage" />
 
     <ShellContent
+        Title="Benchmark"
+        ContentTemplate="{DataTemplate views:BenchmarkPage}"
+        Route="BenchmarkPage" />
+
+    <ShellContent
         Title="Settings"
         ContentTemplate="{DataTemplate views:SettingsPage}"
         Route="SettingsPage" />

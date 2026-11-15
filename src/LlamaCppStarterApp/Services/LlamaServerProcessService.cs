@@ -21,7 +21,7 @@ public class ServerStateChangedEventArgs : EventArgs
 /// is running in which process. Null = no loaded server. Used by the Overview cards
 /// (nvidia-smi PID match, /metrics toggle, configured slots).
 /// </summary>
-public sealed record LoadedSession(Runtime Runtime, Model Model, int LoadedProfileId, ProfileParameters Parameters, int Port, int ProcessId);
+public sealed record LoadedSession(Runtime Runtime, Model Model, int LoadedProfileId, ProfileParameters Parameters, int Port, int ProcessId, string ProfileName);
 
 /// <summary>
 /// Manages a single "current server" (llama-server.exe process).
@@ -201,7 +201,7 @@ public class LlamaServerProcessService
             _process = process;
             Port = port;
             ModelName = model.Name;
-            Session = new LoadedSession(runtime, model, profileId, parameters, port, process.Id);
+            Session = new LoadedSession(runtime, model, profileId, parameters.Clone(), port, process.Id, profileName ?? string.Empty);
             State = LlamaServerState.Starting;
 
             RaiseLog($"Opstarten: {LlamaServerCommandBuilder.BuildCommandLine(args)}");

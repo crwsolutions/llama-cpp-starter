@@ -10,7 +10,9 @@ internal static class AddViewsExtension
         builder.Services.AddSingleton<ModelsViewModel>();
         builder.Services.AddSingleton<RuntimesViewModel>();
         builder.Services.AddSingleton<SettingsViewModel>();
+        builder.Services.AddSingleton<BenchmarkViewModel>();
 
+        builder.Services.AddTransient<BenchmarkPage>();
 
         return builder;
     }

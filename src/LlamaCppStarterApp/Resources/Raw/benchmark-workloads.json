@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "scenarios": [
+    {
+      "id": "csharp-review",
+      "version": "1",
+      "category": "C#/.NET",
+      "title": "Review an async C# method",
+      "prompt": "Review the method below for correctness and maintainability. Identify the most important issues and suggest a concise corrected implementation.\n\nprivate static async Task<int> ReadCountAsync(Stream stream)\n{\n    var buffer = new byte[4];\n    await stream.ReadAsync(buffer);\n    return BitConverter.ToInt32(buffer);\n}",
+      "expectedOutput": "Issues and corrected C# code; used as context only."
+    },
+    {
+      "id": "dotnet-api-design",
+      "version": "1",
+      "category": "C#/.NET",
+      "title": "Design a resilient .NET API client",
+      "prompt": "Sketch a small .NET 10 service method that calls a JSON HTTP endpoint with cancellation, a finite timeout, status checking, and deserialization. State how errors should be surfaced. Avoid third-party libraries.",
+      "expectedOutput": "A concise, compilable C# example and notes; context only."
+    },
+    {
+      "id": "maui-binding-analysis",
+      "version": "1",
+      "category": ".NET MAUI",
+      "title": "Diagnose a MAUI binding issue",
+      "prompt": "A compiled MAUI XAML binding displays no value, while the view model property is populated. Give a short diagnostic sequence covering x:DataType, binding paths, notification, and build diagnostics. Do not assume the framework version.",
+      "expectedOutput": "Ordered diagnostic steps; context only."
+    },
+    {
+      "id": "typescript-transform",
+      "version": "1",
+      "category": "JavaScript/TypeScript",
+      "title": "Transform a typed record collection",
+      "prompt": "Write a TypeScript function that accepts readonly user records, filters active users, groups them by department, and returns a deterministic object whose department keys are sorted. Include types and handle empty input.",
+      "expectedOutput": "Typed TypeScript implementation; context only."
+    },
+    {
+      "id": "sql-pagination",
+      "version": "1",
+      "category": "SQL",
+      "title": "Review keyset pagination",
+      "prompt": "Given an Orders table with a unique increasing Id and CreatedAt timestamp, write a parameterized SQL Server query for the next page ordered by CreatedAt then Id. Explain why the cursor must include both values and mention an index that supports it.",
+      "expectedOutput": "Parameterized query and concise explanation; context only."
+    },
+    {
+      "id": "markup-documentation",
+      "version": "1",
+      "category": "HTML/Markdown",
+      "title": "Write accessible release notes",
+      "prompt": "Create a compact Markdown release-note section for a desktop app feature that adds keyboard navigation and a searchable settings page. Include a heading, user-facing changes, and one known limitation. Use clear, accessible wording.",
+      "expectedOutput": "Well-structured Markdown; context only."
+    },
+    {
+      "id": "code-analysis",
+      "version": "1",
+      "category": "Code analysis",
+      "title": "Analyze a resource-lifetime bug",
+      "prompt": "Analyze this C# code for correctness problems and propose a fix: static async Task<string> Fetch(HttpClient client, string url) { var response = await client.GetAsync(url); return await response.Content.ReadAsStringAsync(); } Address cancellation, unsuccessful status codes, and resource ownership without disposing the injected client.",
+      "expectedOutput": "Analysis and corrected code; context only."
+    },
+    {
+      "id": "code-change-proposal",
+      "version": "1",
+      "category": "Code changes",
+      "title": "Propose a focused refactor",
+      "prompt": "Propose a minimal refactor for a method that validates an input string, reads a local JSON file, parses it, and returns a result. Show a C# method signature and explain how cancellation, malformed JSON, and I/O errors should be handled. Do not introduce a new dependency.",
+      "expectedOutput": "Focused refactor proposal; context only."
+    },
+    {
+      "id": "code-generation",
+      "version": "1",
+      "category": "Code generation",
+      "title": "Generate a small validation helper",
+      "prompt": "Generate a C# helper for validating a positive page size with a configurable upper bound. Include XML documentation and two short examples of expected behavior. Keep the helper dependency-free.",
+      "expectedOutput": "A small documented C# helper; context only."
+    },
+    {
+      "id": "agent-tool-loop",
+      "version": "1",
+      "category": "Tool scenario",
+      "title": "Use simulated code-search tools",
+      "prompt": "You are reviewing a small code change. First search for the referenced API, then run the relevant focused tests, and finally summarize the findings. Use the available tools when helpful.",
+      "maxToolRounds": 2,
+      "maxRequests": 4,
+      "tools": [
+        {
+          "name": "search_code",
+          "description": "Search the codebase for a symbol. This is simulated and performs no I/O.",
+          "parameters": { "type": "object", "properties": { "symbol": { "type": "string" } }, "required": ["symbol"], "additionalProperties": false },
+          "required": ["symbol"],
+          "propertyTypes": { "symbol": "string" },
+          "simulatedResponse": "Simulated search result: the API is declared in the sample service and called by its view model. No files were accessed."
+        },
+        {
+          "name": "run_tests",
+          "description": "Run a named test filter. This is simulated and executes no process.",
+          "parameters": { "type": "object", "properties": { "filter": { "type": "string" } }, "required": ["filter"], "additionalProperties": false },
+          "required": ["filter"],
+          "propertyTypes": { "filter": "string" },
+          "simulatedResponse": "Simulated test result: 5 passed, 0 failed. No tests were actually executed."
+        }
+      ],
+      "expectedOutput": "A short summary after zero or more simulated tool calls; context only."
+    }
+  ]
+}

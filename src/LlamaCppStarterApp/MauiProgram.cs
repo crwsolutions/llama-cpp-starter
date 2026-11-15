@@ -41,6 +41,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IProfileRepository, ProfileRepository>();
         builder.Services.AddSingleton<IRuntimeRepository, RuntimeRepository>();
         builder.Services.AddSingleton<IAppSettingsRepository, AppSettingsRepository>();
+        builder.Services.AddSingleton<IBenchmarkRepository, BenchmarkRepository>();
 
         // Register services
         builder.Services.AddSingleton<ModelScannerService>();
@@ -50,6 +51,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<GpuStatusProbeService>();
         builder.Services.AddSingleton<GpuSummaryCache>();
         builder.Services.AddSingleton<GpuSummaryService>();
+        builder.Services.AddSingleton<BenchmarkRunnerService>();
         builder.Services.AddSingleton<RuntimeMetricSummaryTracker>();
         builder.Services.AddSingleton<RuntimeMetricPollerService>();
 

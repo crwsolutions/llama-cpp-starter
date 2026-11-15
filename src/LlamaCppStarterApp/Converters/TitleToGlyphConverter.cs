@@ -1,7 +1,7 @@
 namespace LlamaCppStarterApp.Converters;
 
 /// <summary>
-/// Flyout title → FontAwesome6 Free Solid glyph (home, folder, code, gear).
+/// Flyout title → FontAwesome6 Free Solid glyphs.
 /// Used in Shell.ItemTemplate because ShellContent.Icon only accepts ImageSource.
 /// </summary>
 public class TitleToGlyphConverter : IValueConverter
@@ -11,6 +11,7 @@ public class TitleToGlyphConverter : IValueConverter
         ["Overview"] = "\uf015",   // house
         ["Models"] = "\uf07b",     // folder
         ["Runtimes"] = "\uf2db",   // processor
+        ["Benchmark"] = "\uf0e7",  // bolt
         ["Settings"] = "\uf013"    // gear
     };
 

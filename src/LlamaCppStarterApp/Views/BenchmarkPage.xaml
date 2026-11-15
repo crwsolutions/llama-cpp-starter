@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
+             xmlns:models="clr-namespace:LlamaCppStarterApp.Models"
+             xmlns:controls="clr-namespace:LlamaCppStarterApp.Controls"
+             x:DataType="vm:BenchmarkViewModel"
+             x:Class="LlamaCppStarterApp.Views.BenchmarkPage"
+             Title="Benchmark">
+    <Grid Padding="20,16" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="1*,1.5*" ColumnSpacing="16" RowSpacing="12">
+        <ScrollView Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" VerticalScrollBarVisibility="Always">
+            <VerticalStackLayout Spacing="12">
+                <Border Style="{StaticResource PanelBorder}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="8">
+                            <Label Text="Selected benchmark target" Style="{StaticResource SectionTitle}" />
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                    <Label Text="Model" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="{Binding SelectedModelText}" LineBreakMode="CharacterWrap" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                    <Label Text="Profile" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="{Binding SelectedProfileText}" LineBreakMode="CharacterWrap" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                    <Label Text="Runtime" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="{Binding SelectedRuntimeText}" LineBreakMode="CharacterWrap" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <Label Text="{Binding ActiveSessionText}" Style="{StaticResource SectionSubtitle}" LineBreakMode="CharacterWrap" />
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" IsEnabled="{Binding IsRunning, Converter={StaticResource InvertedBoolConverter}}">
+                                <Label Grid.Column="0" Text="Measurements per scenario (1–30)" Style="{StaticResource FieldLabel}" VerticalOptions="Center" />
+                                <Entry Grid.Column="1" Text="{Binding Repetitions}" Keyboard="Numeric" WidthRequest="64" HorizontalTextAlignment="Center" />
+                                <HorizontalStackLayout Grid.Column="2" Spacing="6" VerticalOptions="Center">
+                                    <Label Text="Warm-up" Style="{StaticResource FieldLabel}" VerticalOptions="Center" />
+                                    <Switch IsToggled="{Binding WarmupEnabled}" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" IsEnabled="{Binding IsRunning, Converter={StaticResource InvertedBoolConverter}}">
+                                <Label Grid.Column="0" Text="Comment" Style="{StaticResource FieldLabel}" VerticalOptions="Center" />
+                                <Entry Grid.Column="1" Text="{Binding Comment}" Placeholder="What is this test for?" MaxLength="200" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="8">
+                            <Button Text="Start benchmark" Command="{Binding StartCommand}" IsVisible="{Binding IsRunning, Converter={StaticResource InvertedBoolConverter}}" />
+                            <Button Text="Cancel benchmark" Command="{Binding StopCommand}" IsVisible="{Binding IsRunning}" BackgroundColor="#B42318" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+                <Label Text="{Binding StatusText}" Style="{StaticResource SectionSubtitle}" LineBreakMode="CharacterWrap" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="12">
+            <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Benchmark Progress" Style="{StaticResource SectionTitle}" />
+                    <ProgressBar Progress="{Binding ProgressValue}" />
+                    <Label Text="{Binding ProgressText}" LineBreakMode="CharacterWrap" />
+                    <Label Text="{Binding LastRunSummary}" LineBreakMode="CharacterWrap" Style="{StaticResource SectionSubtitle}"  />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
+                    <BoxView Grid.Column="0"
+                     WidthRequest="4"
+                     HeightRequest="20"
+                     CornerRadius="2"
+                     BackgroundColor="{StaticResource Primary}"
+                     Margin="0,0,10,0"
+                     VerticalOptions="Center" />
+                    <Label Grid.Column="1"
+                       Text="Command"
+                       Style="{StaticResource SectionTitle}" />
+
+                    <controls:CopyIconButton Grid.Column="2"
+                    Text="{Binding CommandPreview, Mode=OneWay}"
+                    FontSize="14"
+                    VerticalOptions="Center" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource PanelBorder}">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <Label Grid.Row="0" Text="Run History (newest first)" Style="{StaticResource SectionTitle}" />
+                    <Grid Grid.Row="1" ColumnDefinitions="1.15*,1.7*,0.8*,1.2*,2.2*,0.7*,0.65*,0.7*,0.7*,0.6*,0.8*,1.6*,34,64" ColumnSpacing="8" Margin="8,10,8,4">
+                        <Label Grid.Column="0" Text="Date" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="1" Text="Model" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="2" Text="Profile" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="3" Text="Build" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="4" Text="llama.cpp version" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="5" Text="Measurements" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="6" Text="Warm-up" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="7" Text="TG t/s" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="8" Text="PP t/s" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="9" Text="Failed" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="10" Text="Status" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="11" Text="Comment" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="12" Text="Compare" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="13" Text="" Style="{StaticResource TableHeaderLabel}" />
+                    </Grid>
+                    <CollectionView Grid.Row="2" ItemsSource="{Binding History}" SelectionMode="Single" SelectionChanged="Runs_SelectionChanged">
+                        <CollectionView.EmptyView>
+                            <Label Text="No benchmark runs yet." Style="{StaticResource SectionSubtitle}" Margin="4,12" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:BenchmarkHistoryItem">
+                                <Border Style="{StaticResource TableRowBorder}">
+                                    <Grid ColumnDefinitions="1.15*,1.7*,0.8*,1.2*,2.2*,0.7*,0.65*,0.7*,0.7*,0.6*,0.8*,1.6*,34,64" ColumnSpacing="8">
+                                        <Label Grid.Column="0" Text="{Binding DateText}" Style="{StaticResource TableCell}" />
+                                        <Label Grid.Column="1" Text="{Binding ModelText}" Style="{StaticResource TableCell}" />
+                                        <Label Grid.Column="2" Text="{Binding ProfileText}" Style="{StaticResource TableCell}" />
+                                        <Label Grid.Column="3" Text="{Binding BuildText}" Style="{StaticResource TableCell}" />
+                                        <Label Grid.Column="4" Text="{Binding LlamaCppVersionText}" Style="{StaticResource TableCell}" />
+                                        <Label Grid.Column="5" Text="{Binding MeasurementsText}" Style="{StaticResource TableCell}" HorizontalTextAlignment="End" />
+                                        <Label Grid.Column="6" Text="{Binding WarmupsText}" Style="{StaticResource TableCell}" HorizontalTextAlignment="End" />
+                                        <Label Grid.Column="7" Text="{Binding GenerationSpeedText}" Style="{StaticResource TableCell}" HorizontalTextAlignment="End" />
+                                        <Label Grid.Column="8" Text="{Binding PromptSpeedText}" Style="{StaticResource TableCell}" HorizontalTextAlignment="End" />
+                                        <Label Grid.Column="9" Text="{Binding FailedText}" Style="{StaticResource TableCell}" HorizontalTextAlignment="End" />
+                                        <Label Grid.Column="10" Text="{Binding StatusText}" Style="{StaticResource TableCell}" HorizontalTextAlignment="End" />
+                                        <Label Grid.Column="11" Text="{Binding CommentText}" Style="{StaticResource TableCell}" />
+                                        <CheckBox Grid.Column="12" IsChecked="{Binding IsComparisonRun}" CheckedChanged="CompareRun_CheckedChanged" HorizontalOptions="Center" VerticalOptions="Center" />
+                                        <Button Grid.Column="13" Text="Delete" Clicked="DeleteRun_Clicked" CommandParameter="{Binding .}" Style="{StaticResource DangerButton}" IsEnabled="{Binding CanDelete}" WidthRequest="64" MinimumWidthRequest="64" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="3" Grid.ColumnSpan="2" Style="{StaticResource PanelBorder}">
+                    <Grid RowDefinitions="Auto,Auto,*">
+                    <Label Grid.Row="0" Text="Selected Run by Category" Style="{StaticResource SectionTitle}" />
+                    <Grid Grid.Row="1" ColumnDefinitions="2*,1*,1*,0.8*,0.9*" ColumnSpacing="8" Margin="0,10,0,4">
+                        <Label Grid.Column="0" Text="Category" Style="{StaticResource TableHeaderLabel}" />
+                        <Label Grid.Column="1" Text="TG t/s" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="2" Text="PP t/s" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="3" Text="Failed" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="4" Text="Status" Style="{StaticResource TableHeaderLabel}" HorizontalTextAlignment="End" />
+                    </Grid>
+                    <CollectionView Grid.Row="2" ItemsSource="{Binding CategoryResults}" SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <Label Text="Select a run to view category details." Style="{StaticResource SectionSubtitle}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:BenchmarkCategoryResult">
+                                <Grid ColumnDefinitions="2*,1*,1*,0.8*,0.9*" ColumnSpacing="8" Padding="2">
+                                    <Label Grid.Column="0" Text="{Binding Category}" Style="{StaticResource TableCell}" />
+                                    <Label Grid.Column="1" Style="{StaticResource TableCell}" HorizontalTextAlignment="End">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding GenerationSpeedText}" />
+                                                <Span Text="{Binding GenerationComparisonText}" TextColor="#666666" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label Grid.Column="2" Style="{StaticResource TableCell}" HorizontalTextAlignment="End">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding PromptSpeedText}" />
+                                                <Span Text="{Binding PromptComparisonText}" TextColor="#666666" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label Grid.Column="3" Style="{StaticResource TableCell}" HorizontalTextAlignment="End">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding FailedToolCallsText}" />
+                                                <Span Text="{Binding FailedComparisonText}" TextColor="#666666" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label Grid.Column="4" Style="{StaticResource TableCell}" HorizontalTextAlignment="End">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding Status}" />
+                                                <Span Text="{Binding StatusComparisonText}" TextColor="#666666" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+    </Grid>
+</ContentPage>
