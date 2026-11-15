@@ -50,16 +50,9 @@
                 <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
                     <Grid RowDefinitions="Auto,Auto,Auto,*">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
-                            <BoxView Grid.Column="0"
-                                     WidthRequest="4"
-                                     HeightRequest="20"
-                                     CornerRadius="2"
-                                     BackgroundColor="{StaticResource Primary}"
-                                     Margin="0,0,10,0"
-                                     VerticalOptions="Center" />
-                            <Label Grid.Column="1"
-                                   Text="Model Files"
-                                   Style="{StaticResource SectionTitle}" />
+                            <controls:SectionTitleView Grid.Column="0"
+                                                       Grid.ColumnSpan="2"
+                                                       Title="Model Files" />
                         </Grid>
                         <Label Grid.Row="1"
                                Text="GGUF files found in the models folder or imported from elsewhere."
@@ -120,16 +113,9 @@
                 <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
                     <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
-                            <BoxView Grid.Column="0"
-                                     WidthRequest="4"
-                                     HeightRequest="20"
-                                     CornerRadius="2"
-                                     BackgroundColor="{StaticResource Primary}"
-                                     Margin="0,0,10,0"
-                                     VerticalOptions="Center" />
-                            <Label Grid.Column="1"
-                                   Text="Launch Profiles"
-                                   Style="{StaticResource SectionTitle}" />
+                            <controls:SectionTitleView Grid.Column="0"
+                                                       Grid.ColumnSpan="2"
+                                                       Title="Launch Profiles" />
                             <Button Grid.Column="2"
                                     Text="Add"
                                     Style="{StaticResource RowButton}"

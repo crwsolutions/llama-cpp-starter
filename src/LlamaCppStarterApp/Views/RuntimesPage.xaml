@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:LlamaCppStarterApp.ViewModels"
              xmlns:models="clr-namespace:LlamaCppStarterApp.Models"
+             xmlns:controls="clr-namespace:LlamaCppStarterApp.Controls"
              x:DataType="vm:RuntimesViewModel"
              x:Class="LlamaCppStarterApp.Views.RuntimesPage"
              Title="Runtimes">
@@ -35,16 +36,9 @@
         <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,12,0,0">
             <Grid RowDefinitions="Auto,Auto,*">
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
-                    <BoxView Grid.Column="0"
-                             WidthRequest="4"
-                             HeightRequest="20"
-                             CornerRadius="2"
-                             BackgroundColor="{StaticResource Primary}"
-                             Margin="0,0,10,0"
-                             VerticalOptions="Center" />
-                    <Label Grid.Column="1"
-                           Text="Installed Local Builds"
-                           Style="{StaticResource SectionTitle}" />
+                    <controls:SectionTitleView Grid.Column="0"
+                                               Grid.ColumnSpan="2"
+                                               Title="Installed Local Builds" />
                 </Grid>
 
                 <!-- Table header -->
